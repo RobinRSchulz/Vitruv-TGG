@@ -74,6 +74,7 @@ public class DefaultRegistrationHelper implements IRegistrationHelper {
 //                .blackInterpreter(new DemoclesTGGEngine()) // can't get it to find matches despite it having the patterns and resources...
 //                .blackInterpreter(new HiPETGGEngine())  // doesnt work, creats path that is not reproducible -> use overridden class
                 .blackInterpreter(new VitruviusHiPETGGEngine())
+                .blackInterpreter(new VitruviusBackwardConversionTGGEngine())
 //                .project.name(ibexProjectPath.getName()) //TODO maybe solve that via some strategy, e.g. TGGChangePropagationSpecification has to be extended for each new consistency relation and must explicitly specify
                 .project.name("Something2Else") //TODO de-hardcode
                 .project.workspacePath(ibexProjectPath.getParentFile().getAbsolutePath())
