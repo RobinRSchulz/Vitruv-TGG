@@ -11,8 +11,11 @@ import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 import org.emoflon.ibex.common.operational.IContextPatternInterpreter;
 import org.emoflon.ibex.common.operational.IMatchObserver;
 import org.emoflon.ibex.common.operational.IPatternInterpreterProperties;
+import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXContext;
 import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXModel;
 import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXPatternSet;
+import org.emoflon.ibex.tgg.compiler.patterns.PatternSuffixes;
+import org.emoflon.ibex.tgg.compiler.patterns.PatternUtil;
 import org.emoflon.ibex.tgg.operational.IBlackInterpreter;
 import org.emoflon.ibex.tgg.operational.benchmark.TimeMeasurable;
 import org.emoflon.ibex.tgg.operational.benchmark.Times;
@@ -87,6 +90,8 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     @Override
     public void initPatterns(IBeXPatternSet iBeXPatternSet) {
         new IbexPatternConverter(this.ibexModel).convert();
+        iBeXPatternSet.getContextPatterns().forEach( contextPattern ->
+                PatternUtil.registerPattern(contextPattern.getName(), PatternSuffixes.extractType(contextPattern.getName())));
     }
 
     @Override
