@@ -1,10 +1,12 @@
 package tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternconversion;
 
 
+import language.TGGRule;
 import org.eclipse.emf.ecore.EClass;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Todo: This class should
@@ -22,14 +24,21 @@ public class IbexPatternTemplate {
 
     private Collection<EChangeWrapper> eChangeWrappers;
 
+    private TGGRule tggRule;
+
     /**
      * maps an Echange Type to all EChange-Wrappers this pattern contains
      */
     private Map<EClass, EChangeWrapper> echangeTypeToEchangeWrapperMap;
 
-    public IbexPatternTemplate(Collection<EChangeWrapper> eChangeWrappers) {
+    public IbexPatternTemplate(TGGRule tggRule, Collection<EChangeWrapper> eChangeWrappers) {
+        this.tggRule = tggRule;
         this.eChangeWrappers = eChangeWrappers;
     }
 
     //TODO restructure this class after the pattern matching algorithm design is complete
+
+    public String toString() {
+        return "[IbexPatternTemplate of " + tggRule.getName() + "] \n  - " + eChangeWrappers.stream().map(EChangeWrapper::toString).collect(Collectors.joining(",\n  - "));
+    }
 }

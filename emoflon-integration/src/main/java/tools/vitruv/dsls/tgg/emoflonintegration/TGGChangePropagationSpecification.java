@@ -227,17 +227,18 @@ public class TGGChangePropagationSpecification extends AbstractChangePropagation
                 .findAny().orElseThrow(() -> {
                     throw new IllegalArgumentException("change cannot be mapped to a model: " + vitruviusChange);
                 });
-        debug("Found EChange for model-finding: " + modelResourceRelatedEchange);
+
+//        debug("Found EChange for model-finding: " + modelResourceRelatedEchange);
 
         // 2. Get affected Element
         // 3. Traverse the model to its root.
-        EObject rootEchange = getAffectedElement(modelResourceRelatedEchange);
-        debug("That EChange has the following affected EObject: " + rootEchange);
-        while (rootEchange.eContainer() != null) {
-            rootEchange = rootEchange.eContainer();
+        EObject rootEObject = getAffectedElement(modelResourceRelatedEchange);
+//        debug("That EChange has the following affected EObject: " + rootEObject);
+        while (rootEObject.eContainer() != null) {
+            rootEObject = rootEObject.eContainer();
         }
-        debug("That EObject has the following affected model root: " + rootEchange);
-        return Optional.ofNullable(rootEchange.eResource());
+//        debug("That EObject has the following affected model root: " + rootEObject);
+        return Optional.ofNullable(rootEObject.eResource());
     }
 
     private EObject getAffectedElement(EChange<EObject> change) {

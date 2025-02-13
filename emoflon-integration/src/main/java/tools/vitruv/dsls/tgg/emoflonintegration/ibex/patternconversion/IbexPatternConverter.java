@@ -5,11 +5,11 @@ import org.apache.log4j.Logger;
 import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXContext;
 import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXContextPattern;
 import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXModel;
-import tools.vitruv.change.atomic.feature.reference.InsertEReference;
-import tools.vitruv.change.atomic.feature.reference.ReplaceSingleValuedEReference;
+import tools.vitruv.change.atomic.eobject.EobjectPackage;
+import tools.vitruv.change.atomic.feature.reference.ReferencePackage;
+import tools.vitruv.change.atomic.root.RootPackage;
 
-import java.util.Collection;
-import java.util.LinkedList;
+import java.util.*;
 
 public class IbexPatternConverter {
 
@@ -17,10 +17,23 @@ public class IbexPatternConverter {
 
     private IBeXModel iBeXModel;
     private final TGG tgg;
+    /**
+     * Remember placeholders because some need to be referenced by multiple EChangeWrappers.
+     */
+    private final Map<TGGRuleNode, EObjectPlaceholder> nodeToPlaceholderMap;
+    /**
+     * We need that because patterns are DAGs, not trees and we want each node to be visited exactly once.
+     */
+    private final Set<TGGRuleNode> graphElementVisitedSet;
+    private Collection<EChangeWrapper> eChangeWrappers;
+
 
     public IbexPatternConverter(IBeXModel iBeXModel, TGG tgg) {
         this.iBeXModel = iBeXModel;
         this.tgg = tgg;
+        this.nodeToPlaceholderMap = new HashMap<>();
+        this.graphElementVisitedSet = new HashSet<>();
+        this.eChangeWrappers = new LinkedList<>();
     }
 
     public VitruviusChangeTemplateSet convert() {
@@ -59,37 +72,75 @@ public class IbexPatternConverter {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+
+        // actual conversion! todo delete the above debug crap
+        this.tgg.getRules().stream().map(tggRule -> parseRule(tggRule)).forEach(ibexPatternTemplate -> {
+            logger.info(ibexPatternTemplate);
+        });
         throw new RuntimeException("Make here weiter!");
-//        return null;
     }
 
     private IbexPatternTemplate parseRule(final TGGRule rule) {
-        /*
-        * Pseudocode:
-        * for edge : rule.
-        * */
-        Collection<EChangeWrapper> eChangeWrappers = new LinkedList<>();
-//        eChangeWrappers.addAll()
-//        filterNodes(rule, BindingType.CONTEXT, DomainType.SRC).
-        filterNodes(rule, BindingType.CONTEXT, DomainType.SRC).forEach(node -> this.parseContextNode(node, eChangeWrappers));
+        eChangeWrappers = new HashSet<>();
+        filterNodes(rule, BindingType.CONTEXT, DomainType.SRC).forEach(node -> this.parseContextNode(node));
+        filterNodes(rule, BindingType.CREATE, DomainType.SRC).forEach(node -> this.parseCreateNode(node));
 
-        return new IbexPatternTemplate(eChangeWrappers);
+        return new IbexPatternTemplate(rule, eChangeWrappers);
     }
 
-    private void parseContextNode(TGGRuleNode ruleNode, Collection<EChangeWrapper> eChangeWrappers) {
+    private void parseCreateNode(TGGRuleNode ruleNode) {
+        if (graphElementVisitedSet.contains(ruleNode)) { return; }
+        assert ruleNode.getBindingType().equals(BindingType.CREATE);
+
+        //TODO do we also need an InsertRootEObject EChange?
+        eChangeWrappers.add(
+                new EChangeWrapper(
+                        EobjectPackage.eINSTANCE.getCreateEObject(),
+                        ruleNode.getType(),
+                        getOrCreatePlaceHolder(ruleNode))
+        );
+
+        if (ruleNode.getIncomingEdges().stream().filter(tggRuleEdge ->
+                (tggRuleEdge.getBindingType().equals(BindingType.CONTEXT) || tggRuleEdge.getBindingType().equals(BindingType.CREATE))
+                        && tggRuleEdge.getDomainType().equals(DomainType.SRC))
+                .findAny().isEmpty()) {
+            // no incoming edges --> root EObject --> TODO ask Lars if that assumption so passt
+
+            eChangeWrappers.add(
+                    new EChangeWrapper(
+                            RootPackage.eINSTANCE.getInsertRootEObject(),
+                            ruleNode.getType(),
+                            getOrCreatePlaceHolder(ruleNode))
+            );
+        }
+
+        // continue further on
+        graphElementVisitedSet.add(ruleNode);
+        ruleNode.getOutgoingEdges().forEach(edge -> {
+            // created nodes cannot have outgoing edges that "already exist".
+            assert edge.getBindingType().equals(BindingType.CREATE);
+            parseCreateEdge(edge);
+        });
+
+    }
+
+    private void parseContextNode(TGGRuleNode ruleNode) {
+        if (graphElementVisitedSet.contains(ruleNode)) { return; }
         // recurse through context nodes and edges until a CREATE node or edge is found.
         assert ruleNode.getBindingType().equals(BindingType.CONTEXT);
+        graphElementVisitedSet.add(ruleNode);
         ruleNode.getOutgoingEdges().forEach(edge -> {
             if (edge.getBindingType().equals(BindingType.CONTEXT)) {
                 assert edge.getTrgNode().getBindingType().equals(BindingType.CONTEXT);
-                parseContextNode(edge.getTrgNode(), eChangeWrappers);
+                parseContextNode(edge.getTrgNode());
             } else if (edge.getBindingType().equals(BindingType.CREATE)) {
-                parseCreateEdge(edge, eChangeWrappers);
+                parseCreateEdge(edge);
             }
         });
     }
 
-    private void parseCreateEdge(TGGRuleEdge ruleEdge, Collection<EChangeWrapper> eChangeWrappers) {
+    private void parseCreateEdge(TGGRuleEdge ruleEdge) {
+        assert ruleEdge.getBindingType().equals(BindingType.CREATE);
         /*
             Ibex treats every edge as an EReference, not an EAttribute.
             That is in accordance to ecore, where Attributes refer to EDataTypes and references refer to EClasses.
@@ -106,22 +157,31 @@ public class IbexPatternConverter {
                This is NOT the type of the element(s) in the reference but the type of the reference itself.
             4. Choice of a placeholder.
          */
+        /*
+         * todo placeholder handling
+         * Since we do a DFS, we expect an already created placeholder representing the src node.
+         * TODO best do this via a global map [ TGGRuleNode -> Placeholder ] --> Jetzt!
+         * affectedElement
+         */
         if (Util.isManyValued(ruleEdge.getType())) {
             eChangeWrappers.add(
-                    new EReferenceEChangeWrapper(
-                            InsertEReference.class,
+                    new EReferenceValueIndexEChangeWrapper(
+                            ReferencePackage.eINSTANCE.getInsertEReference(),
                             ruleEdge.getSrcNode().getType(), //TODO müsste das sein, da affectedElement der InsertEReference der source-Knoten der betrachteten Kante ist.
-                            new EObjectEStructuralFeatureValueIndexPlaceholder(),
-                            ruleEdge.getType())
+                            getOrCreatePlaceHolder(ruleEdge.getSrcNode()),
+                            ruleEdge.getType(),
+                            getOrCreatePlaceHolder(ruleEdge.getTrgNode()))
             );
         } else {
             // TODO check if this is correct (according to the change model, this is the only option...)
             eChangeWrappers.add(
-                    new EReferenceEChangeWrapper(
-                            ReplaceSingleValuedEReference.class,
+                    new EReferenceTwoValueEChangeWrapper(
+                            ReferencePackage.eINSTANCE.getReplaceSingleValuedEReference(),
                             ruleEdge.getSrcNode().getType(), //TODO müsste das sein, da affectedElement der InsertEReference der source-Knoten der betrachteten Kante ist.
-                            new EObjectEStructuralFeatureTwoValuePlaceholder(),
-                            ruleEdge.getType())
+                            getOrCreatePlaceHolder(ruleEdge.getSrcNode()),
+                            ruleEdge.getType(),
+                            new EObjectPlaceholder(), // this isn't mapped by TGGs
+                            getOrCreatePlaceHolder(ruleEdge.getTrgNode()))
             );
         }
         // more cases? Think about delete later.
@@ -131,6 +191,21 @@ public class IbexPatternConverter {
          * Isn't there some Util for that?
          */
         //TODO call TRG node but with existing placeholder!
+        if (ruleEdge.getTrgNode().getBindingType().equals(BindingType.CONTEXT)) {
+            parseContextNode(ruleEdge.getTrgNode());
+        } else if (ruleEdge.getTrgNode().getBindingType().equals(BindingType.CREATE)) {
+            parseCreateNode(ruleEdge.getTrgNode());
+        }
+    }
+
+    private EObjectPlaceholder getOrCreatePlaceHolder(TGGRuleNode tggRuleNode) {
+        if (nodeToPlaceholderMap.containsKey(tggRuleNode)) {
+            return nodeToPlaceholderMap.get(tggRuleNode);
+        } else {
+            EObjectPlaceholder placeholder = new EObjectPlaceholder();
+            nodeToPlaceholderMap.putIfAbsent(tggRuleNode, placeholder);
+            return placeholder;
+        }
     }
 
     private int parseIBeXContext(IBeXContext iBeXContext) {
@@ -160,8 +235,6 @@ public class IbexPatternConverter {
     }
 
     private String edgeToString(TGGRuleEdge edge) {
-//        ((ReplaceSingleValuedEAttribute)edge).get
-
         return "TGGRuleEdge(" + edge.getName() + "): " +
                 "type.EReferenceType()= " + edge.getType().getEReferenceType().getName() + ", " +
                 "domainType=" + edge.getDomainType() + ", " +
