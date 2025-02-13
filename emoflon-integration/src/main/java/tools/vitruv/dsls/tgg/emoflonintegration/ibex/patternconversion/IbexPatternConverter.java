@@ -67,16 +67,16 @@ public class IbexPatternConverter {
 //            logger.info("ContextPattern: " + contextPattern.getName());
 //            parseIBeXContext(contextPattern);
 //        });
-        try {
-            Thread.sleep(20000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
 
         // actual conversion! todo delete the above debug crap
         this.tgg.getRules().stream().map(tggRule -> parseRule(tggRule)).forEach(ibexPatternTemplate -> {
             logger.info(ibexPatternTemplate);
         });
+        try {
+            Thread.sleep(20000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         throw new RuntimeException("Make here weiter!");
     }
 
