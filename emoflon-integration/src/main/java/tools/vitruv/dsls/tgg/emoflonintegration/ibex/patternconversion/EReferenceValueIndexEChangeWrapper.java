@@ -47,7 +47,8 @@ public class EReferenceValueIndexEChangeWrapper extends EChangeWrapper {
 
     @Override
     public String toString() {
-        return "[EReferenceValueIndexEChangeWrapper of " + getEChangeType().getName() + ". affectedElement Type: " + getAffectedElementEClass().getName() + ", reference: " + affectedEReference.getName() + "] holding: todo";
+        return "[EAttributeValueEChangeWrapper of " + getEChangeType().getName() + ". affectedElement Type: " + getAffectedElementEClass().getName() + ", attribute: " + affectedEReference.getName() + "] " +
+                "holding: AE: " + getAffectedElementPlaceholder() + ", V: " + getValuePlaceholder() + ", I:" + getIndex();
         //TODO add what this is holding.
     }
 }

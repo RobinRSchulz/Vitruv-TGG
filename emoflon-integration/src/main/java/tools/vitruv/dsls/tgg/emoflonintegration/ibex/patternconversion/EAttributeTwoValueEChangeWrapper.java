@@ -50,7 +50,7 @@ public class EAttributeTwoValueEChangeWrapper extends EChangeWrapper{
 
     @Override
     public String toString() {
-        return "[EAttributeTwoValueEChangeWrapper of " + getEChangeType().getName() + ". affectedElement Type: " + getAffectedElementEClass().getName() + ", attribute: " + affectedEAttribute.getName() + "] holding: todo";
-        //TODO add what this is holding.
+        return "[EAttributeTwoValueEChangeWrapper of " + getEChangeType().getName() + ". affectedElement Type: " + getAffectedElementEClass().getName() + ", attribute: " + affectedEAttribute.getName() + "] " +
+                "holding: AE: " + getAffectedElementPlaceholder() + ", oldV: " + getOldValuePlaceholder() + ", newV: " + getNewValuePlaceholder();
     }
 }

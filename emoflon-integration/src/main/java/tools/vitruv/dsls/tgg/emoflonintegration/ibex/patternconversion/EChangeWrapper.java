@@ -75,8 +75,7 @@ public class EChangeWrapper {
 
     @Override
     public String toString() {
-        return "[EChangeWrapper of " + getEChangeType().getName() + ". affectedElement Type: " + getAffectedElementEClass().getName() + "] holding: todo";
-        //TODO add what this is holding.
+        return "[EChangeWrapper of " + getEChangeType().getName() + ". affectedElement Type: " + getAffectedElementEClass().getName() + "] holding: " + getAffectedElementPlaceholder();
     }
 
     //TODO need a method matches(EChange echange) that matches against eChangeType and referenceType

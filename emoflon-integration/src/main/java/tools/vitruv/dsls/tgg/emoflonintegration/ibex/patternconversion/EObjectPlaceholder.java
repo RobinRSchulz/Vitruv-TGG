@@ -25,4 +25,8 @@ public  class EObjectPlaceholder {
     public EObject getAffectedEObject() {
         return affectedEObject;
     }
+
+    public String toString() {
+        return "[EObjectPlaceholder " + this.hashCode() + "]" + (this.isInitialized() ? (": " + affectedEObject.toString()) : "");
+    }
 }
