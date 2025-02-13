@@ -83,13 +83,14 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
                 + ibexOptions.project.path() + "/bin/" + ibexOptions.project.path() + "/"
                 + "sync/hipe/engine/ibex-patterns.xmi"));
         this.ibexModel = ((IBeXModel) ibexPatternsResource.getContents().get(0));
+        logger.info("Now initializing patterns: ");
 
         this.initPatterns(ibexModel.getPatternSet());
     }
 
     @Override
     public void initPatterns(IBeXPatternSet iBeXPatternSet) {
-        new IbexPatternConverter(this.ibexModel).convert();
+        new IbexPatternConverter(this.ibexModel, this.ibexOptions.tgg.flattenedTGG()).convert();
         iBeXPatternSet.getContextPatterns().forEach( contextPattern ->
                 PatternUtil.registerPattern(contextPattern.getName(), PatternSuffixes.extractType(contextPattern.getName())));
     }
