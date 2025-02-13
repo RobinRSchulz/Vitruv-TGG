@@ -10,6 +10,7 @@ import tools.vitruv.change.atomic.feature.reference.ReferencePackage;
 import tools.vitruv.change.atomic.root.RootPackage;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class IbexPatternConverter {
 
@@ -69,15 +70,15 @@ public class IbexPatternConverter {
 //        });
 
         // actual conversion! todo delete the above debug crap
-        this.tgg.getRules().stream().map(tggRule -> parseRule(tggRule)).forEach(ibexPatternTemplate -> {
-            logger.info(ibexPatternTemplate);
-        });
-        try {
-            Thread.sleep(20000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        throw new RuntimeException("Make here weiter!");
+        Collection<IbexPatternTemplate> patternTemplates = this.tgg.getRules().stream().map(this::parseRule).collect(Collectors.toList());
+        patternTemplates.forEach(logger::info);
+//        try {
+//            Thread.sleep(20000);
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//        }
+//        throw new RuntimeException("Make here weiter!");
+        return new VitruviusChangeTemplateSet(patternTemplates);
     }
 
     private IbexPatternTemplate parseRule(final TGGRule rule) {

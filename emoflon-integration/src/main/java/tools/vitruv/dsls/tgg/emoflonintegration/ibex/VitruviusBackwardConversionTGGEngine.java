@@ -18,11 +18,13 @@ import org.emoflon.ibex.tgg.compiler.patterns.PatternSuffixes;
 import org.emoflon.ibex.tgg.compiler.patterns.PatternUtil;
 import org.emoflon.ibex.tgg.operational.IBlackInterpreter;
 import org.emoflon.ibex.tgg.operational.benchmark.TimeMeasurable;
+import org.emoflon.ibex.tgg.operational.benchmark.Timer;
 import org.emoflon.ibex.tgg.operational.benchmark.Times;
 import org.emoflon.ibex.tgg.operational.defaults.IbexOptions;
 import org.emoflon.ibex.tgg.operational.strategies.modules.IbexExecutable;
 import org.emoflon.smartemf.persistence.SmartEMFResourceFactoryImpl;
 import tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternconversion.IbexPatternConverter;
+import tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternconversion.VitruviusChangeTemplateSet;
 
 import java.io.File;
 import java.io.IOException;
@@ -65,6 +67,8 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     private Resource ibexPatternsResource;
     private IBeXModel ibexModel;
     private IbexExecutable ibexExecutable;
+
+    private VitruviusChangeTemplateSet vitruviusChangeTemplateSet;
     private final Times times;
 
     /**
@@ -90,7 +94,9 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
 
     @Override
     public void initPatterns(IBeXPatternSet iBeXPatternSet) {
-        new IbexPatternConverter(this.ibexModel, this.ibexOptions.tgg.flattenedTGG()).convert();
+        Timer.start();
+        this.vitruviusChangeTemplateSet = new IbexPatternConverter(this.ibexModel, this.ibexOptions.tgg.flattenedTGG()).convert();
+        this.times.addTo("patternConversion", Timer.stop());
         iBeXPatternSet.getContextPatterns().forEach( contextPattern ->
                 PatternUtil.registerPattern(contextPattern.getName(), PatternSuffixes.extractType(contextPattern.getName())));
     }
