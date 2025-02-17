@@ -36,6 +36,10 @@ public class EChangeWrapper {
     private EClass affectedElementEClass;
     private EObjectPlaceholder affectedElementPlaceholder;
 
+    /**
+     * This is only filled in pattern instantiations. It refers to the "original" EChangeWrapper and is used in pattern matching.
+     */
+    private EChangeWrapper parent;
 
     /**
      * We use Eclasses instead of Classes where there is no difference because
@@ -80,6 +84,12 @@ public class EChangeWrapper {
         this.affectedElementPlaceholder = newAffectedElementPlaceholder;
     }
 
+    protected void setParent(EChangeWrapper parent) {
+        this.parent = parent;
+    }
+    public EChangeWrapper getParent() {
+        return this.parent;
+    }
     /**
      * [COPY helper]
      * @return a copy of this EChangeWrapper that has the identical Placeholder as this eChangeWrapper.
@@ -90,7 +100,9 @@ public class EChangeWrapper {
         if (!this.getClass().getName().equals(EChangeWrapper.class.getName())) {
             throw new IllegalStateException("This Subclass of " + EChangeWrapper.class.getName() + " does not override shallowCopy! Implement this method in your subclass!");
         }
-        return new EChangeWrapper(eChangeType, affectedElementEClass, affectedElementPlaceholder);
+        EChangeWrapper copy = new EChangeWrapper(eChangeType, affectedElementEClass, affectedElementPlaceholder);
+        copy.setParent(this);
+        return copy;
     }
     /**
      * [COPY helper]

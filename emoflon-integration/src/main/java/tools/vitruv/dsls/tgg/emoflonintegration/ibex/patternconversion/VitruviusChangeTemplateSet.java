@@ -48,9 +48,26 @@ public class VitruviusChangeTemplateSet {
     /**
      *
      * @param eChange
-     * @return all IbexPatternTemplates that contain the given eChangeType in one of their change wrappers and thus are a possible candidate
+     * @return all IbexPatternTemplates that contain the given eChangeType in one of their change wrappers and thus are a possible candidate.
+     *      Those are already partly initialized with the given EChange
      */
-    public Set<IbexPatternTemplate> getRelevantIbexPatternTemplatesByEChange(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
+    public Set<IbexPatternTemplate> getAndInitRelevantIbexPatternTemplatesByEChange(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
+        Set<IbexPatternTemplate> partlyInitializedTemplates = new HashSet<>();
+        ibexPatternTemplatesByEChangeType.get(eChange.eClass()).stream()
+                .forEach(ibexPatternTemplate -> {
+                    ibexPatternTemplate.getEChangeWrappers().stream().filter(eChangeWrapper ->
+                            eChangeWrapper.getEChangeType().equals(eChange.eClass()) &&
+                            eChangeWrapper.getAffectedElementEClass().equals(Util.getAffectedEObjectFromEChange(eChange, vitruviusChange).eClass()))
+                            .forEach(eChangeWrapper -> {
+                                // we got a pattern with >= 1 eChangewrappers matching the eChange. We now want to create one invoked IbexPatternTemplate with the respective eChangeWrapper already initialized.
+                                // thus, we initialize the one eChangeWrapper here
+                                IbexPatternTemplate ibexPatternTemplateCopy = ibexPatternTemplate.deepCopy();
+                                initializeEChangeWrapper(ibexPatternTemplateCopy.getThisInstancesEChangeWrapperFromParent(eChangeWrapper), eChange);
+
+                                partlyInitializedTemplates.add(ibexPatternTemplateCopy); //TODO this doesnt work, we need a mapping between parent eChangeWrapper and child eChangeWrapper...
+                            });
+                });
+
         // filter patterns that have the
         return ibexPatternTemplatesByEChangeType.get(eChange.eClass()).stream()
                 .filter( ibexPatternTemplate ->

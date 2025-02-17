@@ -34,14 +34,19 @@ public class IbexPatternTemplate {
     private Map<PatternType, IBeXContextPattern> iBeXContextPatternMap;
 
     /**
+     * This is a convenvience field for instantiated Pattern Template, mapping wrappers of the original to this instances wrappers.
+     */
+    Map<EChangeWrapper, EChangeWrapper> parentToChildEChangeWrapperMap
+
+    /**
      * private constructor for copying the Template
      */
-    private IbexPatternTemplate(TGGRule tggRule, Map<PatternType, IBeXContextPattern> iBeXContextPatternMap, Collection<EChangeWrapper> eChangeWrappers) {
+    private IbexPatternTemplate(TGGRule tggRule, Map<PatternType, IBeXContextPattern> iBeXContextPatternMap, Collection<EChangeWrapper> eChangeWrappers, Map<EChangeWrapper, EChangeWrapper> parentToChildEChangeWrapperMap) {
         this.tggRule = tggRule;
         this.iBeXContextPatternMap = iBeXContextPatternMap;
-        this.eChangeWrappers = new LinkedList<>();
 
         this.eChangeWrappers = eChangeWrappers;
+        this.parentToChildEChangeWrapperMap = parentToChildEChangeWrapperMap;
         initialize();
     }
 
@@ -77,6 +82,15 @@ public class IbexPatternTemplate {
     }
 
     /**
+     * This is a convenvience method for instantiated Pattern templates, mapping wrappers of the original to this instance's wrappers.
+     * @param parent, belonging to the IbexPatternTemplate of which this instance is a copy
+     * @return the child, belonging to this instance
+     */
+    public EChangeWrapper getThisInstancesEChangeWrapperFromParent(EChangeWrapper parent) {
+        return this.parentToChildEChangeWrapperMap.get(parent);
+    }
+
+    /**
      *
      * @param eChangeType
      * @return all EChangeWrappers that match the given eChangeType and thus are a possible candidate
@@ -91,7 +105,15 @@ public class IbexPatternTemplate {
      */
     public IbexPatternTemplate deepCopy() {
         // copy the echange wrapper and their placeholder. Afterwards, we got NEW eChangeWrappers with OLD Placeholders.
-        IbexPatternTemplate copiedTemplate = new IbexPatternTemplate(this.tggRule, this.iBeXContextPatternMap, this.eChangeWrappers.stream().map(EChangeWrapper::shallowCopy).toList());
+        //TODO store a reference to the parent in the copy (maybe in the EChangeWrappers themselves?)
+        Collection<EChangeWrapper> newEChangeWrappers = new LinkedList<>();
+        Map<EChangeWrapper, EChangeWrapper> oldToNewEChangeWrapperMap = new HashMap<>();
+        this.eChangeWrappers.stream().forEach(eChangeWrapper -> {
+            EChangeWrapper newEChangeWrapper = eChangeWrapper.shallowCopy();
+            oldToNewEChangeWrapperMap.put(eChangeWrapper, newEChangeWrapper);
+            newEChangeWrappers.add(newEChangeWrapper);
+        });
+        IbexPatternTemplate copiedTemplate = new IbexPatternTemplate(this.tggRule, this.iBeXContextPatternMap, newEChangeWrappers, oldToNewEChangeWrapperMap);
 
         // now, we can systematically replace the OLD placeholders in the NEW eChangeWrappers with NEW placeholders to achieve a deep copy
         // 1. Create a Map OLDplaceholder -> NEWPlaceholder

@@ -55,8 +55,10 @@ public class EReferenceValueIndexEChangeWrapper extends EChangeWrapper {
      */
     @Override
     protected EChangeWrapper shallowCopy() {
-        return new EReferenceValueIndexEChangeWrapper(this.getEChangeType(), this.getAffectedElementEClass(), this.getAffectedElementPlaceholder(),
+        EChangeWrapper copy = new EReferenceValueIndexEChangeWrapper(this.getEChangeType(), this.getAffectedElementEClass(), this.getAffectedElementPlaceholder(),
                 this.affectedEReference, this.valuePlaceholder);
+        copy.setParent(this);
+        return copy;
     }
     /**
      * [COPY helper]

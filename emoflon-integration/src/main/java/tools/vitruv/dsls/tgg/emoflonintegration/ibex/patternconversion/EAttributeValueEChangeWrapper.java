@@ -51,8 +51,10 @@ public class EAttributeValueEChangeWrapper extends EChangeWrapper {
      */
     @Override
     protected EChangeWrapper shallowCopy() {
-        return new EAttributeValueEChangeWrapper(this.getEChangeType(), this.getAffectedElementEClass(), this.getAffectedElementPlaceholder(),
+        EChangeWrapper copy = new EAttributeValueEChangeWrapper(this.getEChangeType(), this.getAffectedElementEClass(), this.getAffectedElementPlaceholder(),
                 this.affectedEAttribute, this.valuePlaceholder);
+        copy.setParent(this);
+        return copy;
     }
     /**
      * [COPY helper]
