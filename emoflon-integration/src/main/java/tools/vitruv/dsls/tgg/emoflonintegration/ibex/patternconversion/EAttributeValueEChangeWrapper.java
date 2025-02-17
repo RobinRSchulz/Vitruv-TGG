@@ -2,16 +2,25 @@ package tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternconversion;
 
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.EObject;
+import tools.vitruv.change.atomic.EChange;
+import tools.vitruv.change.atomic.feature.attribute.InsertEAttributeValue;
+import tools.vitruv.change.atomic.feature.attribute.RemoveEAttributeValue;
+import tools.vitruv.change.atomic.feature.attribute.ReplaceSingleValuedEAttribute;
+import tools.vitruv.change.composite.description.VitruviusChange;
+import tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternmatching.Util;
 
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
  * Wraps EChanges, that represent a modification of an EAttribute of an EObject with a Value.
  *
  * Applicable to the following types of EChange:
- * <li> ${@link tools.vitruv.change.atomic.feature.attribute.ReplaceSingleValuedEAttribute}
+ * <li> ${@link tools.vitruv.change.atomic.feature.attribute.InsertEAttributeValue}
+ * <li> ${@link tools.vitruv.change.atomic.feature.attribute.RemoveEAttributeValue}
  */
 public class EAttributeValueEChangeWrapper extends EChangeWrapper {
 
@@ -44,6 +53,30 @@ public class EAttributeValueEChangeWrapper extends EChangeWrapper {
         return valuePlaceholder;
     }
     //todo add isInitialized method in superclass which this overrides
+
+    @Override
+    protected boolean extendedDataMatches(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
+        switch (eChange) {
+            case InsertEAttributeValue<EObject, EObject> insertEAttributeValue: return insertEAttributeValue.getAffectedFeature().equals(affectedEAttribute);
+            case RemoveEAttributeValue removeEAttributeValue: return removeEAttributeValue.getAffectedFeature().equals(affectedEAttribute);
+            default: return false;
+        }
+    }
+
+    @Override
+    public void initialize(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
+        this.setEChange(eChange);
+        this.getAffectedElementPlaceholder().initialize(Util.getAffectedEObjectFromEChange(eChange, vitruviusChange));
+        switch (eChange) {
+            case InsertEAttributeValue<EObject, EObject> insertEAttributeValue:
+                this.valuePlaceholder.initialize(insertEAttributeValue.getNewValue());
+                break;
+            case RemoveEAttributeValue<EObject, EObject> removeEAttributeValue:
+                this.valuePlaceholder.initialize(removeEAttributeValue.getOldValue());
+                break;
+            default: throw new IllegalStateException("Unexpected eChange: " + eChange);
+        }
+    }
 
     /**
      * [COPY helper]

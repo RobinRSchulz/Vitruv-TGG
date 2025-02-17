@@ -3,8 +3,9 @@ package tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternconversion;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import tools.vitruv.change.atomic.EChange;
+import tools.vitruv.change.composite.description.VitruviusChange;
+import tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternmatching.Util;
 
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -84,6 +85,40 @@ public abstract class EChangeWrapper {
     public EChangeWrapper getParent() {
         return this.parent;
     }
+
+    /**
+     * This is a basic check which every matches-implementation should use.
+     * @param eChange
+     * @param vitruviusChange
+     * @return whether the eChange type and affectedEObject type of this and the eChange match.
+     */
+    private boolean eChangeTypeAndAffectedEObjectMatches(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
+        return this.getAffectedElementEClass().equals(eChange.eClass()) && this.getAffectedElementEClass().equals(Util.getAffectedEObjectFromEChange(eChange, vitruviusChange).eClass());
+    }
+
+
+    /**
+     *
+     * @param eChange
+     * @return whether this eChange matches this eChangeWrapper.
+     */
+    protected abstract boolean extendedDataMatches(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange);
+
+    /**
+     *
+     * @param eChange
+     * @return whether this eChange matches this eChangeWrapper.
+     */
+    public boolean matches(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
+        return  eChangeTypeAndAffectedEObjectMatches(eChange, vitruviusChange) && extendedDataMatches(eChange, vitruviusChange);
+    }
+
+    /**
+     * Initialize this wrapper with an acual eChange, by filling all this wrapper's placeholders.
+     * @param eChange
+     * @param vitruviusChange only for certain cases to extract affected object...
+     */
+    public abstract void initialize(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange);
     /**
      * [COPY helper]
      * @return a copy of this EChangeWrapper that has the identical Placeholder as this eChangeWrapper.

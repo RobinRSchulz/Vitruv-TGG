@@ -1,10 +1,17 @@
 package tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternconversion;
 
 import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
+import tools.vitruv.change.atomic.EChange;
+import tools.vitruv.change.atomic.feature.attribute.ReplaceSingleValuedEAttribute;
+import tools.vitruv.change.atomic.feature.reference.ReplaceSingleValuedEReference;
+import tools.vitruv.change.composite.description.VitruviusChange;
+import tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternmatching.Util;
 
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -49,6 +56,24 @@ public class EReferenceTwoValueEChangeWrapper extends EChangeWrapper {
         return newValuePlaceholder;
     }
     //todo add isInitialized method in superclass which this overrides
+
+    @Override
+    protected boolean extendedDataMatches(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
+        switch (eChange) {
+            case ReplaceSingleValuedEReference<EObject> replaceSingleValuedEReference: return replaceSingleValuedEReference.getAffectedFeature().equals(affectedEReference);
+            default: return false;
+        }
+    }
+
+    @Override
+    public void initialize(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
+        this.setEChange(eChange);
+        this.getAffectedElementPlaceholder().initialize(Util.getAffectedEObjectFromEChange(eChange, vitruviusChange));
+        if (Objects.requireNonNull(eChange) instanceof ReplaceSingleValuedEReference<EObject> replaceSingleValuedEReference) {
+            this.newValuePlaceholder.initialize(replaceSingleValuedEReference.getNewValue());
+            this.oldValuePlaceholder.initialize(replaceSingleValuedEReference.getNewValue());
+        } else throw new IllegalStateException("Unexpected eChange: " + eChange);
+    }
 
     /**
      * [COPY helper]

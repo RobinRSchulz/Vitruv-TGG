@@ -2,15 +2,22 @@ package tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternconversion;
 
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.EObject;
+import tools.vitruv.change.atomic.EChange;
+import tools.vitruv.change.atomic.feature.attribute.InsertEAttributeValue;
+import tools.vitruv.change.atomic.feature.attribute.RemoveEAttributeValue;
+import tools.vitruv.change.atomic.feature.attribute.ReplaceSingleValuedEAttribute;
+import tools.vitruv.change.composite.description.VitruviusChange;
+import tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternmatching.Util;
 
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
  * Applicable to the following types of EChange:
- * <li> ${@link tools.vitruv.change.atomic.feature.attribute.InsertEAttributeValue}
- * <li> ${@link tools.vitruv.change.atomic.feature.attribute.RemoveEAttributeValue}
+ * <li> ${@link tools.vitruv.change.atomic.feature.attribute.ReplaceSingleValuedEAttribute}
  */
 public class EAttributeTwoValueEChangeWrapper extends EChangeWrapper{
 
@@ -52,6 +59,23 @@ public class EAttributeTwoValueEChangeWrapper extends EChangeWrapper{
     }
     //todo add isInitialized method in superclass which this overrides
 
+    @Override
+    protected boolean extendedDataMatches(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
+        switch (eChange) {
+            case ReplaceSingleValuedEAttribute<EObject, EObject> replaceSingleValuedEAttribute: return replaceSingleValuedEAttribute.getAffectedFeature().equals(affectedEAttribute);
+            default: return false;
+        }
+    }
+
+    @Override
+    public void initialize(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
+        this.setEChange(eChange);
+        this.getAffectedElementPlaceholder().initialize(Util.getAffectedEObjectFromEChange(eChange, vitruviusChange));
+        if (Objects.requireNonNull(eChange) instanceof ReplaceSingleValuedEAttribute<EObject, EObject> replaceSingleValuedEAttribute) {
+            this.newValuePlaceholder.initialize(replaceSingleValuedEAttribute.getNewValue());
+            this.oldValuePlaceholder.initialize(replaceSingleValuedEAttribute.getNewValue());
+        } else throw new IllegalStateException("Unexpected eChange: " + eChange);
+    }
 
     /**
      * [COPY helper]

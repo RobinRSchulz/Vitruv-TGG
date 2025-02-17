@@ -1,6 +1,10 @@
 package tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternconversion;
 
 import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.EObject;
+import tools.vitruv.change.atomic.EChange;
+import tools.vitruv.change.composite.description.VitruviusChange;
+import tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternmatching.Util;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -30,10 +34,22 @@ public class PlainEChangeWrapper extends EChangeWrapper {
         super(eChangeType, affectedElementEClass, affectedElementPlaceholder);
     }
 
+    @Override
+    protected boolean extendedDataMatches(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
+        return true; // no extended data here.
+    }
+
+    @Override
+    public void initialize(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
+        this.setEChange(eChange);
+        this.getAffectedElementPlaceholder().initialize(Util.getAffectedEObjectFromEChange(eChange, vitruviusChange));
+    }
+
     /**
      * [COPY helper]
      * @return a copy of this EChangeWrapper that has the identical Placeholder as this eChangeWrapper.
      */
+    @Override
     protected EChangeWrapper shallowCopy() {
         PlainEChangeWrapper copy = new PlainEChangeWrapper(this.getEChangeType(), this.getAffectedElementEClass(), this.getAffectedElementPlaceholder());
         copy.setParent(this);
@@ -43,6 +59,7 @@ public class PlainEChangeWrapper extends EChangeWrapper {
      * [COPY helper]
      * @return all placeholders this EChangeWrapper holds
      */
+    @Override
     protected Set<EObjectPlaceholder> getAllPlaceholders() {
         Set<EObjectPlaceholder> retSet = new HashSet<>();
         retSet.add(getAffectedElementPlaceholder());
@@ -53,6 +70,7 @@ public class PlainEChangeWrapper extends EChangeWrapper {
      * [COPY helper]
      * Replace all placeholders with their new objects from the map
      */
+    @Override
     protected void replaceAllPlaceholders(Map<EObjectPlaceholder, EObjectPlaceholder> oldToNewPlaceholders) {
         if (!oldToNewPlaceholders.containsKey(getAffectedElementPlaceholder())) {
             throw new IllegalStateException("oldToNewPlaceholders does not contain " + getAffectedElementPlaceholder());

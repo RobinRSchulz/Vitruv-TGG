@@ -1,7 +1,15 @@
 package tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternconversion;
 
 import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
+import tools.vitruv.change.atomic.EChange;
+import tools.vitruv.change.atomic.feature.attribute.InsertEAttributeValue;
+import tools.vitruv.change.atomic.feature.attribute.RemoveEAttributeValue;
+import tools.vitruv.change.atomic.feature.reference.InsertEReference;
+import tools.vitruv.change.atomic.feature.reference.RemoveEReference;
+import tools.vitruv.change.composite.description.VitruviusChange;
+import tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternmatching.Util;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -47,6 +55,30 @@ public class EReferenceValueIndexEChangeWrapper extends EChangeWrapper {
 
     public Integer getIndex() {
         return index;
+    }
+
+    @Override
+    protected boolean extendedDataMatches(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
+        switch (eChange) {
+            case InsertEReference<EObject> insertEReference: return insertEReference.getAffectedFeature().equals(affectedEReference);
+            case RemoveEReference removeEReference: return removeEReference.getAffectedFeature().equals(affectedEReference);
+            default: return false;
+        }
+    }
+
+    @Override
+    public void initialize(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
+        this.setEChange(eChange);
+        this.getAffectedElementPlaceholder().initialize(Util.getAffectedEObjectFromEChange(eChange, vitruviusChange));
+        switch (eChange) {
+            case InsertEReference<EObject> insertEReference:
+                this.valuePlaceholder.initialize(insertEReference.getNewValue());
+                break;
+            case RemoveEReference<EObject> removeEReference:
+                this.valuePlaceholder.initialize(removeEReference.getOldValue());
+                break;
+            default: throw new IllegalStateException("Unexpected eChange: " + eChange);
+        }
     }
 
     /**

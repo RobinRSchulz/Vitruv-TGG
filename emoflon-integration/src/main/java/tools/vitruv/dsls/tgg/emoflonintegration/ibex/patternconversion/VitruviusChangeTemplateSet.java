@@ -56,6 +56,7 @@ public class VitruviusChangeTemplateSet {
         ibexPatternTemplatesByEChangeType.get(eChange.eClass()).stream()
                 .forEach(ibexPatternTemplate -> {
                     ibexPatternTemplate.getEChangeWrappers().stream().filter(eChangeWrapper ->
+                            // das reicht nicht! TODO ich muss eine matches(EChange, VitruviusChange)-Methode in EChangeWrapper implementieren, die dann Klassenabhängig checkt!
                             eChangeWrapper.getEChangeType().equals(eChange.eClass()) &&
                             eChangeWrapper.getAffectedElementEClass().equals(Util.getAffectedEObjectFromEChange(eChange, vitruviusChange).eClass()))
                             .forEach(eChangeWrapper -> {

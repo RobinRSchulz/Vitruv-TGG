@@ -8,7 +8,7 @@ import org.eclipse.emf.ecore.EObject;
  * This enables referencing the affected EObjects in multiple EChangeWrappers before it is present.
  * This way, the pattern structure can be retained when multiple EChanges should be grouped together and share same entites.
  */
-public  class EObjectPlaceholder {
+public class EObjectPlaceholder {
 
     private EObject affectedEObject;
 
