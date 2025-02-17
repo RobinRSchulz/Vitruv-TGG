@@ -28,6 +28,9 @@ import tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternconversion.Vitruvius
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.Collection;
 
 /**
@@ -94,9 +97,13 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
 
     @Override
     public void initPatterns(IBeXPatternSet iBeXPatternSet) {
+        Timer.setEnabled(true);
         Timer.start();
+
         this.vitruviusChangeTemplateSet = new IbexPatternConverter(this.ibexModel, this.ibexOptions.tgg.flattenedTGG()).convert();
-        this.times.addTo("patternConversion", Timer.stop());
+        long stop = Timer.stop();
+
+        logger.info("Pattern Conversion took " + (stop / 1000000d) + " ms");
         iBeXPatternSet.getContextPatterns().forEach( contextPattern ->
                 PatternUtil.registerPattern(contextPattern.getName(), PatternSuffixes.extractType(contextPattern.getName())));
     }

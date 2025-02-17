@@ -83,10 +83,10 @@ public class IbexPatternConverter {
 
     private IbexPatternTemplate parseRule(final TGGRule rule) {
         eChangeWrappers = new HashSet<>();
-        filterNodes(rule, BindingType.CONTEXT, DomainType.SRC).forEach(node -> this.parseContextNode(node));
-        filterNodes(rule, BindingType.CREATE, DomainType.SRC).forEach(node -> this.parseCreateNode(node));
+        filterNodes(rule, BindingType.CONTEXT, DomainType.SRC).forEach(this::parseContextNode);
+        filterNodes(rule, BindingType.CREATE, DomainType.SRC).forEach(this::parseCreateNode);
 
-        return new IbexPatternTemplate(rule, eChangeWrappers);
+        return new IbexPatternTemplate(rule, getRelatedPatterns(rule) ,eChangeWrappers);
     }
 
     private void parseCreateNode(TGGRuleNode ruleNode) {
@@ -225,6 +225,14 @@ public class IbexPatternConverter {
             }
         }
         return -1;
+    }
+
+    private Collection<IBeXContextPattern> getRelatedPatterns(TGGRule rule) {
+        return this.iBeXModel.getPatternSet().getContextPatterns().stream()
+                .filter(IBeXContextPattern.class::isInstance)
+                .map(IBeXContextPattern.class::cast)
+                .filter(ibexContextPattern -> ibexContextPattern.getName().startsWith(rule.getName()))
+                .toList();
     }
 
     private Collection<TGGRuleEdge> filterEdges(TGGRule tggRule, BindingType bindingType, DomainType domainType) {
