@@ -1,6 +1,13 @@
 package tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternconversion;
 
-import java.util.Collection;
+import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.EObject;
+import tools.vitruv.change.atomic.EChange;
+import tools.vitruv.change.composite.description.VitruviusChange;
+import tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternmatching.Util;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * A representation of Ibex TGG patterns to ease mapping them to VitruviusChanges (sequences of atomic changes)
@@ -8,8 +15,49 @@ import java.util.Collection;
 public class VitruviusChangeTemplateSet {
 
     private Collection<IbexPatternTemplate> patternTemplates;
+    /**
+     * maps an Echange Type to all EChange-Wrappers this pattern contains
+     */
+    private Map<EClass, Set<IbexPatternTemplate>> ibexPatternTemplatesByEChangeType;
 
     public VitruviusChangeTemplateSet(Collection<IbexPatternTemplate> patternTemplates) {
         this.patternTemplates = patternTemplates;
+
+        initialize();
+    }
+
+    private void initialize() {
+        // make the mapping EChangeType -> relevant patterns easily accessible
+        ibexPatternTemplatesByEChangeType = new HashMap<>();
+        patternTemplates.forEach(ibexPatternTemplate -> {
+            ibexPatternTemplate.getEChangeWrappers().forEach(eChangeWrapper -> {
+                ibexPatternTemplatesByEChangeType.computeIfAbsent(eChangeWrapper.getEChangeType(), k -> new HashSet<>()).add(ibexPatternTemplate);
+            });
+        });
+    }
+
+    /**
+     *
+     * @param eChangeType
+     * @return all IbexPatternTemplates that contain the given eChangeType in one of their change wrappers and thus are a possible candidate
+     */
+    public Set<IbexPatternTemplate> getRelevantIbexPatternTemplatesByEChangeType(EClass eChangeType) {
+        //TODO maybe need to do more
+        return ibexPatternTemplatesByEChangeType.get(eChangeType).stream().map(IbexPatternTemplate::deepCopy).collect(Collectors.toSet());
+    }
+    /**
+     *
+     * @param eChange
+     * @return all IbexPatternTemplates that contain the given eChangeType in one of their change wrappers and thus are a possible candidate
+     */
+    public Set<IbexPatternTemplate> getRelevantIbexPatternTemplatesByEChange(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
+        // filter patterns that have the
+        return ibexPatternTemplatesByEChangeType.get(eChange.eClass()).stream()
+                .filter( ibexPatternTemplate ->
+                        ibexPatternTemplate.getEChangeWrappers().stream()
+                                .anyMatch(eChangeWrapper -> eChangeWrapper.getAffectedElementEClass().equals(Util.getAffectedEObjectFromEChange(eChange, vitruviusChange).eClass())))
+                .map(IbexPatternTemplate::deepCopy)
+                .collect(Collectors.toSet());
+
     }
 }

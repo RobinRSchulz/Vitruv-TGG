@@ -21,6 +21,8 @@ import org.emoflon.ibex.tgg.operational.benchmark.TimeMeasurable;
 import org.emoflon.ibex.tgg.operational.benchmark.Timer;
 import org.emoflon.ibex.tgg.operational.benchmark.Times;
 import org.emoflon.ibex.tgg.operational.defaults.IbexOptions;
+import org.emoflon.ibex.tgg.operational.matches.ITGGMatch;
+import org.emoflon.ibex.tgg.operational.strategies.integrate.util.TGGMatchUtil;
 import org.emoflon.ibex.tgg.operational.strategies.modules.IbexExecutable;
 import org.emoflon.smartemf.persistence.SmartEMFResourceFactoryImpl;
 import tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternconversion.IbexPatternConverter;
@@ -137,6 +139,12 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
 
     @Override
     public void updateMatches() {
+
+        //TODO this is where we return new forward matches
+//        new TGGMatchUtil()
+//        this.iMatchObserver.addMatches();
+        // todo this is where we report broken matches
+//        this.iMatchObserver.removeMatch();
         throw new RuntimeException("TODO implement!");
     }
 

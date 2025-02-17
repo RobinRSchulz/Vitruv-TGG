@@ -3,6 +3,10 @@ package tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternconversion;
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
 
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 /**
  * Applicable to the following types of EChange:
  * <li> ${@link tools.vitruv.change.atomic.feature.attribute.InsertEAttributeValue}
@@ -11,8 +15,8 @@ import org.eclipse.emf.ecore.EClass;
 public class EAttributeTwoValueEChangeWrapper extends EChangeWrapper{
 
     private final EAttribute affectedEAttribute;
-    private final EObjectPlaceholder oldValuePlaceholder;
-    private final EObjectPlaceholder newValuePlaceholder;
+    private EObjectPlaceholder oldValuePlaceholder;
+    private EObjectPlaceholder newValuePlaceholder;
 
     /**
      * We use Eclasses instead of Classes where there is no difference because
@@ -47,6 +51,49 @@ public class EAttributeTwoValueEChangeWrapper extends EChangeWrapper{
         return newValuePlaceholder;
     }
     //todo add isInitialized method in superclass which this overrides
+
+
+    /**
+     * [COPY helper]
+     * @return a copy of this EChangeWrapper that has the identical Placeholder as this eChangeWrapper.
+     */
+    @Override
+    protected EChangeWrapper shallowCopy() {
+        return new EAttributeTwoValueEChangeWrapper(this.getEChangeType(), this.getAffectedElementEClass(), this.getAffectedElementPlaceholder(),
+                this.affectedEAttribute, this.oldValuePlaceholder, this.newValuePlaceholder);
+    }
+    /**
+     * [COPY helper]
+     * @return all placeholders this EChangeWrapper holds
+     */
+    @Override
+    protected Set<EObjectPlaceholder> getAllPlaceholders() {
+        Set<EObjectPlaceholder> retSet = new HashSet<>();
+        retSet.add(this.getAffectedElementPlaceholder());
+        retSet.add(this.oldValuePlaceholder);
+        retSet.add(this.newValuePlaceholder);
+        return retSet;
+    }
+    /**
+     * [COPY helper]
+     * Replace all placeholders with their new objects from the map
+     */
+    @Override
+    protected void replaceAllPlaceholders(Map<EObjectPlaceholder, EObjectPlaceholder> oldToNewPlaceholders) {
+        if (!oldToNewPlaceholders.containsKey(this.getAffectedElementPlaceholder())) {
+            throw new IllegalStateException("oldToNewPlaceholders does not contain " + this.getAffectedElementPlaceholder());
+        }
+        if (!oldToNewPlaceholders.containsKey(this.oldValuePlaceholder)) {
+            throw new IllegalStateException("oldToNewPlaceholders does not contain " + oldValuePlaceholder);
+        }
+        if (!oldToNewPlaceholders.containsKey(this.newValuePlaceholder)) {
+            throw new IllegalStateException("oldToNewPlaceholders does not contain " + newValuePlaceholder);
+        }
+
+        this.setAffectedElementPlaceholder(oldToNewPlaceholders.get(this.getAffectedElementPlaceholder()));
+        this.oldValuePlaceholder = oldToNewPlaceholders.get(this.oldValuePlaceholder);
+        this.newValuePlaceholder = oldToNewPlaceholders.get(this.newValuePlaceholder);
+    }
 
     @Override
     public String toString() {

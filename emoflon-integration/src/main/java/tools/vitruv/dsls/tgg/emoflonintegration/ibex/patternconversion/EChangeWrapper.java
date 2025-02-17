@@ -3,6 +3,10 @@ package tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternconversion;
 import org.eclipse.emf.ecore.EClass;
 import tools.vitruv.change.atomic.EChange;
 
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 /**
  *
  * Represents an EChange that affects an object which is also affected by other EChanges. That is realized via ${@link EObjectPlaceholder}s which occur in multiple EChangeWrappers to be able to correctly map the pattern structure.
@@ -71,6 +75,54 @@ public class EChangeWrapper {
 
     public EObjectPlaceholder getAffectedElementPlaceholder() {
         return affectedElementPlaceholder;
+    }
+    public void setAffectedElementPlaceholder(EObjectPlaceholder newAffectedElementPlaceholder) {
+        this.affectedElementPlaceholder = newAffectedElementPlaceholder;
+    }
+
+    /**
+     * [COPY helper]
+     * @return a copy of this EChangeWrapper that has the identical Placeholder as this eChangeWrapper.
+     * TODO need to override this in every subclass!
+     */
+    protected EChangeWrapper shallowCopy() {
+        // don't know if very beautiful but better than nothing...
+        if (!this.getClass().getName().equals(EChangeWrapper.class.getName())) {
+            throw new IllegalStateException("This Subclass of " + EChangeWrapper.class.getName() + " does not override shallowCopy! Implement this method in your subclass!");
+        }
+        return new EChangeWrapper(eChangeType, affectedElementEClass, affectedElementPlaceholder);
+    }
+    /**
+     * [COPY helper]
+     * @return all placeholders this EChangeWrapper holds
+     * TODO need to override this in every subclass!
+     */
+    protected Set<EObjectPlaceholder> getAllPlaceholders() {
+        // don't know if very beautiful but better than nothing...
+        if (!this.getClass().getName().equals(EChangeWrapper.class.getName())) {
+            throw new IllegalStateException("This Subclass of " + EChangeWrapper.class.getName() + " does not override getAllPlaceholders! Implement this method in your subclass!");
+        }
+
+        Set<EObjectPlaceholder> retSet = new HashSet<>();
+        retSet.add(affectedElementPlaceholder);
+        return retSet;
+    }
+    /**
+     * [COPY helper]
+     * Replace all placeholders with their new objects from the map
+     * TODO need to override this in every subclass!
+     */
+    protected void replaceAllPlaceholders(Map<EObjectPlaceholder, EObjectPlaceholder> oldToNewPlaceholders) {
+        // don't know if very beautiful but better than nothing...
+        if (!this.getClass().getName().equals(EChangeWrapper.class.getName())) {
+            throw new IllegalStateException("This Subclass of " + EChangeWrapper.class.getName() + " does not override replaceAllPlaceholders! Implement this method in your subclass!");
+        }
+
+        if (!oldToNewPlaceholders.containsKey(affectedElementPlaceholder)) {
+            throw new IllegalStateException("oldToNewPlaceholders does not contain " + affectedElementPlaceholder);
+        }
+
+        this.affectedElementPlaceholder = oldToNewPlaceholders.get(affectedElementPlaceholder);
     }
 
     @Override

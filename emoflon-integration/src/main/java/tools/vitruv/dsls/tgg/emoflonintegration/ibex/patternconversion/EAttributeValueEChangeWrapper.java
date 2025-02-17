@@ -3,6 +3,10 @@ package tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternconversion;
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
 
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 /**
  * Wraps EChanges, that represent a modification of an EAttribute of an EObject with a Value.
  *
@@ -12,7 +16,7 @@ import org.eclipse.emf.ecore.EClass;
 public class EAttributeValueEChangeWrapper extends EChangeWrapper {
 
     private final EAttribute affectedEAttribute;
-    private final EObjectPlaceholder valuePlaceholder;
+    private EObjectPlaceholder valuePlaceholder;
 
     /**
      * We use Eclasses instead of Classes where there is no difference because
@@ -41,6 +45,42 @@ public class EAttributeValueEChangeWrapper extends EChangeWrapper {
     }
     //todo add isInitialized method in superclass which this overrides
 
+    /**
+     * [COPY helper]
+     * @return a copy of this EChangeWrapper that has the identical Placeholder as this eChangeWrapper.
+     */
+    @Override
+    protected EChangeWrapper shallowCopy() {
+        return new EAttributeValueEChangeWrapper(this.getEChangeType(), this.getAffectedElementEClass(), this.getAffectedElementPlaceholder(),
+                this.affectedEAttribute, this.valuePlaceholder);
+    }
+    /**
+     * [COPY helper]
+     * @return all placeholders this EChangeWrapper holds
+     */
+    @Override
+    protected Set<EObjectPlaceholder> getAllPlaceholders() {
+        Set<EObjectPlaceholder> retSet = new HashSet<>();
+        retSet.add(this.getAffectedElementPlaceholder());
+        retSet.add(this.valuePlaceholder);
+        return retSet;
+    }
+    /**
+     * [COPY helper]
+     * Replace all placeholders with their new objects from the map
+     */
+    @Override
+    protected void replaceAllPlaceholders(Map<EObjectPlaceholder, EObjectPlaceholder> oldToNewPlaceholders) {
+        if (!oldToNewPlaceholders.containsKey(this.getAffectedElementPlaceholder())) {
+            throw new IllegalStateException("oldToNewPlaceholders does not contain " + this.getAffectedElementPlaceholder());
+        }
+        if (!oldToNewPlaceholders.containsKey(this.valuePlaceholder)) {
+            throw new IllegalStateException("oldToNewPlaceholders does not contain " + valuePlaceholder);
+        }
+
+        this.setAffectedElementPlaceholder(oldToNewPlaceholders.get(this.getAffectedElementPlaceholder()));
+        this.valuePlaceholder = oldToNewPlaceholders.get(this.valuePlaceholder);
+    }
     @Override
     public String toString() {
         return "[EAttributeValueEChangeWrapper of " + getEChangeType().getName() + ". affectedElement Type: " + getAffectedElementEClass().getName() + ", attribute: " + affectedEAttribute.getName() + "] " +
