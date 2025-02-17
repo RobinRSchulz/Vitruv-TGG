@@ -95,7 +95,7 @@ public class IbexPatternConverter {
 
         //TODO do we also need an InsertRootEObject EChange?
         eChangeWrappers.add(
-                new EChangeWrapper(
+                new PlainEChangeWrapper(
                         EobjectPackage.eINSTANCE.getCreateEObject(),
                         ruleNode.getType(),
                         getOrCreatePlaceHolder(ruleNode))
@@ -108,7 +108,7 @@ public class IbexPatternConverter {
             // no incoming edges --> root EObject --> TODO ask Lars if that assumption so passt
 
             eChangeWrappers.add(
-                    new EChangeWrapper(
+                    new PlainEChangeWrapper(
                             RootPackage.eINSTANCE.getInsertRootEObject(),
                             ruleNode.getType(),
                             getOrCreatePlaceHolder(ruleNode))
