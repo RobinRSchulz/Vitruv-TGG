@@ -174,7 +174,7 @@ public class TGGChangePropagationSpecification extends AbstractChangePropagation
         logger.info("------- Calling ibex -------");
         try {
             new SYNCDefault(new DefaultRegistrationHelper(sourceMetamodel, targetMetamodel,
-                    sourceModel, targetModel, null, ibexProjectPath))
+                    sourceModel, targetModel, null, change, ibexProjectPath))
                     .propagateChanges(sourceModel, targetModel, change);
         } catch (IOException e) {
             throw new RuntimeException("Could not set up eMoflon! " + e);

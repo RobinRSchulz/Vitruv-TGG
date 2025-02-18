@@ -15,6 +15,10 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+/**
+ * Calculates a matching of a change sequence (${@link VitruviusChange}) against a set of converted TGG patterns (${@link VitruviusChangeTemplateSet}).
+ *
+ */
 public class VitruviusChangePatternMatcher {
 
     private final VitruviusChange<EObject> vitruviusChange;
@@ -25,7 +29,7 @@ public class VitruviusChangePatternMatcher {
         initialize();
     }
 
-    public void matchPatterns(VitruviusChangeTemplateSet vitruviusChangeTemplateSet) {
+    public Set<IbexPatternTemplate> matchPatterns(VitruviusChangeTemplateSet vitruviusChangeTemplateSet) {
         // 1. compute all possible matches
         // TODO optimization: not compute all matches but mark EChanges (at the possible cost of missing sth?)
         Set<IbexPatternTemplate> allInvokedPatternTemplates = new HashSet<>();
@@ -53,8 +57,14 @@ public class VitruviusChangePatternMatcher {
                 }
             });
         });
+        //TODO log the patterns
 
-        // 2.
+        // 2. Check if the context of the patterns matches maybe by leveraging existing ibex functionality??
+
+        // 3. choose patterns to form a Überdeckung where each change belongs to exactly one pattern (todo maybe less than exactly one since not everything is consistency-relevant)
+
+        // 4. todo
+        return null;
     }
 
     private void initialize() {

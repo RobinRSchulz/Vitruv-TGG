@@ -9,6 +9,7 @@ import org.emoflon.ibex.tgg.operational.defaults.IbexOptions;
 import org.emoflon.ibex.tgg.operational.strategies.modules.IbexExecutable;
 import org.emoflon.ibex.tgg.runtime.democles.DemoclesTGGEngine;
 import org.emoflon.ibex.tgg.runtime.hipe.HiPETGGEngine;
+import tools.vitruv.change.composite.description.VitruviusChange;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,12 +26,15 @@ public class DefaultRegistrationHelper implements IRegistrationHelper {
 
     private File ibexProjectPath;
 
-    public DefaultRegistrationHelper(EPackage sourceMetamodel, EPackage targetMetamodel, Resource source, Resource target, Resource corr, File ibexProjectPath) {
+    private VitruviusChange vitruviusChange;
+
+    public DefaultRegistrationHelper(EPackage sourceMetamodel, EPackage targetMetamodel, Resource source, Resource target, Resource corr, VitruviusChange vitruviusChange, File ibexProjectPath) {
         this.sourceMetamodel = sourceMetamodel;
         this.targetMetamodel = targetMetamodel;
         this.source = source;
         this.target = target;
         this.corr = corr;
+        this.vitruviusChange = vitruviusChange;
         this.ibexProjectPath = ibexProjectPath;
     }
     @Override
@@ -74,7 +78,7 @@ public class DefaultRegistrationHelper implements IRegistrationHelper {
 //                .blackInterpreter(new DemoclesTGGEngine()) // can't get it to find matches despite it having the patterns and resources...
 //                .blackInterpreter(new HiPETGGEngine())  // doesnt work, creats path that is not reproducible -> use overridden class
                 .blackInterpreter(new VitruviusHiPETGGEngine())
-                .blackInterpreter(new VitruviusBackwardConversionTGGEngine())
+                .blackInterpreter(new VitruviusBackwardConversionTGGEngine(vitruviusChange))
 //                .project.name(ibexProjectPath.getName()) //TODO maybe solve that via some strategy, e.g. TGGChangePropagationSpecification has to be extended for each new consistency relation and must explicitly specify
                 .project.name("Something2Else") //TODO de-hardcode
                 .project.workspacePath(ibexProjectPath.getParentFile().getAbsolutePath())

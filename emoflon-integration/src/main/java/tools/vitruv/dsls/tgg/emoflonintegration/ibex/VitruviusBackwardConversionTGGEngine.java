@@ -9,9 +9,9 @@ import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 import org.emoflon.ibex.common.operational.IContextPatternInterpreter;
+import org.emoflon.ibex.common.operational.IMatch;
 import org.emoflon.ibex.common.operational.IMatchObserver;
 import org.emoflon.ibex.common.operational.IPatternInterpreterProperties;
-import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXContext;
 import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXModel;
 import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXPatternSet;
 import org.emoflon.ibex.tgg.compiler.patterns.PatternSuffixes;
@@ -21,19 +21,18 @@ import org.emoflon.ibex.tgg.operational.benchmark.TimeMeasurable;
 import org.emoflon.ibex.tgg.operational.benchmark.Timer;
 import org.emoflon.ibex.tgg.operational.benchmark.Times;
 import org.emoflon.ibex.tgg.operational.defaults.IbexOptions;
-import org.emoflon.ibex.tgg.operational.matches.ITGGMatch;
-import org.emoflon.ibex.tgg.operational.strategies.integrate.util.TGGMatchUtil;
 import org.emoflon.ibex.tgg.operational.strategies.modules.IbexExecutable;
 import org.emoflon.smartemf.persistence.SmartEMFResourceFactoryImpl;
+import tools.vitruv.change.composite.description.VitruviusChange;
 import tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternconversion.IbexPatternConverter;
+import tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternconversion.IbexPatternTemplate;
 import tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternconversion.VitruviusChangeTemplateSet;
+import tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternmatching.VitruviusChangePatternMatcher;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.Collection;
+import java.util.Set;
 
 /**
  * Pattern Matcher implementing the generation of new matches based on
@@ -74,13 +73,15 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     private IbexExecutable ibexExecutable;
 
     private VitruviusChangeTemplateSet vitruviusChangeTemplateSet;
+    private VitruviusChange vitruviusChange;
     private final Times times;
 
     /**
      * TODO input here or in init function?
      * VitruviusChange cannot be given in initialize, so here.
      */
-    public VitruviusBackwardConversionTGGEngine() {
+    public VitruviusBackwardConversionTGGEngine(VitruviusChange vitruviusChange) {
+        this.vitruviusChange = vitruviusChange;
         this.times = new Times();
         this.baseURI = URI.createPlatformResourceURI("/", true);
     }
@@ -140,11 +141,11 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     @Override
     public void updateMatches() {
 
-        //TODO this is where we return new forward matches
-//        new TGGMatchUtil()
-//        this.iMatchObserver.addMatches();
-        // todo this is where we report broken matches
-//        this.iMatchObserver.removeMatch();
+        // new forward matches
+        Set<IbexPatternTemplate> matches = new VitruviusChangePatternMatcher(vitruviusChange).matchPatterns(vitruviusChangeTemplateSet);
+        this.iMatchObserver.addMatches(convertMatches(matches));
+        // broken matches
+        this.iMatchObserver.removeMatches(getBrokenMatches());
         throw new RuntimeException("TODO implement!");
     }
 
@@ -166,6 +167,20 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     @Override
     public Times getTimes() {
         return this.times;
+    }
+
+    private Collection<IMatch> convertMatches(Set<IbexPatternTemplate> matches) {
+        throw new RuntimeException("TODO implement");
+    }
+    private Collection<IMatch> getBrokenMatches() {
+        /*
+        todo was überlegen, das so vorgeht:
+             * Für alle eChanges : VitruviusChange.getEChanges().filter(::isDeletingEChange)
+             *      getRelevantMatches(eChange)
+             *      check if broken (entweder anhand des eChanges oder anhand des graphen)
+             *      daraus matches basteln
+         */
+        throw new RuntimeException("TODO implement");
     }
 
 
