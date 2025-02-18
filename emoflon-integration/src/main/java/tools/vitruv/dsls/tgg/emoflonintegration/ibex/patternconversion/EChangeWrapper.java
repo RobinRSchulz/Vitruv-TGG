@@ -36,6 +36,8 @@ public abstract class EChangeWrapper {
      */
     private EChangeWrapper parent;
 
+    private boolean isInitialized;
+
     /**
      * We use Eclasses instead of Classes where there is no difference because
      *   * we stay in the "ecore-world"
@@ -50,6 +52,7 @@ public abstract class EChangeWrapper {
         this.eChangeType = eChangeType;
         this.affectedElementEClass = affectedElementEClass;
         this.affectedElementPlaceholder = affectedElementPlaceholder;
+        this.isInitialized = false;
     }
 
     public void setEChange(EChange eChange) {
@@ -113,12 +116,25 @@ public abstract class EChangeWrapper {
         return  eChangeTypeAndAffectedEObjectMatches(eChange, vitruviusChange) && extendedDataMatches(eChange, vitruviusChange);
     }
 
+    protected abstract void initializeImpl(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange);
+
     /**
-     * Initialize this wrapper with an acual eChange, by filling all this wrapper's placeholders.
+     * Initialize this wrapper with an actual eChange, by filling all this wrapper's placeholders.
      * @param eChange
      * @param vitruviusChange only for certain cases to extract affected object...
      */
-    public abstract void initialize(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange);
+    public void initialize(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
+        initializeImpl(eChange, vitruviusChange);
+        this.isInitialized = true;
+    }
+
+    /**
+     *
+     * @return whether ${@code initialize()} has been called, i.e. whether this wrapper holds an actual eChange.
+     */
+    public boolean isInitialized() {
+        return this.isInitialized;
+    }
     /**
      * [COPY helper]
      * @return a copy of this EChangeWrapper that has the identical Placeholder as this eChangeWrapper.

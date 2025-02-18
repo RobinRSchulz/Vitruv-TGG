@@ -68,7 +68,7 @@ public class EAttributeTwoValueEChangeWrapper extends EChangeWrapper{
     }
 
     @Override
-    public void initialize(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
+    public void initializeImpl(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
         this.setEChange(eChange);
         this.getAffectedElementPlaceholder().initialize(Util.getAffectedEObjectFromEChange(eChange, vitruviusChange));
         if (Objects.requireNonNull(eChange) instanceof ReplaceSingleValuedEAttribute<EObject, EObject> replaceSingleValuedEAttribute) {

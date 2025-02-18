@@ -53,7 +53,7 @@ public class VitruviusChangeTemplateSet {
      */
     public Set<IbexPatternTemplate> getAndInitRelevantIbexPatternTemplatesByEChange(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
         Set<IbexPatternTemplate> partlyInitializedTemplates = new HashSet<>();
-        ibexPatternTemplatesByEChangeType.get(eChange.eClass()).stream()
+        ibexPatternTemplatesByEChangeType.get(eChange.eClass())
                 .forEach(ibexPatternTemplate -> {
                     ibexPatternTemplate.getEChangeWrappers().stream().filter(eChangeWrapper ->
                             // das reicht nicht! TODO ich muss eine matches(EChange, VitruviusChange)-Methode in EChangeWrapper implementieren, die dann Klassenabhängig checkt!
@@ -63,19 +63,18 @@ public class VitruviusChangeTemplateSet {
                                 // we got a pattern with >= 1 eChangewrappers matching the eChange. We now want to create one invoked IbexPatternTemplate with the respective eChangeWrapper already initialized.
                                 // thus, we initialize the one eChangeWrapper here
                                 IbexPatternTemplate ibexPatternTemplateCopy = ibexPatternTemplate.deepCopy();
-                                initializeEChangeWrapper(ibexPatternTemplateCopy.getThisInstancesEChangeWrapperFromParent(eChangeWrapper), eChange);
-
+                                ibexPatternTemplateCopy.getThisInstancesEChangeWrapperFromParent(eChangeWrapper).initialize(eChange, vitruviusChange);
                                 partlyInitializedTemplates.add(ibexPatternTemplateCopy); //TODO this doesnt work, we need a mapping between parent eChangeWrapper and child eChangeWrapper...
                             });
                 });
-
+        return partlyInitializedTemplates;
         // filter patterns that have the
-        return ibexPatternTemplatesByEChangeType.get(eChange.eClass()).stream()
-                .filter( ibexPatternTemplate ->
-                        ibexPatternTemplate.getEChangeWrappers().stream()
-                                .anyMatch(eChangeWrapper -> eChangeWrapper.getAffectedElementEClass().equals(Util.getAffectedEObjectFromEChange(eChange, vitruviusChange).eClass())))
-                .map(IbexPatternTemplate::deepCopy)
-                .collect(Collectors.toSet());
+//        return ibexPatternTemplatesByEChangeType.get(eChange.eClass()).stream()
+//                .filter( ibexPatternTemplate ->
+//                        ibexPatternTemplate.getEChangeWrappers().stream()
+//                                .anyMatch(eChangeWrapper -> eChangeWrapper.getAffectedElementEClass().equals(Util.getAffectedEObjectFromEChange(eChange, vitruviusChange).eClass())))
+//                .map(IbexPatternTemplate::deepCopy)
+//                .collect(Collectors.toSet());
 
     }
 }
