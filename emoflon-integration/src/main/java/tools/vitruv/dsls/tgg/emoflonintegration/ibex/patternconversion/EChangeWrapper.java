@@ -96,7 +96,12 @@ public abstract class EChangeWrapper {
      * @return whether the eChange type and affectedEObject type of this and the eChange match.
      */
     private boolean eChangeTypeAndAffectedEObjectMatches(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
-        return this.getAffectedElementEClass().equals(eChange.eClass()) && this.getAffectedElementEClass().equals(Util.getAffectedEObjectFromEChange(eChange, vitruviusChange).eClass());
+        final EObject affectedEObjectFromEChange = Util.getAffectedEObjectFromEChange(eChange, vitruviusChange);
+        if (affectedElementPlaceholder.isInitialized() && !affectedElementPlaceholder.getAffectedEObject().equals(affectedEObjectFromEChange)) {
+            // if this EChangeWrapper is partly initialized, the EObject it holds must be matched, too!
+            return false;
+        }
+        return this.getAffectedElementEClass().equals(eChange.eClass()) && this.getAffectedElementEClass().equals(affectedEObjectFromEChange.eClass());
     }
 
 
@@ -104,27 +109,53 @@ public abstract class EChangeWrapper {
      *
      * @param eChange
      * @return whether this eChange matches this eChangeWrapper.
+     *         Obacht! This EChangeWrapper might be partly initialized, as some placeholders could have already been filled
+     *         by initializing another EChangeWrapper belonging to the same ${@link IbexPatternTemplate} as this one.
+     *         This introduces the requirement for matching not only the "statical properties" (meaning EClasses and EStructuralFeatures)
+     *         but also checking whether the <b>already initialized</b> placeholders match the echange!
+     *         TODO implement this!
      */
     protected abstract boolean extendedDataMatches(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange);
 
     /**
      *
      * @param eChange
+     * @param vitruviusChange this is only required because of the staging area stuff...
      * @return whether this eChange matches this eChangeWrapper.
+     *         Obacht! This EChangeWrapper might be partly initialized, as some placeholders could have already been filled
+     *         by initializing another EChangeWrapper belonging to the same ${@link IbexPatternTemplate} as this one.
+     *         This introduces the requirement for matching not only the "statical properties" (meaning EClasses and EStructuralFeatures)
+     *         but also checking whether the <b>already initialized</b> placeholders match the echange!
      */
     public boolean matches(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
         return  eChangeTypeAndAffectedEObjectMatches(eChange, vitruviusChange) && extendedDataMatches(eChange, vitruviusChange);
     }
 
-    protected abstract void initializeImpl(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange);
+    /**
+     * Initialize everything that doesn't concern setting the eChange and filling the affectedElementPlaceholder.
+     * Obacht! This EChangeWrapper might be partly initialized, as some placeholders could have already been filled
+     * by initializing another EChangeWrapper belonging to the same ${@link IbexPatternTemplate} as this one.
+     * Implementations need to account for that by throwing ${@link IllegalStateException}. TODO implement that!
+     * @param eChange
+     * @param vitruviusChange
+     */
+    protected abstract void initializeExtension(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange);
 
     /**
      * Initialize this wrapper with an actual eChange, by filling all this wrapper's placeholders.
+     * Obacht! This EChangeWrapper might be partly initialized, as some placeholders could have already been filled
+     * by initializing another EChangeWrapper belonging to the same ${@link IbexPatternTemplate} as this one.
+     * This is intended and this method accounts for that.
+     * It is intended that the caller calls ${@code matches()} first.
+     * This method will throw ${@link IllegalStateException}, if a placeholder that already contains something would be overwritten by applying the given eChange.
      * @param eChange
      * @param vitruviusChange only for certain cases to extract affected object...
      */
     public void initialize(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
-        initializeImpl(eChange, vitruviusChange);
+        this.setEChange(eChange);
+        this.getAffectedElementPlaceholder().initialize(Util.getAffectedEObjectFromEChange(eChange, vitruviusChange));
+        // delegate further initialization to subclasses
+        initializeExtension(eChange, vitruviusChange);
         this.isInitialized = true;
     }
 

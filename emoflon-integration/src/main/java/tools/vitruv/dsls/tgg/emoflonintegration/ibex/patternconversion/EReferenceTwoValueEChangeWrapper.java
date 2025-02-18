@@ -60,15 +60,22 @@ public class EReferenceTwoValueEChangeWrapper extends EChangeWrapper {
     @Override
     protected boolean extendedDataMatches(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
         switch (eChange) {
-            case ReplaceSingleValuedEReference<EObject> replaceSingleValuedEReference: return replaceSingleValuedEReference.getAffectedFeature().equals(affectedEReference);
+            case ReplaceSingleValuedEReference<EObject> replaceSingleValuedEReference:
+                if (oldValuePlaceholder.isInitialized() && !oldValuePlaceholder.getAffectedEObject().equals(replaceSingleValuedEReference.getOldValue())) {
+                    // if this EChangeWrapper is partly initialized, the EObject it holds must be matched, too!
+                    return false;
+                }
+                if (newValuePlaceholder.isInitialized() && !newValuePlaceholder.getAffectedEObject().equals(replaceSingleValuedEReference.getNewValue())) {
+                    // if this EChangeWrapper is partly initialized, the EObject it holds must be matched, too!
+                    return false;
+                }
+                return replaceSingleValuedEReference.getAffectedFeature().equals(affectedEReference);
             default: return false;
         }
     }
 
     @Override
-    public void initializeImpl(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
-        this.setEChange(eChange);
-        this.getAffectedElementPlaceholder().initialize(Util.getAffectedEObjectFromEChange(eChange, vitruviusChange));
+    public void initializeExtension(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
         if (Objects.requireNonNull(eChange) instanceof ReplaceSingleValuedEReference<EObject> replaceSingleValuedEReference) {
             this.newValuePlaceholder.initialize(replaceSingleValuedEReference.getNewValue());
             this.oldValuePlaceholder.initialize(replaceSingleValuedEReference.getNewValue());

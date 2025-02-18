@@ -14,7 +14,13 @@ public class EObjectPlaceholder {
 
     public EObjectPlaceholder() {  }
 
+    /**
+     * Initialize this placeholder with the given eObject.
+     * This is an idempotent operation, but ${@link IllegalStateException} is thrown if this placeholder is already initialized but initialize is called with an EObject different to the one it already holds.
+     * @param affectedEObject
+     */
     public void initialize(EObject affectedEObject) {
+        if (this.isInitialized() && this.affectedEObject != affectedEObject) throw new IllegalStateException("EObjectPlaceholder already initialized. It cannot be initialized with a different EObject!");
         this.affectedEObject = affectedEObject;
     }
 

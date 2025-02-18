@@ -57,16 +57,24 @@ public class EAttributeValueEChangeWrapper extends EChangeWrapper {
     @Override
     protected boolean extendedDataMatches(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
         switch (eChange) {
-            case InsertEAttributeValue<EObject, EObject> insertEAttributeValue: return insertEAttributeValue.getAffectedFeature().equals(affectedEAttribute);
-            case RemoveEAttributeValue removeEAttributeValue: return removeEAttributeValue.getAffectedFeature().equals(affectedEAttribute);
+            case InsertEAttributeValue<EObject, EObject> insertEAttributeValue:
+                if (valuePlaceholder.isInitialized() && !valuePlaceholder.getAffectedEObject().equals(insertEAttributeValue.getNewValue())) {
+                    // if this EChangeWrapper is partly initialized, the EObject it holds must be matched, too!
+                    return false;
+                }
+                return insertEAttributeValue.getAffectedFeature().equals(affectedEAttribute);
+            case RemoveEAttributeValue removeEAttributeValue:
+                if (valuePlaceholder.isInitialized() && !valuePlaceholder.getAffectedEObject().equals(removeEAttributeValue.getOldValue())) {
+                    // if this EChangeWrapper is partly initialized, the EObject it holds must be matched, too!
+                    return false;
+                }
+                return removeEAttributeValue.getAffectedFeature().equals(affectedEAttribute);
             default: return false;
         }
     }
 
     @Override
-    public void initializeImpl(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
-        this.setEChange(eChange);
-        this.getAffectedElementPlaceholder().initialize(Util.getAffectedEObjectFromEChange(eChange, vitruviusChange));
+    public void initializeExtension(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
         switch (eChange) {
             case InsertEAttributeValue<EObject, EObject> insertEAttributeValue:
                 this.valuePlaceholder.initialize(insertEAttributeValue.getNewValue());

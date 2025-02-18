@@ -36,15 +36,15 @@ public class VitruviusChangeTemplateSet {
         });
     }
 
-    /**
-     *
-     * @param eChangeType
-     * @return all IbexPatternTemplates that contain the given eChangeType in one of their change wrappers and thus are a possible candidate
-     */
-    public Set<IbexPatternTemplate> getRelevantIbexPatternTemplatesByEChangeType(EClass eChangeType) {
-        //TODO maybe need to do more
-        return ibexPatternTemplatesByEChangeType.get(eChangeType).stream().map(IbexPatternTemplate::deepCopy).collect(Collectors.toSet());
-    }
+//    /**
+//     *
+//     * @param eChangeType
+//     * @return all IbexPatternTemplates that contain the given eChangeType in one of their change wrappers and thus are a possible candidate
+//     */
+//    public Set<IbexPatternTemplate> getRelevantIbexPatternTemplatesByEChangeType(EClass eChangeType) {
+//        //TODO maybe need to do more
+//        return ibexPatternTemplatesByEChangeType.get(eChangeType).stream().map(IbexPatternTemplate::deepCopy).collect(Collectors.toSet());
+//    }
     /**
      *
      * @param eChange

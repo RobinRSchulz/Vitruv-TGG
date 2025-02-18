@@ -40,9 +40,8 @@ public class PlainEChangeWrapper extends EChangeWrapper {
     }
 
     @Override
-    public void initializeImpl(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
-        this.setEChange(eChange);
-        this.getAffectedElementPlaceholder().initialize(Util.getAffectedEObjectFromEChange(eChange, vitruviusChange));
+    public void initializeExtension(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
+        // nothing more to do here.
     }
 
     /**

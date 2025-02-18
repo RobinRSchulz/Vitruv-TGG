@@ -36,7 +36,7 @@ public class IbexPatternTemplate {
     /**
      * This is a convenvience field for instantiated Pattern Template, mapping wrappers of the original to this instances wrappers.
      */
-    Map<EChangeWrapper, EChangeWrapper> parentToChildEChangeWrapperMap
+    Map<EChangeWrapper, EChangeWrapper> parentToChildEChangeWrapperMap;
 
     /**
      * private constructor for copying the Template
@@ -80,6 +80,11 @@ public class IbexPatternTemplate {
     public Collection<EChangeWrapper> getEChangeWrappers() {
         return eChangeWrappers;
     }
+
+    public Collection<EChangeWrapper> getUninitializedEChangeWrappers() {
+        return eChangeWrappers.stream().filter(eChangeWrapper -> !eChangeWrapper.isInitialized()).collect(Collectors.toSet());
+    }
+
 
     /**
      * This is a convenvience method for instantiated Pattern templates, mapping wrappers of the original to this instance's wrappers.
