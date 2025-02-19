@@ -39,8 +39,10 @@ public class VitruviusChangePatternMatcher {
         // TODO optimization: not compute all matches but mark EChanges (at the possible cost of missing sth?)
         Set<IbexPatternTemplate> allInvokedPatternTemplates = new HashSet<>();
         vitruviusChange.getEChanges().forEach(eChange -> {
-            Set<IbexPatternTemplate> patternTemplates = vitruviusChangeTemplateSet.getAndInitRelevantIbexPatternTemplatesByEChange(eChange, vitruviusChange);
+            Set<IbexPatternTemplate> patternTemplates = vitruviusChangeTemplateSet.getAndInitRelevantIbexPatternTemplatesByEChange(eChange);
             logger.debug("[VitruviusChangePatternMatcher] Matching the following eChange against " + patternTemplates.size() + " suitable pattern templates: \n" + Util.eChangeToString(eChange));
+            logger.debug("[VitruviusChangePatternMatcher] The suitable pattern templates: ");
+            patternTemplates.forEach(patternTemplate -> logger.debug("  - " + patternTemplate));
             allInvokedPatternTemplates.addAll(patternTemplates);
             patternTemplates.forEach(patternTemplate -> {
                 for (EChangeWrapper eChangeWrapper : patternTemplate.getUninitializedEChangeWrappers()) {

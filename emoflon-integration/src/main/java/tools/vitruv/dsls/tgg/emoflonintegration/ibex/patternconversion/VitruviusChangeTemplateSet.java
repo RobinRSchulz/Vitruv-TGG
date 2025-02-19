@@ -51,19 +51,19 @@ public class VitruviusChangeTemplateSet {
      * @return all IbexPatternTemplates that contain the given eChangeType in one of their change wrappers and thus are a possible candidate.
      *      Those are already partly initialized with the given EChange
      */
-    public Set<IbexPatternTemplate> getAndInitRelevantIbexPatternTemplatesByEChange(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
+    public Set<IbexPatternTemplate> getAndInitRelevantIbexPatternTemplatesByEChange(EChange<EObject> eChange) {
         Set<IbexPatternTemplate> partlyInitializedTemplates = new HashSet<>();
         ibexPatternTemplatesByEChangeType.get(eChange.eClass())
                 .forEach(ibexPatternTemplate -> {
                     ibexPatternTemplate.getEChangeWrappers().stream().filter(eChangeWrapper ->
                             // das reicht nicht! TODO ich muss eine matches(EChange, VitruviusChange)-Methode in EChangeWrapper implementieren, die dann Klassenabhängig checkt!
                             eChangeWrapper.getEChangeType().equals(eChange.eClass()) &&
-                            eChangeWrapper.getAffectedElementEClass().equals(Util.getAffectedEObjectFromEChange(eChange, vitruviusChange).eClass()))
+                            eChangeWrapper.getAffectedElementEClass().equals(Util.getAffectedEObjectFromEChange(eChange).eClass()))
                             .forEach(eChangeWrapper -> {
                                 // we got a pattern with >= 1 eChangewrappers matching the eChange. We now want to create one invoked IbexPatternTemplate with the respective eChangeWrapper already initialized.
                                 // thus, we initialize the one eChangeWrapper here
                                 IbexPatternTemplate ibexPatternTemplateCopy = ibexPatternTemplate.deepCopy();
-                                ibexPatternTemplateCopy.getThisInstancesEChangeWrapperFromParent(eChangeWrapper).initialize(eChange, vitruviusChange);
+                                ibexPatternTemplateCopy.getThisInstancesEChangeWrapperFromParent(eChangeWrapper).initialize(eChange);
                                 partlyInitializedTemplates.add(ibexPatternTemplateCopy); //TODO this doesnt work, we need a mapping between parent eChangeWrapper and child eChangeWrapper...
                             });
                 });
