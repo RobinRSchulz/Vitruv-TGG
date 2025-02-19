@@ -81,9 +81,11 @@ public class EReferenceValueIndexEChangeWrapper extends EChangeWrapper {
         switch (eChange) {
             case InsertEReference<EObject> insertEReference:
                 this.valuePlaceholder.initialize(insertEReference.getNewValue());
+                this.index = insertEReference.getIndex();
                 break;
             case RemoveEReference<EObject> removeEReference:
                 this.valuePlaceholder.initialize(removeEReference.getOldValue());
+                this.index = removeEReference.getIndex();
                 break;
             default: throw new IllegalStateException("Unexpected eChange: " + eChange);
         }
