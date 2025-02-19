@@ -103,7 +103,7 @@ public abstract class EChangeWrapper {
             // if this EChangeWrapper is partly initialized, the EObject it holds must be matched, too!
             return false;
         }
-        return this.getAffectedElementEClass().equals(eChange.eClass()) && this.getAffectedElementEClass().equals(affectedEObjectFromEChange.eClass());
+        return this.getEChangeType().equals(eChange.eClass()) && this.getAffectedElementEClass().equals(affectedEObjectFromEChange.eClass());
     }
 
 

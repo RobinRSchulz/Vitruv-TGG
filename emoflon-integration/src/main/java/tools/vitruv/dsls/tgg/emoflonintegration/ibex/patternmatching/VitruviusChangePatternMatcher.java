@@ -71,6 +71,7 @@ public class VitruviusChangePatternMatcher {
         //TODO log the patterns
         logger.info("\n[VitruviusChangePatternMatcher] +++ Computed the following matches +++\n");
         allInvokedPatternTemplates.forEach(patternTemplate -> logger.info("  - " + patternTemplate));
+        visualizeÜberdeckung(allInvokedPatternTemplates);
 
         // 2. Check if the context of the patterns matches maybe by leveraging existing ibex functionality??
 
@@ -78,6 +79,21 @@ public class VitruviusChangePatternMatcher {
 
         // 4. todo
         return null;
+    }
+
+    private void visualizeÜberdeckung(Set<IbexPatternTemplate> überdeckung) {
+        logger.info(
+                "[VitruviusChangePatternMatcher] Überdeckung:\n" +
+                "| # Patterns überdecking | EChange                                                                            |\n" +
+                "|------------------------|------------------------------------------------------------------------------------|\n" +
+                vitruviusChange.getEChanges().stream().map(eChange ->
+                                "| " + überdeckung.stream().filter(ibexPatternTemplate ->
+                                        ibexPatternTemplate.getEChangeWrappers().stream().anyMatch(eChangeWrapper -> eChangeWrapper.getEChange().equals(eChange))).count()
+                                        + "                                                                            | " + Util.eChangeToString(eChange))
+                        .collect(Collectors.joining("\n"))
+
+        );
+
     }
 
     private void initialize() {
