@@ -62,6 +62,8 @@ public class VitruviusChangePatternMatcher {
                             logger.debug("[VitruviusChangePatternMatcher] SUCCESS!");
                             eChangeWrapper.initialize(eChangeCandidate);
                             eChangeWrapperInitialized = true;
+                            // to avoid duplicates, remember which pattern types are already invoked for the current eChange.
+                            rememberInvokedPatternType(eChangeCandidate, patternTemplate);
                             // we can break, since we're finished with this eChangeWrapper. TODO do we miss anything by not continuing the search and splitting the pattern invocation again?
                             break;
                         }
@@ -109,6 +111,7 @@ public class VitruviusChangePatternMatcher {
 
     private void initialize() {
         this.eChangesByEChangeType = new HashMap<>();
+        this.alreadyInvokedPatternTypes = new HashMap<>();
         this.vitruviusChange.getEChanges()
                 .forEach(eChange -> {
                     this.eChangesByEChangeType.computeIfAbsent(eChange.eClass(), k -> new HashSet<>()).add(eChange);
@@ -118,7 +121,7 @@ public class VitruviusChangePatternMatcher {
     private void removeAlreadyInvokedPatternTypes(EChange<EObject> eChange, Set<IbexPatternTemplate> ibexPatternTemplates) {
         ibexPatternTemplates.removeAll(
                 ibexPatternTemplates.stream()
-                        .filter(ibexPatternTemplate -> alreadyInvokedPatternTypes.containsKey(eChange) && alreadyInvokedPatternTypes.get(eChange).contains(ibexPatternTemplate))
+                        .filter(ibexPatternTemplate -> alreadyInvokedPatternTypes.containsKey(eChange) && alreadyInvokedPatternTypes.get(eChange).contains(ibexPatternTemplate.getTggRule()))
                         .collect(Collectors.toSet())
         );
     }
