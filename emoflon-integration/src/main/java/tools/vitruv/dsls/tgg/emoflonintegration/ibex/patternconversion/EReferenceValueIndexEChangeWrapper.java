@@ -58,7 +58,7 @@ public class EReferenceValueIndexEChangeWrapper extends EChangeWrapper {
     }
 
     @Override
-    protected boolean extendedDataMatches(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
+    protected boolean extendedDataMatches(EChange<EObject> eChange) {
         switch (eChange) {
             case InsertEReference<EObject> insertEReference:
                 if (valuePlaceholder.isInitialized() && !valuePlaceholder.getAffectedEObject().equals(insertEReference.getNewValue())) {
@@ -77,7 +77,7 @@ public class EReferenceValueIndexEChangeWrapper extends EChangeWrapper {
     }
 
     @Override
-    public void initializeExtension(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
+    public void initializeExtension(EChange<EObject> eChange) {
         switch (eChange) {
             case InsertEReference<EObject> insertEReference:
                 this.valuePlaceholder.initialize(insertEReference.getNewValue());

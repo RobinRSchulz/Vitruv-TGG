@@ -60,7 +60,7 @@ public class EAttributeTwoValueEChangeWrapper extends EChangeWrapper{
     //todo add isInitialized method in superclass which this overrides
 
     @Override
-    protected boolean extendedDataMatches(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
+    protected boolean extendedDataMatches(EChange<EObject> eChange) {
         switch (eChange) {
             case ReplaceSingleValuedEAttribute replaceSingleValuedEAttribute:
                 if (oldValuePlaceholder.isInitialized() && !oldValuePlaceholder.getAffectedEObject().equals(replaceSingleValuedEAttribute.getOldValue())) {
@@ -77,7 +77,7 @@ public class EAttributeTwoValueEChangeWrapper extends EChangeWrapper{
     }
 
     @Override
-    public void initializeExtension(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
+    public void initializeExtension(EChange<EObject> eChange) {
         if (Objects.requireNonNull(eChange) instanceof ReplaceSingleValuedEAttribute replaceSingleValuedEAttribute) {
             this.newValuePlaceholder.initialize((EObject) replaceSingleValuedEAttribute.getNewValue());
             this.oldValuePlaceholder.initialize((EObject) replaceSingleValuedEAttribute.getNewValue());

@@ -47,8 +47,8 @@ public class VitruviusChangePatternMatcher {
                     boolean eChangeWrapperInitialized = false;
                     // find a match for the echangewrapper in the VitruviusChange.
                     for (EChange<EObject> eChangeCandidate : eChangesByEChangeType.get(eChangeWrapper.getEChangeType())) {
-                        if (eChangeWrapper.matches(eChangeCandidate, vitruviusChange)) {
-                            eChangeWrapper.initialize(eChangeCandidate, vitruviusChange);
+                        if (eChangeWrapper.matches(eChangeCandidate)) {
+                            eChangeWrapper.initialize(eChangeCandidate);
                             eChangeWrapperInitialized = true;
                             // we can break, since we're finished with this eChangeWrapper. TODO do we miss anything by not continuing the search and splitting the pattern invocation again?
                             break;

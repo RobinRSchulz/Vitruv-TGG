@@ -55,7 +55,7 @@ public class EAttributeValueEChangeWrapper extends EChangeWrapper {
     //todo add isInitialized method in superclass which this overrides
 
     @Override
-    protected boolean extendedDataMatches(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
+    protected boolean extendedDataMatches(EChange<EObject> eChange) {
         switch (eChange) {
             case InsertEAttributeValue insertEAttributeValue:
                 if (valuePlaceholder.isInitialized() && !valuePlaceholder.getAffectedEObject().equals(insertEAttributeValue.getNewValue())) {
@@ -74,7 +74,7 @@ public class EAttributeValueEChangeWrapper extends EChangeWrapper {
     }
 
     @Override
-    public void initializeExtension(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
+    public void initializeExtension(EChange<EObject> eChange) {
         switch (eChange) {
             case InsertEAttributeValue insertEAttributeValue:
                 this.valuePlaceholder.initialize((EObject) insertEAttributeValue.getNewValue());

@@ -25,7 +25,7 @@ public class Util {
      *
      * @return the affectedEObject, that an EChange almost always has, but is somehow missing from the root class...
      */
-    public static EObject getAffectedEObjectFromEChange(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
+    public static EObject getAffectedEObjectFromEChange(EChange<EObject> eChange) {
         switch (eChange) {
             case CreateEObject<EObject> createEObject: return (EObject) createEObject.getAffectedElement();
             case DeleteEObject<EObject> deleteEObject: return (EObject) deleteEObject.getAffectedElement();

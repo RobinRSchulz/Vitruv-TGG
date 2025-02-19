@@ -35,12 +35,12 @@ public class PlainEChangeWrapper extends EChangeWrapper {
     }
 
     @Override
-    protected boolean extendedDataMatches(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
+    protected boolean extendedDataMatches(EChange<EObject> eChange) {
         return true; // no extended data here.
     }
 
     @Override
-    public void initializeExtension(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
+    public void initializeExtension(EChange<EObject> eChange) {
         // nothing more to do here.
     }
 
