@@ -70,18 +70,24 @@ public class Util {
 
     public static String eChangeToString(EChange<EObject> eChange) {
         switch (eChange) {
-            case CreateEObject createEObject: return "[CreateEObject] AE=" + createEObject.getAffectedElement();
-            case DeleteEObject deleteEObject: return "[DeleteEObject] AE=" + deleteEObject.getAffectedElement();
-            case InsertRootEObject insertRootEObject: return "[InsertRootEObject] AE=<staging area...> BUT newValue=" + insertRootEObject.getNewValue();
-            case RemoveRootEObject removeRootEObject: return "[RemoveRootEObject] AE=" + removeRootEObject.getOldValue();
-            case UnsetFeature unsetFeature: return "[UnsetFeature] AE=" + unsetFeature.getAffectedElement();
-            case InsertEAttributeValue insertEAttributeValue: return "[InsertEAttributeValue] AE=" + insertEAttributeValue.getAffectedElement();
-            case RemoveEAttributeValue removeEAttributeValue: return "[RemoveEAttributeValue] AE=" + removeEAttributeValue.getAffectedElement();
-            case ReplaceSingleValuedEAttribute replaceSingleValuedEAttribute: return "[ReplaceSingleValuedEAttribute] AE=" + replaceSingleValuedEAttribute.getAffectedElement();
-            case InsertEReference insertEReference: return "[InsertEReference] AE=" + insertEReference.getAffectedElement();
-            case RemoveEReference removeEReference: return "[RemoveEReference] AE=" + removeEReference.getAffectedElement();
-            case ReplaceSingleValuedEReference replaceSingleValuedEReference: return "[ReplaceSingleValuedEReference] AE=" + replaceSingleValuedEReference.getAffectedElement();
+            case CreateEObject createEObject: return "[CreateEObject] AE=" + eObjectToString(createEObject.getAffectedElement());
+            case DeleteEObject deleteEObject: return "[DeleteEObject] AE=" + eObjectToString(deleteEObject.getAffectedElement());
+            case InsertRootEObject insertRootEObject: return "[InsertRootEObject] AE=" + eObjectToString(insertRootEObject.getNewValue());
+            case RemoveRootEObject removeRootEObject: return "[RemoveRootEObject] AE=" + eObjectToString(removeRootEObject.getOldValue());
+            case UnsetFeature unsetFeature: return "[UnsetFeature] AE=" + eObjectToString(unsetFeature.getAffectedElement());
+            case InsertEAttributeValue insertEAttributeValue: return "[InsertEAttributeValue] AE=" + eObjectToString(insertEAttributeValue.getAffectedElement());
+            case RemoveEAttributeValue removeEAttributeValue: return "[RemoveEAttributeValue] AE=" + eObjectToString(removeEAttributeValue.getAffectedElement());
+            case ReplaceSingleValuedEAttribute replaceSingleValuedEAttribute: return "[ReplaceSingleValuedEAttribute] AE=" + eObjectToString(replaceSingleValuedEAttribute.getAffectedElement());
+            case InsertEReference insertEReference: return "[InsertEReference] AE=" + eObjectToString(insertEReference.getAffectedElement());
+            case RemoveEReference removeEReference: return "[RemoveEReference] AE=" + eObjectToString(removeEReference.getAffectedElement());
+            case ReplaceSingleValuedEReference replaceSingleValuedEReference: return "[ReplaceSingleValuedEReference] AE=" + eObjectToString(replaceSingleValuedEReference.getAffectedElement());
             case EChange<EObject> eChange1: return "[EChange] " + eChange1;
         }
+    }
+
+
+    private static String eObjectToString(Object object) {
+        EObject eObject = (EObject) object;
+        return eObject.eClass().getName() + ":" + eObject.hashCode();
     }
 }

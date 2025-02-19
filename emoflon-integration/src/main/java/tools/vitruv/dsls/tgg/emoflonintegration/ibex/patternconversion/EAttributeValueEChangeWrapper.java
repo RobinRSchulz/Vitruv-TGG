@@ -126,7 +126,8 @@ public class EAttributeValueEChangeWrapper extends EChangeWrapper {
     }
     @Override
     public String toString() {
-        return "[EAttributeValueEChangeWrapper of " + getEChangeType().getName() + ". affectedElement Type: " + getAffectedElementEClass().getName() + ", attribute: " + affectedEAttribute.getName() + "] " +
-                "holding: AE: " + getAffectedElementPlaceholder() + ", V: " + getValuePlaceholder();
+        return "[EAttributeValueEChangeWrapper of " + getEChangeType().getName() + ". AE-type: " + getAffectedElementEClass().getName() + ", attribute: " + affectedEAttribute.getName() + "] " +
+                "holding: AE: " + getAffectedElementPlaceholder() + ", V: " + getValuePlaceholder()
+                + (this.isInitialized() ? ", initialized with " + Util.eChangeToString(getEChange()) : ", uninitialized");
     }
 }

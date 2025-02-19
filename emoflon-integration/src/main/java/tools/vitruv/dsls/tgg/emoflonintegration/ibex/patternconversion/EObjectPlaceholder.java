@@ -33,6 +33,10 @@ public class EObjectPlaceholder {
     }
 
     public String toString() {
-        return "[EObjectPlaceholder " + this.hashCode() + "]" + (this.isInitialized() ? (": " + affectedEObject.toString()) : "");
+        return "[Placeholder:" + this.hashCode() + "]" + (this.isInitialized() ? (": " + eObjectToString(affectedEObject)) : "");
+    }
+
+    private String eObjectToString(EObject eObject) {
+        return eObject.eClass().getName() + ":" + eObject.hashCode();
     }
 }

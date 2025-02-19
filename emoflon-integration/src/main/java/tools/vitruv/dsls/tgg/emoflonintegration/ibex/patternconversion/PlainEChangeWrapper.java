@@ -80,6 +80,7 @@ public class PlainEChangeWrapper extends EChangeWrapper {
 
     @Override
     public String toString() {
-        return "[PlainEChangeWrapper of " + getEChangeType().getName() + ". affectedElement Type: " + getAffectedElementEClass().getName() + "] holding: " + getAffectedElementPlaceholder();
+        return "[PlainEChangeWrapper of " + getEChangeType().getName() + ". AE-type: " + getAffectedElementEClass().getName() + "] holding: " + getAffectedElementPlaceholder()
+                + (this.isInitialized() ? ", initialized with " + Util.eChangeToString(getEChange()) : ", uninitialized");
     }
 }

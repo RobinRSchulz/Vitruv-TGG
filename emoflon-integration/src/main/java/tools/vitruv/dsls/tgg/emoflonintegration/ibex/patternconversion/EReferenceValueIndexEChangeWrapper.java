@@ -129,8 +129,9 @@ public class EReferenceValueIndexEChangeWrapper extends EChangeWrapper {
     }
     @Override
     public String toString() {
-        return "[EReferenceValueIndexEChangeWrapper of " + getEChangeType().getName() + ". affectedElement Type: " + getAffectedElementEClass().getName() + ", reference: " + affectedEReference.getName() + "] " +
-                "holding: AE: " + getAffectedElementPlaceholder() + ", V: " + getValuePlaceholder() + ", I:" + getIndex();
+        return "[EReferenceValueIndexEChangeWrapper of " + getEChangeType().getName() + ". AE-type: " + getAffectedElementEClass().getName() + ", reference: " + affectedEReference.getName() + "] " +
+                "holding: AE: " + getAffectedElementPlaceholder() + ", V: " + getValuePlaceholder() + ", I:" + getIndex()
+                + (this.isInitialized() ? ", initialized with " + Util.eChangeToString(getEChange()) : ", uninitialized");
         //TODO add what this is holding.
     }
 }

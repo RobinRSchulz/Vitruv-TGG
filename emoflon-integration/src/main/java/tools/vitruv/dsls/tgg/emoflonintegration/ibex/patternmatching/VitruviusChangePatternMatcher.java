@@ -42,14 +42,18 @@ public class VitruviusChangePatternMatcher {
             Set<IbexPatternTemplate> patternTemplates = vitruviusChangeTemplateSet.getAndInitRelevantIbexPatternTemplatesByEChange(eChange);
             logger.debug("[VitruviusChangePatternMatcher] Matching the following eChange against " + patternTemplates.size() + " suitable pattern templates: \n" + Util.eChangeToString(eChange));
             logger.debug("[VitruviusChangePatternMatcher] The suitable pattern templates: ");
-            patternTemplates.forEach(patternTemplate -> logger.debug("  - " + patternTemplate));
+            patternTemplates.forEach(patternTemplate -> logger.debug("\n- " + patternTemplate));
             allInvokedPatternTemplates.addAll(patternTemplates);
+            logger.debug("[VitruviusChangePatternMatcher] Trying to match the uninitialized wrappers, too...");
             patternTemplates.forEach(patternTemplate -> {
                 for (EChangeWrapper eChangeWrapper : patternTemplate.getUninitializedEChangeWrappers()) {
+                    logger.debug("[VitruviusChangePatternMatcher] Trying to match " + eChangeWrapper);
                     boolean eChangeWrapperInitialized = false;
                     // find a match for the echangewrapper in the VitruviusChange.
                     for (EChange<EObject> eChangeCandidate : eChangesByEChangeType.get(eChangeWrapper.getEChangeType())) {
+                        logger.debug("[VitruviusChangePatternMatcher] Trying to match it against " + Util.eChangeToString(eChangeCandidate));
                         if (eChangeWrapper.matches(eChangeCandidate)) {
+                            logger.debug("[VitruviusChangePatternMatcher] SUCCESS!");
                             eChangeWrapper.initialize(eChangeCandidate);
                             eChangeWrapperInitialized = true;
                             // we can break, since we're finished with this eChangeWrapper. TODO do we miss anything by not continuing the search and splitting the pattern invocation again?
@@ -61,12 +65,12 @@ public class VitruviusChangePatternMatcher {
                         allInvokedPatternTemplates.remove(patternTemplate);
                         break;
                     }
-
                 }
             });
         });
         //TODO log the patterns
-        logger.info("\n[VitruviusChangePatternMatcher] +++ Computed the following matches +++\n" + allInvokedPatternTemplates);
+        logger.info("\n[VitruviusChangePatternMatcher] +++ Computed the following matches +++\n");
+        allInvokedPatternTemplates.forEach(patternTemplate -> logger.info("  - " + patternTemplate));
 
         // 2. Check if the context of the patterns matches maybe by leveraging existing ibex functionality??
 

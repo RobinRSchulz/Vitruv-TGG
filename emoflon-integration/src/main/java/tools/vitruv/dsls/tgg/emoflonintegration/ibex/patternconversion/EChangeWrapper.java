@@ -1,5 +1,6 @@
 package tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternconversion;
 
+import org.apache.log4j.Logger;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import tools.vitruv.change.atomic.EChange;
@@ -21,6 +22,8 @@ import java.util.Set;
  * We chose to not make a bijective mapping of all EChange subclasses to EChangeWrapper classes but instead group classes with the same set of parameters/ EObjects.
  */
 public abstract class EChangeWrapper {
+
+    protected static final Logger logger = Logger.getRootLogger();
 
     private final EClass eChangeType;
     private EChange<EObject> eChange;
@@ -95,6 +98,7 @@ public abstract class EChangeWrapper {
      */
     private boolean eChangeTypeAndAffectedEObjectMatches(EChange<EObject> eChange) {
         final EObject affectedEObjectFromEChange = Util.getAffectedEObjectFromEChange(eChange);
+
         if (affectedElementPlaceholder.isInitialized() && !affectedElementPlaceholder.getAffectedEObject().equals(affectedEObjectFromEChange)) {
             // if this EChangeWrapper is partly initialized, the EObject it holds must be matched, too!
             return false;
