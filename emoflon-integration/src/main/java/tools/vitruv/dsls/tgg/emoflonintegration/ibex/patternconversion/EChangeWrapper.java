@@ -165,6 +165,7 @@ public abstract class EChangeWrapper {
     public boolean isInitialized() {
         return this.isInitialized;
     }
+
     /**
      * [COPY helper]
      * @return a copy of this EChangeWrapper that has the identical Placeholder as this eChangeWrapper.

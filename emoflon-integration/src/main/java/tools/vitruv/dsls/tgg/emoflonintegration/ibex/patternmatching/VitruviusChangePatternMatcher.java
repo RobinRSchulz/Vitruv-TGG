@@ -1,5 +1,6 @@
 package tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternmatching;
 
+import language.TGGRule;
 import org.apache.log4j.Logger;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
@@ -9,10 +10,7 @@ import tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternconversion.EChangeWr
 import tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternconversion.IbexPatternTemplate;
 import tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternconversion.VitruviusChangeTemplateSet;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -27,6 +25,11 @@ public class VitruviusChangePatternMatcher {
     private final VitruviusChange<EObject> vitruviusChange;
     private Map<EClass, Set<EChange<EObject>>> eChangesByEChangeType;
 
+    /**
+     * To avoid duplicates in invoking patterns, remember which types of patterns have already been invoked for each EChange
+     */
+    private Map<EChange<EObject>, Set<TGGRule>> alreadyInvokedPatternTypes;
+
     public VitruviusChangePatternMatcher(VitruviusChange<EObject> vitruviusChange) {
         this.vitruviusChange = vitruviusChange;
         initialize();
@@ -40,6 +43,9 @@ public class VitruviusChangePatternMatcher {
         Set<IbexPatternTemplate> allInvokedPatternTemplates = new HashSet<>();
         vitruviusChange.getEChanges().forEach(eChange -> {
             Set<IbexPatternTemplate> patternTemplates = vitruviusChangeTemplateSet.getAndInitRelevantIbexPatternTemplatesByEChange(eChange);
+            // to avoid duplicates, remember which pattern types are already invoked for the current eChange.
+            removeAlreadyInvokedPatternTypes(eChange, patternTemplates);
+            rememberInvokedPatternTypes(eChange, patternTemplates);
             logger.debug("[VitruviusChangePatternMatcher] Matching the following eChange against " + patternTemplates.size() + " suitable pattern templates: \n" + Util.eChangeToString(eChange));
             logger.debug("[VitruviusChangePatternMatcher] The suitable pattern templates: ");
             patternTemplates.forEach(patternTemplate -> logger.debug("\n- " + patternTemplate));
@@ -73,6 +79,11 @@ public class VitruviusChangePatternMatcher {
         allInvokedPatternTemplates.forEach(patternTemplate -> logger.info("  - " + patternTemplate));
         visualizeÜberdeckung(allInvokedPatternTemplates);
 
+        //TODO need to verhinder duplicates that occur if a patterntemplate has more than one EChangewrapper (1 match for each wrapper...)
+        /* Idea: We allow multiple an Echange to be covered by multiple patterns, but only one of each pattern type (i.e. via their rule reference?? That doesnt break anything!
+         * --> Create a Map EChange -> TggRule
+         */
+
         // 2. Check if the context of the patterns matches maybe by leveraging existing ibex functionality??
 
         // 3. choose patterns to form a Überdeckung where each change belongs to exactly one pattern (todo maybe less than exactly one since not everything is consistency-relevant)
@@ -102,5 +113,20 @@ public class VitruviusChangePatternMatcher {
                 .forEach(eChange -> {
                     this.eChangesByEChangeType.computeIfAbsent(eChange.eClass(), k -> new HashSet<>()).add(eChange);
                 });
+    }
+
+    private void removeAlreadyInvokedPatternTypes(EChange<EObject> eChange, Set<IbexPatternTemplate> ibexPatternTemplates) {
+        ibexPatternTemplates.removeAll(
+                ibexPatternTemplates.stream()
+                        .filter(ibexPatternTemplate -> alreadyInvokedPatternTypes.containsKey(eChange) && alreadyInvokedPatternTypes.get(eChange).contains(ibexPatternTemplate))
+                        .collect(Collectors.toSet())
+        );
+    }
+
+    private void rememberInvokedPatternTypes(EChange<EObject> eChange, Collection<IbexPatternTemplate> ibexPatternTemplates) {
+        ibexPatternTemplates.forEach(ibexPatternTemplate -> {rememberInvokedPatternType(eChange, ibexPatternTemplate);});
+    }
+    private void rememberInvokedPatternType(EChange<EObject> eChange, IbexPatternTemplate ibexPatternTemplate) {
+        this.alreadyInvokedPatternTypes.computeIfAbsent(eChange, k -> new HashSet<>()).add(ibexPatternTemplate.getTggRule());
     }
 }

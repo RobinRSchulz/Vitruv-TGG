@@ -106,6 +106,14 @@ public class IbexPatternTemplate {
 
     /**
      *
+     * @return the tgg rule this pattern template is based on.
+     */
+    public TGGRule getTggRule() {
+        return tggRule;
+    }
+
+    /**
+     *
      * @return a deep copy with new wrappers and placeholders, while retaining the placeholder structure.
      */
     public IbexPatternTemplate deepCopy() {
