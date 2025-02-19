@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
  */
 public class VitruviusChangeTemplateSet {
 
-    private Collection<IbexPatternTemplate> patternTemplates;
+    private final Collection<IbexPatternTemplate> patternTemplates;
     /**
      * maps an Echange Type to all EChange-Wrappers this pattern contains
      */
@@ -76,5 +76,13 @@ public class VitruviusChangeTemplateSet {
 //                .map(IbexPatternTemplate::deepCopy)
 //                .collect(Collectors.toSet());
 
+    }
+
+    /**
+     *
+     * @return the uninitialized, uncopied pattern templates. Don't use these Templates for matching, they need to be copied, first!
+     */
+    public Collection<IbexPatternTemplate> getPatternTemplates() {
+        return patternTemplates;
     }
 }

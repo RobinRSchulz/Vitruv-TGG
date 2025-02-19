@@ -128,7 +128,7 @@ public class EReferenceTwoValueEChangeWrapper extends EChangeWrapper {
 
     @Override
     public String toString() {
-        return "[EAttributeValueEChangeWrapper of " + getEChangeType().getName() + ". affectedElement Type: " + getAffectedElementEClass().getName() + ", attribute: " + affectedEReference.getName() + "] " +
+        return "[EReferenceTwoValueEChangeWrapper of " + getEChangeType().getName() + ". affectedElement Type: " + getAffectedElementEClass().getName() + ", reference: " + affectedEReference.getName() + "] " +
                 "holding: AE: " + getAffectedElementPlaceholder() + ", oldV: " + getOldValuePlaceholder() + ", newV: " + getNewValuePlaceholder();
     }
 }

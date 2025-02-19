@@ -57,7 +57,7 @@ public class EAttributeValueEChangeWrapper extends EChangeWrapper {
     @Override
     protected boolean extendedDataMatches(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
         switch (eChange) {
-            case InsertEAttributeValue<EObject, EObject> insertEAttributeValue:
+            case InsertEAttributeValue insertEAttributeValue:
                 if (valuePlaceholder.isInitialized() && !valuePlaceholder.getAffectedEObject().equals(insertEAttributeValue.getNewValue())) {
                     // if this EChangeWrapper is partly initialized, the EObject it holds must be matched, too!
                     return false;
@@ -76,11 +76,11 @@ public class EAttributeValueEChangeWrapper extends EChangeWrapper {
     @Override
     public void initializeExtension(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
         switch (eChange) {
-            case InsertEAttributeValue<EObject, EObject> insertEAttributeValue:
-                this.valuePlaceholder.initialize(insertEAttributeValue.getNewValue());
+            case InsertEAttributeValue insertEAttributeValue:
+                this.valuePlaceholder.initialize((EObject) insertEAttributeValue.getNewValue());
                 break;
-            case RemoveEAttributeValue<EObject, EObject> removeEAttributeValue:
-                this.valuePlaceholder.initialize(removeEAttributeValue.getOldValue());
+            case RemoveEAttributeValue removeEAttributeValue:
+                this.valuePlaceholder.initialize((EObject) removeEAttributeValue.getOldValue());
                 break;
             default: throw new IllegalStateException("Unexpected eChange: " + eChange);
         }

@@ -30,7 +30,7 @@ public class Util {
             case CreateEObject<EObject> createEObject: return (EObject) createEObject.getAffectedElement();
             case DeleteEObject<EObject> deleteEObject: return (EObject) deleteEObject.getAffectedElement();
               // staging area crap...  we need to give the whole vitruviuschange here and trace back to the last CreateEObject dominating this InsertRootEObject EChange !
-            case InsertRootEObject<EObject> insertRootEObject: return getAffectedEObjectForInsertRootEobject(insertRootEObject, vitruviusChange);
+            case InsertRootEObject<EObject> insertRootEObject: return insertRootEObject.getNewValue();
             case RemoveRootEObject<EObject> removeRootEObject: return (EObject) removeRootEObject.getOldValue() ;
             case UnsetFeature unsetFeature: return (EObject) unsetFeature.getAffectedElement();
             case InsertEAttributeValue insertEAttributeValue: return (EObject) insertEAttributeValue.getAffectedElement();
@@ -45,6 +45,7 @@ public class Util {
 
     /**
      * Workaround for the staging area stuff. An InsertRootEObject change does not hold its affected Element but takes it from the dominating CreateEObject change.
+     * todo this is not needed, we can use ::getNewValue. Check nonetheless for edge cases...
      * @param eChange
      * @param vitruviusChange
      * @return the affectedElement of the CreateEObject which dominates the eChange in the vitruviusChange
@@ -65,5 +66,22 @@ public class Util {
             throw new IllegalStateException("InsertRootEObject without preceding CreateEObject! eChange: ");
         }
         return affectedEObject;
+    }
+
+    public static String eChangeToString(EChange<EObject> eChange) {
+        switch (eChange) {
+            case CreateEObject createEObject: return "[CreateEObject] AE=" + createEObject.getAffectedElement();
+            case DeleteEObject deleteEObject: return "[DeleteEObject] AE=" + deleteEObject.getAffectedElement();
+            case InsertRootEObject insertRootEObject: return "[InsertRootEObject] AE=<staging area...> BUT newValue=" + insertRootEObject.getNewValue();
+            case RemoveRootEObject removeRootEObject: return "[RemoveRootEObject] AE=" + removeRootEObject.getOldValue();
+            case UnsetFeature unsetFeature: return "[UnsetFeature] AE=" + unsetFeature.getAffectedElement();
+            case InsertEAttributeValue insertEAttributeValue: return "[InsertEAttributeValue] AE=" + insertEAttributeValue.getAffectedElement();
+            case RemoveEAttributeValue removeEAttributeValue: return "[RemoveEAttributeValue] AE=" + removeEAttributeValue.getAffectedElement();
+            case ReplaceSingleValuedEAttribute replaceSingleValuedEAttribute: return "[ReplaceSingleValuedEAttribute] AE=" + replaceSingleValuedEAttribute.getAffectedElement();
+            case InsertEReference insertEReference: return "[InsertEReference] AE=" + insertEReference.getAffectedElement();
+            case RemoveEReference removeEReference: return "[RemoveEReference] AE=" + removeEReference.getAffectedElement();
+            case ReplaceSingleValuedEReference replaceSingleValuedEReference: return "[ReplaceSingleValuedEReference] AE=" + replaceSingleValuedEReference.getAffectedElement();
+            case EChange<EObject> eChange1: return "[EChange] " + eChange1;
+        }
     }
 }

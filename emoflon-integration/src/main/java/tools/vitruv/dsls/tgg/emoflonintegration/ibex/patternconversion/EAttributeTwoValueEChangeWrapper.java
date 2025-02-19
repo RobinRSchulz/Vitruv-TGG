@@ -62,7 +62,7 @@ public class EAttributeTwoValueEChangeWrapper extends EChangeWrapper{
     @Override
     protected boolean extendedDataMatches(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
         switch (eChange) {
-            case ReplaceSingleValuedEAttribute<EObject, EObject> replaceSingleValuedEAttribute:
+            case ReplaceSingleValuedEAttribute replaceSingleValuedEAttribute:
                 if (oldValuePlaceholder.isInitialized() && !oldValuePlaceholder.getAffectedEObject().equals(replaceSingleValuedEAttribute.getOldValue())) {
                     // if this EChangeWrapper is partly initialized, the EObject it holds must be matched, too!
                     return false;
@@ -78,9 +78,9 @@ public class EAttributeTwoValueEChangeWrapper extends EChangeWrapper{
 
     @Override
     public void initializeExtension(EChange<EObject> eChange, VitruviusChange<EObject> vitruviusChange) {
-        if (Objects.requireNonNull(eChange) instanceof ReplaceSingleValuedEAttribute<EObject, EObject> replaceSingleValuedEAttribute) {
-            this.newValuePlaceholder.initialize(replaceSingleValuedEAttribute.getNewValue());
-            this.oldValuePlaceholder.initialize(replaceSingleValuedEAttribute.getNewValue());
+        if (Objects.requireNonNull(eChange) instanceof ReplaceSingleValuedEAttribute replaceSingleValuedEAttribute) {
+            this.newValuePlaceholder.initialize((EObject) replaceSingleValuedEAttribute.getNewValue());
+            this.oldValuePlaceholder.initialize((EObject) replaceSingleValuedEAttribute.getNewValue());
         } else throw new IllegalStateException("Unexpected eChange: " + eChange);
     }
 

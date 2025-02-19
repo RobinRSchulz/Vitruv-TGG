@@ -33,6 +33,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Pattern Matcher implementing the generation of new matches based on
@@ -135,7 +136,10 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
 
     @Override
     public void monitor(Collection<Resource> collection) {
-        throw new RuntimeException("TODO implement!");
+        logger.warn("[VitruviusBackwardConversionTGGEngine::monitor(Collection<Resource> collection) NOT IMPLEMENTED YET!");
+        logger.info(collection.stream().map(Resource::getURI).map(URI::toString).collect(Collectors.joining(", ")));
+        //TODO here we get corr, protocol, model1 and model2
+//        throw new RuntimeException("TODO implement!");
     }
 
     @Override
@@ -156,12 +160,14 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
 
     @Override
     public void setDebugPath(String s) {
-        throw new RuntimeException("TODO implement!");
+        //TODO implement if needed
     }
 
     @Override
     public IPatternInterpreterProperties getProperties() {
-        return null;
+        return new IPatternInterpreterProperties() {
+            //TODO implement methods if needed (e.g. smartEMF support??) this by default returns false for every method
+        };
     }
 
     @Override

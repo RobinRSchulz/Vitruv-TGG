@@ -1,5 +1,6 @@
 package tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternmatching;
 
+import org.apache.log4j.Logger;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import tools.vitruv.change.atomic.EChange;
@@ -21,6 +22,8 @@ import java.util.stream.Collectors;
  */
 public class VitruviusChangePatternMatcher {
 
+    protected static final Logger logger = Logger.getRootLogger();
+
     private final VitruviusChange<EObject> vitruviusChange;
     private Map<EClass, Set<EChange<EObject>>> eChangesByEChangeType;
 
@@ -30,11 +33,14 @@ public class VitruviusChangePatternMatcher {
     }
 
     public Set<IbexPatternTemplate> matchPatterns(VitruviusChangeTemplateSet vitruviusChangeTemplateSet) {
+        logger.debug("\n[VitruviusChangePatternMatcher] matching the following eChanges against " + vitruviusChangeTemplateSet.getPatternTemplates().size() + " pattern templates:");
+        vitruviusChange.getEChanges().forEach(eChange -> {logger.info("  - " + Util.eChangeToString(eChange));});
         // 1. compute all possible matches
         // TODO optimization: not compute all matches but mark EChanges (at the possible cost of missing sth?)
         Set<IbexPatternTemplate> allInvokedPatternTemplates = new HashSet<>();
         vitruviusChange.getEChanges().forEach(eChange -> {
             Set<IbexPatternTemplate> patternTemplates = vitruviusChangeTemplateSet.getAndInitRelevantIbexPatternTemplatesByEChange(eChange, vitruviusChange);
+            logger.debug("[VitruviusChangePatternMatcher] Matching the following eChange against " + patternTemplates.size() + " suitable pattern templates: \n" + Util.eChangeToString(eChange));
             allInvokedPatternTemplates.addAll(patternTemplates);
             patternTemplates.forEach(patternTemplate -> {
                 for (EChangeWrapper eChangeWrapper : patternTemplate.getUninitializedEChangeWrappers()) {
@@ -58,6 +64,7 @@ public class VitruviusChangePatternMatcher {
             });
         });
         //TODO log the patterns
+        logger.info("\n[VitruviusChangePatternMatcher] +++ Computed the following matches +++\n" + allInvokedPatternTemplates);
 
         // 2. Check if the context of the patterns matches maybe by leveraging existing ibex functionality??
 
