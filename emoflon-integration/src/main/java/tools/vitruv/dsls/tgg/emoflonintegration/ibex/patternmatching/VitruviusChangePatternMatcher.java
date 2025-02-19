@@ -83,13 +83,13 @@ public class VitruviusChangePatternMatcher {
 
     private void visualizeÜberdeckung(Set<IbexPatternTemplate> überdeckung) {
         logger.info(
-                "[VitruviusChangePatternMatcher] Überdeckung:\n" +
-                "| # Patterns überdecking | EChange                                                                            |\n" +
-                "|------------------------|------------------------------------------------------------------------------------|\n" +
+                "[VitruviusChangePatternMatcher] Pattern Coverage of the given Vitruvius change:\n" +
+                "| # Patterns covering | EChange                                    |\n" +
+                "|---------------------|--------------------------------------------|\n" +
                 vitruviusChange.getEChanges().stream().map(eChange ->
                                 "| " + überdeckung.stream().filter(ibexPatternTemplate ->
                                         ibexPatternTemplate.getEChangeWrappers().stream().anyMatch(eChangeWrapper -> eChangeWrapper.getEChange().equals(eChange))).count()
-                                        + "                                                                            | " + Util.eChangeToString(eChange))
+                                        + "                  | " + Util.eChangeToString(eChange) + "       |")
                         .collect(Collectors.joining("\n"))
 
         );
