@@ -144,9 +144,13 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
 
     @Override
     public void updateMatches() {
+        Timer.setEnabled(true);
+        Timer.start();
 
         // new forward matches
         Set<IbexPatternTemplate> matches = new VitruviusChangePatternMatcher(vitruviusChange).matchPatterns(vitruviusChangeTemplateSet);
+        long stop = Timer.stop();
+        logger.info("Pattern Matching took " + (stop / 1000000d) + " ms");
         this.iMatchObserver.addMatches(convertMatches(matches));
         // broken matches
         this.iMatchObserver.removeMatches(getBrokenMatches());
