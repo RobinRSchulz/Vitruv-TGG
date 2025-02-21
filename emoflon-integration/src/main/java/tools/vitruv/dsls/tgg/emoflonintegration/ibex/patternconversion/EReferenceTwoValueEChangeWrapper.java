@@ -132,4 +132,12 @@ public class EReferenceTwoValueEChangeWrapper extends EChangeWrapper {
                 "holding: AE: " + getAffectedElementPlaceholder() + ", oldV: " + getOldValuePlaceholder() + ", newV: " + getNewValuePlaceholder()
                 + (this.isInitialized() ? ", initialized with " + Util.eChangeToString(getEChange()) : ", uninitialized");
     }
+
+    @Override
+    public String toString(String indent) {
+        return "[EReferenceTwoValueEChangeWrapper of " + getEChangeType().getName() + ". AE-type: " + getAffectedElementEClass().getName() + ", reference: " + affectedEReference.getName() + "] " +
+                "holding:  \n" + indent + "AE: " + getAffectedElementPlaceholder() + ", oldV: " + getOldValuePlaceholder() + ", newV: " + getNewValuePlaceholder()
+                + "\n" + indent
+                + (this.isInitialized() ? ", initialized with " + Util.eChangeToString(getEChange()) : ", uninitialized");
+    }
 }

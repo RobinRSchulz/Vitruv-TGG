@@ -181,4 +181,6 @@ public abstract class EChangeWrapper {
      * Replace all placeholders with their new objects from the map
      */
     protected abstract void replaceAllPlaceholders(Map<EObjectPlaceholder, EObjectPlaceholder> oldToNewPlaceholders);
+
+    public abstract String toString(String indent);
 }

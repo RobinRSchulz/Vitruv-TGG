@@ -35,6 +35,16 @@ public class VitruviusChangePatternMatcher {
         initialize();
     }
 
+    /**
+     * todo unit-tests schreiben!
+     * todo evtl an Khelladi orientieren, bzw. überlegen ob mein sofort-matching wirklich besser ist
+     * todo CODE REVIEW am 06.03.2025,
+     * * Woche vorher Code den Teilnehmern schicken!
+     * * im Wiki Zeug lesen.
+     *
+     * @param vitruviusChangeTemplateSet
+     * @return
+     */
     public Set<IbexPatternTemplate> matchPatterns(VitruviusChangeTemplateSet vitruviusChangeTemplateSet) {
         logger.debug("\n[VitruviusChangePatternMatcher] matching the following eChanges against " + vitruviusChangeTemplateSet.getPatternTemplates().size() + " pattern templates:");
         vitruviusChange.getEChanges().forEach(eChange -> {logger.info("  - " + Util.eChangeToString(eChange));});
@@ -78,7 +88,7 @@ public class VitruviusChangePatternMatcher {
         });
         //TODO log the patterns
         logger.info("\n[VitruviusChangePatternMatcher] +++ Computed the following matches +++\n");
-        allInvokedPatternTemplates.forEach(patternTemplate -> logger.info("  - " + patternTemplate));
+        allInvokedPatternTemplates.forEach(logger::info);
         visualizeÜberdeckung(allInvokedPatternTemplates);
 
         //TODO need to verhinder duplicates that occur if a patterntemplate has more than one EChangewrapper (1 match for each wrapper...)

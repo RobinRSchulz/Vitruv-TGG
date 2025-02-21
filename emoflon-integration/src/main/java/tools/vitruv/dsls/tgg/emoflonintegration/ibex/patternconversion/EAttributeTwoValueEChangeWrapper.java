@@ -4,10 +4,7 @@ import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import tools.vitruv.change.atomic.EChange;
-import tools.vitruv.change.atomic.feature.attribute.InsertEAttributeValue;
-import tools.vitruv.change.atomic.feature.attribute.RemoveEAttributeValue;
 import tools.vitruv.change.atomic.feature.attribute.ReplaceSingleValuedEAttribute;
-import tools.vitruv.change.composite.description.VitruviusChange;
 import tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternmatching.Util;
 
 import java.util.HashSet;
@@ -132,6 +129,14 @@ public class EAttributeTwoValueEChangeWrapper extends EChangeWrapper{
     public String toString() {
         return "[EAttributeTwoValueEChangeWrapper of " + getEChangeType().getName() + ". AE-type: " + getAffectedElementEClass().getName() + ", attribute: " + affectedEAttribute.getName() + "] " +
                 "holding: AE: " + getAffectedElementPlaceholder() + ", oldV: " + getOldValuePlaceholder() + ", newV: " + getNewValuePlaceholder()
+                + (this.isInitialized() ? ", initialized with " + Util.eChangeToString(getEChange()) : ", uninitialized");
+    }
+
+    @Override
+    public String toString(String indent) {
+        return "[EAttributeTwoValueEChangeWrapper of " + getEChangeType().getName() + ". AE-type: " + getAffectedElementEClass().getName() + ", attribute: " + affectedEAttribute.getName() + "] " +
+                "holding:  \n" + indent + "AE: " + getAffectedElementPlaceholder() + ", oldV: " + getOldValuePlaceholder() + ", newV: " + getNewValuePlaceholder()
+                + "\n" + indent
                 + (this.isInitialized() ? ", initialized with " + Util.eChangeToString(getEChange()) : ", uninitialized");
     }
 }

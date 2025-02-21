@@ -134,6 +134,13 @@ public class EReferenceValueIndexEChangeWrapper extends EChangeWrapper {
         return "[EReferenceValueIndexEChangeWrapper of " + getEChangeType().getName() + ". AE-type: " + getAffectedElementEClass().getName() + ", reference: " + affectedEReference.getName() + "] " +
                 "holding: AE: " + getAffectedElementPlaceholder() + ", V: " + getValuePlaceholder() + ", I:" + getIndex()
                 + (this.isInitialized() ? ", initialized with " + Util.eChangeToString(getEChange()) : ", uninitialized");
-        //TODO add what this is holding.
+    }
+
+    @Override
+    public String toString(String indent) {
+        return "[EReferenceValueIndexEChangeWrapper of " + getEChangeType().getName() + ". AE-type: " + getAffectedElementEClass().getName() + ", reference: " + affectedEReference.getName() + "] " +
+                "holding:  \n" + indent + "AE: " + getAffectedElementPlaceholder() + ", V: " + getValuePlaceholder() + ", I:" + getIndex()
+                + "\n" + indent
+                + (this.isInitialized() ? ", initialized with " + Util.eChangeToString(getEChange()) : ", uninitialized");
     }
 }

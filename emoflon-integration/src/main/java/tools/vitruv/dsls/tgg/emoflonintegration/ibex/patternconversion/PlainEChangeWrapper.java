@@ -83,4 +83,9 @@ public class PlainEChangeWrapper extends EChangeWrapper {
         return "[PlainEChangeWrapper of " + getEChangeType().getName() + ". AE-type: " + getAffectedElementEClass().getName() + "] holding: " + getAffectedElementPlaceholder()
                 + (this.isInitialized() ? ", initialized with " + Util.eChangeToString(getEChange()) : ", uninitialized");
     }
+
+    public String toString(String indent) {
+        return "[PlainEChangeWrapper of " + getEChangeType().getName() + ". AE-type: " + getAffectedElementEClass().getName() + "] holding: \n" + indent + "AE: " + getAffectedElementPlaceholder()
+                + (this.isInitialized() ? ", initialized with " + Util.eChangeToString(getEChange()) : ", uninitialized");
+    }
 }

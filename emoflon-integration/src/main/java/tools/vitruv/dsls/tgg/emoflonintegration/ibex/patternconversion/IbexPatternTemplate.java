@@ -74,7 +74,7 @@ public class IbexPatternTemplate {
     }
 
     public String toString() {
-        return "[IbexPatternTemplate of " + tggRule.getName() + "] \n  - " + eChangeWrappers.stream().map(EChangeWrapper::toString).collect(Collectors.joining(",\n  - "));
+        return "[IbexPatternTemplate of " + tggRule.getName() + "] \n  - " + eChangeWrappers.stream().map(eChangeWrapper -> eChangeWrapper.toString("      ")).collect(Collectors.joining(",\n  - "));
     }
 
     public Collection<EChangeWrapper> getEChangeWrappers() {
