@@ -54,6 +54,8 @@ Since this depends on eMoflon, we need at least a Java-21-SDK
   * IbexPatternConverter
   * VitruviusChangePatternMatcher
   * dafür das Something2Else-Modell bisschen erweitern und einfach die Patterns ins repo reinhauen. Das benötigte Ibex-Gedöns möglichst kleinhalten, Vitruvius auch.
+* Architektur-Review-Ergebnisse einarbeiten
+* Ibex-Gedöns schön machen (SyncDefault und so...)
 * Hier im Readme die Tabelle |EChange|Werte|EChangeWrapper| anlegen
 * Readme strukturieren und schreiben
   * Kapitel: Vitruvius-Anbindung, IbeX-Anbindung (Pattern Retrieval), Pattern to template Conversion, Pattern Template Matching, Pattern Matching Ibex
