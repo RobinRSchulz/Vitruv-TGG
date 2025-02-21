@@ -15,3 +15,26 @@ Since this depends on eMoflon, we need at least a Java-21-SDK
     ```
     mvnw clean install
     ```
+## todo 4 code review
+* TGGChangePropagationSpecification
+  * getAffectedElement --> Util.getAffectedElement
+  * findModel aufräumen
+  * propagateNonAtomicChange aufräumen
+  * logging reduzieren
+* VitruviusTGGResourceHandler
+  * Kommentare reduzieren
+* Paket-Restrukturierung
+  * ibex enthält nur die Klassen, die von Ibex-Klassen erben, die anderen Pakete werden hochgezogen.
+  * Util kommt ins root-Paket und wird zu einer Klasse.
+* patternconversion
+  * Umbenennung: VitruviusChangeTemplateSet sollte eher ChangeSequenceTemplateSet heißen und IbexPatternTemplate sollte ChangeSequenceTemplate heißen
+  * VitruviusChangeTemplateSet
+    * auskommentierter Code raus
+    * detaillierteres JavaDoc
+    * getAndInitRelevantIbexPatternTemplatesByEChange
+      * matches-Methode nutzen statt selber checken
+      * Algorithmus detaillierter erklären (Kommentare)
+* Hier im Readme die Tabelle |EChange|Werte|EChangeWrapper| anlegen
+* Readme strukturieren und schreiben
+  * Kapitel: Vitruvius-Anbindung, IbeX-Anbindung (Pattern Retrieval), Pattern to template Conversion, Pattern Template Matching, Pattern Matching Ibex
+  * 
