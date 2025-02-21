@@ -57,7 +57,8 @@ Since this depends on eMoflon, we need at least a Java-21-SDK
     * Auskommentierter Code zurückdrängen
     * hardgecodete Resource-URLs de-hardcoden ==> Util-Methode NSUriToPlatformUri(..) schreiben.
     * BlackInterpreter (PatternMatcher) im Konstruktor mitgeben
-  * SYNCDefault: BlackInterpreter einfach im zusätzlich angebotenen Konstruktor mit. (Default = VitruviusBackwardConversion...) So kann man in der CPS überschreiben, welchen PatternMatcher man will? 
+  * SYNCDefault: BlackInterpreter einfach im zusätzlich angebotenen Konstruktor mit. (Default = VitruviusBackwardConversion...) So kann man in der CPS überschreiben, welchen PatternMatcher man will?
+  * PfuschURLClassLoader: dokumentieren
 * Aufschreiben, was noch alles zu tun ist!
 * Alle TODOs überprüfen
 * GGF Unit-Tests schreiben für
