@@ -26,6 +26,7 @@ Since this depends on eMoflon, we need at least a Java-21-SDK
 * Paket-Restrukturierung
   * ibex enthält nur die Klassen, die von Ibex-Klassen erben, die anderen Pakete werden hochgezogen.
   * Util kommt ins root-Paket und wird zu einer Klasse.
+  * EChangeWrappers in Subpaket echange, um protected-Methdoen unerreichbar zu machen
 * patternconversion
   * Umbenennung: VitruviusChangeTemplateSet sollte eher ChangeSequenceTemplateSet heißen und IbexPatternTemplate sollte ChangeSequenceTemplate heißen
   * VitruviusChangeTemplateSet
@@ -34,6 +35,25 @@ Since this depends on eMoflon, we need at least a Java-21-SDK
     * getAndInitRelevantIbexPatternTemplatesByEChange
       * matches-Methode nutzen statt selber checken
       * Algorithmus detaillierter erklären (Kommentare)
+  * IbexPatternConverter
+    * auskommentiertes Zeug weitestgehend raus oder in extra-Methode
+    * logging fixen
+    * Algorithmus kommentieren
+    * Kommentare überprüfen, todos raus etc
+    * evtl umbenennen in IbexPatternToChangeSequenceTemplateConverter ?
+  * EChangeWrapper
+    * ganz viel Javadoc, an Methoden und an Felder.
+    * "parent" --> eher was in richtung "Vorlage"
+    * Javadocs überarbeiten
+    * s
+  * EChangeWrapper-Kinder
+    * Javadoc-Duplikate raus, nur das reinschreiben, was mehr gemacht wird.
+* Aufschreiben, was noch alles zu tun ist!
+* Alle TODOs überprüfen
+* GGF Unit-Tests schreiben für
+  * IbexPatternConverter
+  * VitruviusChangePatternMatcher
+  * dafür das Something2Else-Modell bisschen erweitern und einfach die Patterns ins repo reinhauen. Das benötigte Ibex-Gedöns möglichst kleinhalten, Vitruvius auch.
 * Hier im Readme die Tabelle |EChange|Werte|EChangeWrapper| anlegen
 * Readme strukturieren und schreiben
   * Kapitel: Vitruvius-Anbindung, IbeX-Anbindung (Pattern Retrieval), Pattern to template Conversion, Pattern Template Matching, Pattern Matching Ibex
