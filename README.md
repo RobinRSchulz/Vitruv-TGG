@@ -27,6 +27,10 @@ Since this depends on eMoflon, we need at least a Java-21-SDK
   * ibex enthält nur die Klassen, die von Ibex-Klassen erben, die anderen Pakete werden hochgezogen.
   * Util kommt ins root-Paket und wird zu einer Klasse.
   * EChangeWrappers in Subpaket echange, um protected-Methdoen unerreichbar zu machen
+* patternmatching
+  * PatternMatcher -> rememberInvokedPatternType -> man sollte nicht TggRules speichern, sondern TGGRules+die Stelle, an der der EChangeWrapper invoziert wurde. --> damit reicht eigentlich der Parent-EChangeWrapper, weil der immer nur in einem Template vorkommt.
+    --> macht das ganze auch intuitiver: hasBeenInvokedAsChildOf(eChange, eChangeWrapperParent)
+    --> Parent/Child-Konstruktion dokumentieren!
 * patternconversion
   * Umbenennung: VitruviusChangeTemplateSet sollte eher ChangeSequenceTemplateSet heißen und IbexPatternTemplate sollte ChangeSequenceTemplate heißen
   * VitruviusChangeTemplateSet
