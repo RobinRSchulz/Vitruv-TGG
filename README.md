@@ -52,6 +52,12 @@ Since this depends on eMoflon, we need at least a Java-21-SDK
     * s
   * EChangeWrapper-Kinder
     * Javadoc-Duplikate raus, nur das reinschreiben, was mehr gemacht wird.
+* ibex
+  * DefaultRegistrationHelper:
+    * Auskommentierter Code zurückdrängen
+    * hardgecodete Resource-URLs de-hardcoden ==> Util-Methode NSUriToPlatformUri(..) schreiben.
+    * BlackInterpreter (PatternMatcher) im Konstruktor mitgeben
+  * SYNCDefault: BlackInterpreter einfach im zusätzlich angebotenen Konstruktor mit. (Default = VitruviusBackwardConversion...) So kann man in der CPS überschreiben, welchen PatternMatcher man will? 
 * Aufschreiben, was noch alles zu tun ist!
 * Alle TODOs überprüfen
 * GGF Unit-Tests schreiben für
