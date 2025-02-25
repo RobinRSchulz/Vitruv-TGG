@@ -46,7 +46,7 @@ public class VitruviusChangePatternMatcher {
      * @return
      */
     public Set<ChangeSequenceTemplate> matchPatterns(ChangeSequenceTemplateSet changeSequenceTemplateSet) {
-        logger.debug("\n[VitruviusChangePatternMatcher] matching the following eChanges against " + changeSequenceTemplateSet.getPatternTemplates().size() + " pattern templates:");
+        logger.debug("\n[VitruviusChangePatternMatcher] matching the following eChanges against " + changeSequenceTemplateSet.getPatternTemplateParents().size() + " pattern templates:");
         vitruviusChange.getEChanges().forEach(eChange -> {logger.info("  - " + Util.eChangeToString(eChange));});
         // 1. compute all possible matches
         // TODO optimization: not compute all matches but mark EChanges (at the possible cost of missing sth?)

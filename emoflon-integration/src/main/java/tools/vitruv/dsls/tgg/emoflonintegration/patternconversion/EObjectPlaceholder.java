@@ -3,9 +3,9 @@ package tools.vitruv.dsls.tgg.emoflonintegration.patternconversion;
 import org.eclipse.emf.ecore.EObject;
 
 /**
- * A placeholder for an EObject for initializing after creating the EChangeWrappers.
+ * A placeholder for an ${@link EObject} for initializing after creating the ${@link tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange.EChangeWrapper}.
  *
- * This enables referencing the affected EObjects in multiple EChangeWrappers before it is present.
+ * This enables referencing the affected ${@link EObject}s in multiple EChangeWrappers before it is present.
  * This way, the pattern structure can be retained when multiple EChanges should be grouped together and share same entites.
  */
 public class EObjectPlaceholder {
@@ -15,7 +15,7 @@ public class EObjectPlaceholder {
     public EObjectPlaceholder() {  }
 
     /**
-     * Initialize this placeholder with the given eObject.
+     * Initialize this placeholder with the given ${@link EObject}.
      * This is an idempotent operation, but ${@link IllegalStateException} is thrown if this placeholder is already initialized but initialize is called with an EObject different to the one it already holds.
      * @param affectedEObject
      */
@@ -24,14 +24,23 @@ public class EObjectPlaceholder {
         this.affectedEObject = affectedEObject;
     }
 
+    /**
+     *
+     * @return whether this placeholder already holds an affected ${@link EObject}
+     */
     public boolean isInitialized() {
         return affectedEObject != null;
     }
 
+    /**
+     *
+     * @return the ${@link EObject} this placeholder holds.
+     */
     public EObject getAffectedEObject() {
         return affectedEObject;
     }
 
+    @Override
     public String toString() {
         return "[Placeholder:" + this.hashCode() + "]" + (this.isInitialized() ? (": " + eObjectToString(affectedEObject)) : "");
     }

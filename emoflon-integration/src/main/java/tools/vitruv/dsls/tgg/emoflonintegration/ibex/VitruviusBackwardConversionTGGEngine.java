@@ -24,7 +24,7 @@ import org.emoflon.ibex.tgg.operational.defaults.IbexOptions;
 import org.emoflon.ibex.tgg.operational.strategies.modules.IbexExecutable;
 import org.emoflon.smartemf.persistence.SmartEMFResourceFactoryImpl;
 import tools.vitruv.change.composite.description.VitruviusChange;
-import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.IbexPatternConverter;
+import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.IbexPatternToChangeSequenceTemplateConverter;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange.ChangeSequenceTemplate;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.ChangeSequenceTemplateSet;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternmatching.VitruviusChangePatternMatcher;
@@ -104,7 +104,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
         Timer.setEnabled(true);
         Timer.start();
 
-        this.changeSequenceTemplateSet = new IbexPatternConverter(this.ibexModel, this.ibexOptions.tgg.flattenedTGG()).convert();
+        this.changeSequenceTemplateSet = new IbexPatternToChangeSequenceTemplateConverter(this.ibexModel, this.ibexOptions.tgg.flattenedTGG()).convert();
         long stop = Timer.stop();
 
         logger.info("Pattern Conversion took " + (stop / 1000000d) + " ms");
