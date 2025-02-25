@@ -3,6 +3,7 @@ package tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternmatching;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EStructuralFeature;
+import org.eclipse.emf.ecore.resource.Resource;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.eobject.CreateEObject;
 import tools.vitruv.change.atomic.eobject.DeleteEObject;
@@ -86,8 +87,12 @@ public class Util {
     }
 
 
-    private static String eObjectToString(Object object) {
+    public static String eObjectToString(Object object) {
         EObject eObject = (EObject) object;
         return eObject.eClass().getName() + ":" + eObject.hashCode();
+    }
+
+    public static String resourceToString(Resource resource) {
+        return resource.getURI().toString();
     }
 }
