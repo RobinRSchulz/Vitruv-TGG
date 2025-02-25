@@ -1,13 +1,12 @@
-package tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternconversion;
+package tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange;
 
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
 import tools.vitruv.change.atomic.EChange;
-import tools.vitruv.change.atomic.feature.attribute.ReplaceSingleValuedEAttribute;
 import tools.vitruv.change.atomic.feature.reference.ReplaceSingleValuedEReference;
-import tools.vitruv.change.composite.description.VitruviusChange;
-import tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternmatching.Util;
+import tools.vitruv.dsls.tgg.emoflonintegration.Util;
+import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.EObjectPlaceholder;
 
 import java.util.HashSet;
 import java.util.Map;

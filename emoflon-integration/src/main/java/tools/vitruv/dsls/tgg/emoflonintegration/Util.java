@@ -1,8 +1,7 @@
-package tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternmatching;
+package tools.vitruv.dsls.tgg.emoflonintegration;
 
-import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.EStructuralFeature;
+import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.resource.Resource;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.eobject.CreateEObject;
@@ -94,5 +93,9 @@ public class Util {
 
     public static String resourceToString(Resource resource) {
         return resource.getURI().toString();
+    }
+
+    public static boolean isManyValued(EReference eReference) {
+        return eReference.getUpperBound() == -1;
     }
 }

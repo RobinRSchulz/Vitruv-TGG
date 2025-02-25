@@ -16,11 +16,9 @@ import tools.vitruv.change.propagation.impl.AbstractChangePropagationSpecificati
 import tools.vitruv.change.utils.ResourceAccess;
 import tools.vitruv.dsls.tgg.emoflonintegration.ibex.DefaultRegistrationHelper;
 import tools.vitruv.dsls.tgg.emoflonintegration.ibex.SYNCDefault;
-import tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternmatching.Util;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 

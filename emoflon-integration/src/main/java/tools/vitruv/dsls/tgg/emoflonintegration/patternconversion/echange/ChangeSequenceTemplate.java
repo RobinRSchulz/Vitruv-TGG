@@ -1,4 +1,4 @@
-package tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternconversion;
+package tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange;
 
 
 import language.TGGRule;
@@ -6,6 +6,7 @@ import org.eclipse.emf.ecore.EClass;
 import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXContextPattern;
 import org.emoflon.ibex.tgg.compiler.patterns.PatternSuffixes;
 import org.emoflon.ibex.tgg.compiler.patterns.PatternType;
+import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.EObjectPlaceholder;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -22,7 +23,7 @@ import java.util.stream.Collectors;
  * * todo -> Mal Lars fragen
  *
  */
-public class IbexPatternTemplate {
+public class ChangeSequenceTemplate {
 
     private Collection<EChangeWrapper> eChangeWrappers;
     /**
@@ -41,7 +42,7 @@ public class IbexPatternTemplate {
     /**
      * private constructor for copying the Template
      */
-    private IbexPatternTemplate(TGGRule tggRule, Map<PatternType, IBeXContextPattern> iBeXContextPatternMap, Collection<EChangeWrapper> eChangeWrappers, Map<EChangeWrapper, EChangeWrapper> parentToChildEChangeWrapperMap) {
+    private ChangeSequenceTemplate(TGGRule tggRule, Map<PatternType, IBeXContextPattern> iBeXContextPatternMap, Collection<EChangeWrapper> eChangeWrappers, Map<EChangeWrapper, EChangeWrapper> parentToChildEChangeWrapperMap) {
         this.tggRule = tggRule;
         this.iBeXContextPatternMap = iBeXContextPatternMap;
 
@@ -50,7 +51,7 @@ public class IbexPatternTemplate {
         initialize();
     }
 
-    public IbexPatternTemplate(TGGRule tggRule, Collection<IBeXContextPattern> iBeXContextPatterns, Collection<EChangeWrapper> eChangeWrappers) {
+    public ChangeSequenceTemplate(TGGRule tggRule, Collection<IBeXContextPattern> iBeXContextPatterns, Collection<EChangeWrapper> eChangeWrappers) {
         this.tggRule = tggRule;
         this.iBeXContextPatternMap = new HashMap<>();
         iBeXContextPatterns.forEach(iBeXContextPattern -> this.iBeXContextPatternMap.put(getPatternType(iBeXContextPattern), iBeXContextPattern));
@@ -116,7 +117,7 @@ public class IbexPatternTemplate {
      *
      * @return a deep copy with new wrappers and placeholders, while retaining the placeholder structure.
      */
-    public IbexPatternTemplate deepCopy() {
+    public ChangeSequenceTemplate deepCopy() {
         // copy the echange wrapper and their placeholder. Afterwards, we got NEW eChangeWrappers with OLD Placeholders.
         //TODO store a reference to the parent in the copy (maybe in the EChangeWrappers themselves?)
         Collection<EChangeWrapper> newEChangeWrappers = new LinkedList<>();
@@ -126,7 +127,7 @@ public class IbexPatternTemplate {
             oldToNewEChangeWrapperMap.put(eChangeWrapper, newEChangeWrapper);
             newEChangeWrappers.add(newEChangeWrapper);
         });
-        IbexPatternTemplate copiedTemplate = new IbexPatternTemplate(this.tggRule, this.iBeXContextPatternMap, newEChangeWrappers, oldToNewEChangeWrapperMap);
+        ChangeSequenceTemplate copiedTemplate = new ChangeSequenceTemplate(this.tggRule, this.iBeXContextPatternMap, newEChangeWrappers, oldToNewEChangeWrapperMap);
 
         // now, we can systematically replace the OLD placeholders in the NEW eChangeWrappers with NEW placeholders to achieve a deep copy
         // 1. Create a Map OLDplaceholder -> NEWPlaceholder

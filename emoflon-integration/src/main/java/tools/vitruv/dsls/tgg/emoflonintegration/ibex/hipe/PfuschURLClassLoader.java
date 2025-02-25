@@ -1,4 +1,4 @@
-package tools.vitruv.dsls.tgg.emoflonintegration.ibex;
+package tools.vitruv.dsls.tgg.emoflonintegration.ibex.hipe;
 
 import java.net.URL;
 import java.net.URLClassLoader;

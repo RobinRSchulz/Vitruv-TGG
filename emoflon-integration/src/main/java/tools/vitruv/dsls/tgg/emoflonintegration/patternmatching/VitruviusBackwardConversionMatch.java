@@ -1,4 +1,4 @@
-package tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternmatching;
+package tools.vitruv.dsls.tgg.emoflonintegration.patternmatching;
 
 import org.emoflon.ibex.common.operational.SimpleMatch;
 import org.emoflon.ibex.tgg.operational.matches.SimpleTGGMatch;

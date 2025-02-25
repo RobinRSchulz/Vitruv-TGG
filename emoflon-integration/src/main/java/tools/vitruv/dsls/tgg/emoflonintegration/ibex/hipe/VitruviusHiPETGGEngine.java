@@ -1,9 +1,8 @@
-package tools.vitruv.dsls.tgg.emoflonintegration.ibex;
+package tools.vitruv.dsls.tgg.emoflonintegration.ibex.hipe;
 
 import hipe.engine.HiPEContentAdapter;
 import hipe.engine.IHiPEEngine;
 import hipe.engine.config.HiPEOptions;
-import hipe.network.HiPENetwork;
 import org.apache.log4j.Logger;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource;
@@ -13,8 +12,6 @@ import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXModel;
 import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXPatternSet;
 import org.emoflon.ibex.tgg.compiler.patterns.PatternSuffixes;
 import org.emoflon.ibex.tgg.compiler.patterns.PatternUtil;
-import org.emoflon.ibex.tgg.operational.benchmark.TimeRegistry;
-import org.emoflon.ibex.tgg.operational.benchmark.Times;
 import org.emoflon.ibex.tgg.operational.defaults.IbexOptions;
 import org.emoflon.ibex.tgg.operational.strategies.modules.IbexExecutable;
 import org.emoflon.ibex.tgg.runtime.hipe.HiPETGGEngine;
@@ -28,8 +25,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
 import java.util.stream.Collectors;
 
 /**

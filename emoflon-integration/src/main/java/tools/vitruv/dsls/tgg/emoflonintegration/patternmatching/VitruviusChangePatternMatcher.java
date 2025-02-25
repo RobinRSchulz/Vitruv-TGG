@@ -1,4 +1,4 @@
-package tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternmatching;
+package tools.vitruv.dsls.tgg.emoflonintegration.patternmatching;
 
 import language.TGGRule;
 import org.apache.log4j.Logger;
@@ -6,16 +6,16 @@ import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.composite.description.VitruviusChange;
-import tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternconversion.EChangeWrapper;
-import tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternconversion.IbexPatternTemplate;
-import tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternconversion.VitruviusChangeTemplateSet;
+import tools.vitruv.dsls.tgg.emoflonintegration.Util;
+import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange.EChangeWrapper;
+import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange.ChangeSequenceTemplate;
+import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.ChangeSequenceTemplateSet;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 /**
- * Calculates a matching of a change sequence (${@link VitruviusChange}) against a set of converted TGG patterns (${@link VitruviusChangeTemplateSet}).
+ * Calculates a matching of a change sequence (${@link VitruviusChange}) against a set of converted TGG patterns (${@link ChangeSequenceTemplateSet}).
  *
  */
 public class VitruviusChangePatternMatcher {
@@ -42,17 +42,17 @@ public class VitruviusChangePatternMatcher {
      * * Woche vorher Code den Teilnehmern schicken!
      * * im Wiki Zeug lesen.
      *
-     * @param vitruviusChangeTemplateSet
+     * @param changeSequenceTemplateSet
      * @return
      */
-    public Set<IbexPatternTemplate> matchPatterns(VitruviusChangeTemplateSet vitruviusChangeTemplateSet) {
-        logger.debug("\n[VitruviusChangePatternMatcher] matching the following eChanges against " + vitruviusChangeTemplateSet.getPatternTemplates().size() + " pattern templates:");
+    public Set<ChangeSequenceTemplate> matchPatterns(ChangeSequenceTemplateSet changeSequenceTemplateSet) {
+        logger.debug("\n[VitruviusChangePatternMatcher] matching the following eChanges against " + changeSequenceTemplateSet.getPatternTemplates().size() + " pattern templates:");
         vitruviusChange.getEChanges().forEach(eChange -> {logger.info("  - " + Util.eChangeToString(eChange));});
         // 1. compute all possible matches
         // TODO optimization: not compute all matches but mark EChanges (at the possible cost of missing sth?)
-        Set<IbexPatternTemplate> allInvokedPatternTemplates = new HashSet<>();
+        Set<ChangeSequenceTemplate> allInvokedPatternTemplates = new HashSet<>();
         vitruviusChange.getEChanges().forEach(eChange -> {
-            Set<IbexPatternTemplate> patternTemplates = vitruviusChangeTemplateSet.getAndInitRelevantIbexPatternTemplatesByEChange(eChange);
+            Set<ChangeSequenceTemplate> patternTemplates = changeSequenceTemplateSet.getAndInitRelevantIbexPatternTemplatesByEChange(eChange);
             // to avoid duplicates, remember which pattern types are already invoked for the current eChange.
             removeAlreadyInvokedPatternTypes(eChange, patternTemplates);
             rememberInvokedPatternTypes(eChange, patternTemplates);
@@ -104,7 +104,7 @@ public class VitruviusChangePatternMatcher {
         return null;
     }
 
-    private void visualizeÜberdeckung(Set<IbexPatternTemplate> überdeckung) {
+    private void visualizeÜberdeckung(Set<ChangeSequenceTemplate> überdeckung) {
         logger.info(
                 "[VitruviusChangePatternMatcher] Pattern Coverage of the given Vitruvius change:\n" +
                 "| # Patterns covering | EChange                                    |\n" +
@@ -128,18 +128,18 @@ public class VitruviusChangePatternMatcher {
                 });
     }
 
-    private void removeAlreadyInvokedPatternTypes(EChange<EObject> eChange, Set<IbexPatternTemplate> ibexPatternTemplates) {
-        ibexPatternTemplates.removeAll(
-                ibexPatternTemplates.stream()
+    private void removeAlreadyInvokedPatternTypes(EChange<EObject> eChange, Set<ChangeSequenceTemplate> changeSequenceTemplates) {
+        changeSequenceTemplates.removeAll(
+                changeSequenceTemplates.stream()
                         .filter(ibexPatternTemplate -> alreadyInvokedPatternTypes.containsKey(eChange) && alreadyInvokedPatternTypes.get(eChange).contains(ibexPatternTemplate.getTggRule()))
                         .collect(Collectors.toSet())
         );
     }
 
-    private void rememberInvokedPatternTypes(EChange<EObject> eChange, Collection<IbexPatternTemplate> ibexPatternTemplates) {
-        ibexPatternTemplates.forEach(ibexPatternTemplate -> {rememberInvokedPatternType(eChange, ibexPatternTemplate);});
+    private void rememberInvokedPatternTypes(EChange<EObject> eChange, Collection<ChangeSequenceTemplate> changeSequenceTemplates) {
+        changeSequenceTemplates.forEach(ibexPatternTemplate -> {rememberInvokedPatternType(eChange, ibexPatternTemplate);});
     }
-    private void rememberInvokedPatternType(EChange<EObject> eChange, IbexPatternTemplate ibexPatternTemplate) {
-        this.alreadyInvokedPatternTypes.computeIfAbsent(eChange, k -> new HashSet<>()).add(ibexPatternTemplate.getTggRule());
+    private void rememberInvokedPatternType(EChange<EObject> eChange, ChangeSequenceTemplate changeSequenceTemplate) {
+        this.alreadyInvokedPatternTypes.computeIfAbsent(eChange, k -> new HashSet<>()).add(changeSequenceTemplate.getTggRule());
     }
 }

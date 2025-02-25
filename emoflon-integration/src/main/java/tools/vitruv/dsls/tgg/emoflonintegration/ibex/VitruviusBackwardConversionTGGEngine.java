@@ -24,10 +24,10 @@ import org.emoflon.ibex.tgg.operational.defaults.IbexOptions;
 import org.emoflon.ibex.tgg.operational.strategies.modules.IbexExecutable;
 import org.emoflon.smartemf.persistence.SmartEMFResourceFactoryImpl;
 import tools.vitruv.change.composite.description.VitruviusChange;
-import tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternconversion.IbexPatternConverter;
-import tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternconversion.IbexPatternTemplate;
-import tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternconversion.VitruviusChangeTemplateSet;
-import tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternmatching.VitruviusChangePatternMatcher;
+import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.IbexPatternConverter;
+import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange.ChangeSequenceTemplate;
+import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.ChangeSequenceTemplateSet;
+import tools.vitruv.dsls.tgg.emoflonintegration.patternmatching.VitruviusChangePatternMatcher;
 
 import java.io.File;
 import java.io.IOException;
@@ -73,7 +73,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     private IBeXModel ibexModel;
     private IbexExecutable ibexExecutable;
 
-    private VitruviusChangeTemplateSet vitruviusChangeTemplateSet;
+    private ChangeSequenceTemplateSet changeSequenceTemplateSet;
     private VitruviusChange vitruviusChange;
     private final Times times;
 
@@ -104,7 +104,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
         Timer.setEnabled(true);
         Timer.start();
 
-        this.vitruviusChangeTemplateSet = new IbexPatternConverter(this.ibexModel, this.ibexOptions.tgg.flattenedTGG()).convert();
+        this.changeSequenceTemplateSet = new IbexPatternConverter(this.ibexModel, this.ibexOptions.tgg.flattenedTGG()).convert();
         long stop = Timer.stop();
 
         logger.info("Pattern Conversion took " + (stop / 1000000d) + " ms");
@@ -148,7 +148,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
         Timer.start();
 
         // new forward matches
-        Set<IbexPatternTemplate> matches = new VitruviusChangePatternMatcher(vitruviusChange).matchPatterns(vitruviusChangeTemplateSet);
+        Set<ChangeSequenceTemplate> matches = new VitruviusChangePatternMatcher(vitruviusChange).matchPatterns(changeSequenceTemplateSet);
         long stop = Timer.stop();
         logger.info("Pattern Matching took " + (stop / 1000000d) + " ms");
         this.iMatchObserver.addMatches(convertMatches(matches));
@@ -179,7 +179,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
         return this.times;
     }
 
-    private Collection<IMatch> convertMatches(Set<IbexPatternTemplate> matches) {
+    private Collection<IMatch> convertMatches(Set<ChangeSequenceTemplate> matches) {
         throw new RuntimeException("TODO implement");
     }
     private Collection<IMatch> getBrokenMatches() {

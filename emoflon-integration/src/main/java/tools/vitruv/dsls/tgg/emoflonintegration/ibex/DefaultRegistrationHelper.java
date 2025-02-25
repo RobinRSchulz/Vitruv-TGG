@@ -7,9 +7,8 @@ import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.emoflon.ibex.tgg.compiler.defaults.IRegistrationHelper;
 import org.emoflon.ibex.tgg.operational.defaults.IbexOptions;
 import org.emoflon.ibex.tgg.operational.strategies.modules.IbexExecutable;
-import org.emoflon.ibex.tgg.runtime.democles.DemoclesTGGEngine;
-import org.emoflon.ibex.tgg.runtime.hipe.HiPETGGEngine;
 import tools.vitruv.change.composite.description.VitruviusChange;
+import tools.vitruv.dsls.tgg.emoflonintegration.ibex.hipe.VitruviusHiPETGGEngine;
 
 import java.io.File;
 import java.io.IOException;

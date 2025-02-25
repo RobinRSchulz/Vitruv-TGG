@@ -1,4 +1,4 @@
-package tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternconversion;
+package tools.vitruv.dsls.tgg.emoflonintegration.patternconversion;
 
 import org.eclipse.emf.ecore.EObject;
 

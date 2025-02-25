@@ -1,25 +1,29 @@
-package tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternconversion;
+package tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange;
 
 import org.apache.log4j.Logger;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import tools.vitruv.change.atomic.EChange;
-import tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternmatching.Util;
+import tools.vitruv.dsls.tgg.emoflonintegration.Util;
+import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.EObjectPlaceholder;
 
 import java.util.Map;
 import java.util.Set;
 
 /**
  *
- * Represents an EChange that affects an object which is also affected by other EChanges. That is realized via ${@link EObjectPlaceholder}s which occur in multiple EChangeWrappers to be able to correctly map the pattern structure.
+ * Represents an EChange that affects an object which is also affected by other EChanges.
+ * That is realized via ${@link EObjectPlaceholder}s which occur in multiple EChangeWrappers to be able to correctly map the pattern structure.<br/><br/>
  *
- * Enables referencing the affected EObjects in multiple EChangeWrappers before it is present.
- * This way, the pattern structure can be retained when multiple EChanges should be grouped together and share same entites.
- * E.g. a CreateEObject and a InsertRootEObject EChange should reference the same EObject.
- * Before matching the PatternTemplate to the actual Change sequence, this EObject cannot be known.
+ * Enables referencing the affected EObjects in multiple EChangeWrappers before it is present.<br/>
+ * This way, the pattern structure can be retained when multiple EChanges should be grouped together and share same entites.<br/>
+ * E.g. a CreateEObject and a InsertRootEObject EChange should reference the same EObject.<br/>
+ * Before matching the PatternTemplate to the actual Change sequence, this EObject cannot be known.<br/><br/>
  *
- * Subclasses of this Placeholder represent different sets of parameters that EChanges can have.
- * We chose to not make a bijective mapping of all EChange subclasses to EChangeWrapper classes but instead group classes with the same set of parameters/ EObjects.
+ * Subclasses of this Placeholder represent different sets of parameters that EChanges can have.<br/>
+ * We chose to not make a bijective mapping of all EChange subclasses to EChangeWrapper classes but instead group classes with the same set of parameters/ EObjects.<br/><br/>
+ *
+ * EChangeWrappers are placed their own package, because  the protected methods should be unreachable by the classes using the EChangeWrappers.
  */
 public abstract class EChangeWrapper {
 
@@ -112,7 +116,7 @@ public abstract class EChangeWrapper {
      * @param eChange
      * @return whether this eChange matches this eChangeWrapper.
      *         Obacht! This EChangeWrapper might be partly initialized, as some placeholders could have already been filled
-     *         by initializing another EChangeWrapper belonging to the same ${@link IbexPatternTemplate} as this one.
+     *         by initializing another EChangeWrapper belonging to the same ${@link ChangeSequenceTemplate} as this one.
      *         This introduces the requirement for matching not only the "statical properties" (meaning EClasses and EStructuralFeatures)
      *         but also checking whether the <b>already initialized</b> placeholders match the echange!
      *         TODO implement this!
@@ -124,7 +128,7 @@ public abstract class EChangeWrapper {
      * @param eChange
      * @return whether this eChange matches this eChangeWrapper.
      *         Obacht! This EChangeWrapper might be partly initialized, as some placeholders could have already been filled
-     *         by initializing another EChangeWrapper belonging to the same ${@link IbexPatternTemplate} as this one.
+     *         by initializing another EChangeWrapper belonging to the same ${@link ChangeSequenceTemplate} as this one.
      *         This introduces the requirement for matching not only the "statical properties" (meaning EClasses and EStructuralFeatures)
      *         but also checking whether the <b>already initialized</b> placeholders match the echange!
      */
@@ -135,7 +139,7 @@ public abstract class EChangeWrapper {
     /**
      * Initialize everything that doesn't concern setting the eChange and filling the affectedElementPlaceholder.
      * Obacht! This EChangeWrapper might be partly initialized, as some placeholders could have already been filled
-     * by initializing another EChangeWrapper belonging to the same ${@link IbexPatternTemplate} as this one.
+     * by initializing another EChangeWrapper belonging to the same ${@link ChangeSequenceTemplate} as this one.
      * Implementations need to account for that by throwing ${@link IllegalStateException}. TODO implement that!
      * @param eChange
      */
@@ -144,7 +148,7 @@ public abstract class EChangeWrapper {
     /**
      * Initialize this wrapper with an actual eChange, by filling all this wrapper's placeholders.
      * Obacht! This EChangeWrapper might be partly initialized, as some placeholders could have already been filled
-     * by initializing another EChangeWrapper belonging to the same ${@link IbexPatternTemplate} as this one.
+     * by initializing another EChangeWrapper belonging to the same ${@link ChangeSequenceTemplate} as this one.
      * This is intended and this method accounts for that.
      * It is intended that the caller calls ${@code matches()} first.
      * This method will throw ${@link IllegalStateException}, if a placeholder that already contains something would be overwritten by applying the given eChange.

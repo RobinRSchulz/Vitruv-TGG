@@ -1,4 +1,4 @@
-package tools.vitruv.dsls.tgg.emoflonintegration.ibex.patternconversion;
+package tools.vitruv.dsls.tgg.emoflonintegration.patternconversion;
 
 import language.*;
 import org.apache.log4j.Logger;
@@ -8,6 +8,8 @@ import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXModel;
 import tools.vitruv.change.atomic.eobject.EobjectPackage;
 import tools.vitruv.change.atomic.feature.reference.ReferencePackage;
 import tools.vitruv.change.atomic.root.RootPackage;
+import tools.vitruv.dsls.tgg.emoflonintegration.Util;
+import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -16,14 +18,14 @@ public class IbexPatternConverter {
 
     protected static final Logger logger = Logger.getRootLogger();
 
-    private IBeXModel iBeXModel;
+    private final IBeXModel iBeXModel;
     private final TGG tgg;
     /**
      * Remember placeholders because some need to be referenced by multiple EChangeWrappers.
      */
     private final Map<TGGRuleNode, EObjectPlaceholder> nodeToPlaceholderMap;
     /**
-     * We need that because patterns are DAGs, not trees and we want each node to be visited exactly once.
+     * We need that because patterns are DAGs, not trees, and we want each node to be visited exactly once.
      */
     private final Set<TGGRuleNode> graphElementVisitedSet;
     private Collection<EChangeWrapper> eChangeWrappers;
@@ -37,7 +39,7 @@ public class IbexPatternConverter {
         this.eChangeWrappers = new LinkedList<>();
     }
 
-    public VitruviusChangeTemplateSet convert() {
+    public ChangeSequenceTemplateSet convert() {
         // TODO implement
         // TODO don't return a list but a smaaaart datastructure
         // todo ibexPatterns mit nem Debugger die Struktur rausfinden!
@@ -70,7 +72,7 @@ public class IbexPatternConverter {
 //        });
 
         // actual conversion! todo delete the above debug crap
-        Collection<IbexPatternTemplate> patternTemplates = this.tgg.getRules().stream().map(this::parseRule).collect(Collectors.toList());
+        Collection<ChangeSequenceTemplate> patternTemplates = this.tgg.getRules().stream().map(this::parseRule).collect(Collectors.toList());
         patternTemplates.forEach(logger::info);
 //        try {
 //            Thread.sleep(20000);
@@ -78,15 +80,15 @@ public class IbexPatternConverter {
 //            throw new RuntimeException(e);
 //        }
 //        throw new RuntimeException("Make here weiter!");
-        return new VitruviusChangeTemplateSet(patternTemplates);
+        return new ChangeSequenceTemplateSet(patternTemplates);
     }
 
-    private IbexPatternTemplate parseRule(final TGGRule rule) {
+    private ChangeSequenceTemplate parseRule(final TGGRule rule) {
         eChangeWrappers = new HashSet<>();
         filterNodes(rule, BindingType.CONTEXT, DomainType.SRC).forEach(this::parseContextNode);
         filterNodes(rule, BindingType.CREATE, DomainType.SRC).forEach(this::parseCreateNode);
 
-        return new IbexPatternTemplate(rule, getRelatedPatterns(rule) ,eChangeWrappers);
+        return new ChangeSequenceTemplate(rule, getRelatedPatterns(rule) ,eChangeWrappers);
     }
 
     private void parseCreateNode(TGGRuleNode ruleNode) {
