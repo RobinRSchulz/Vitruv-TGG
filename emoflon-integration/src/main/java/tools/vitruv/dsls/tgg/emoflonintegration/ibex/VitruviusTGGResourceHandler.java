@@ -11,15 +11,13 @@ public class VitruviusTGGResourceHandler extends TGGResourceHandler {
     protected static final Logger logger = Logger.getRootLogger();
 
     //duplicate to avoid possible conflicts. Resources should only be present after loadModels was called.
-    private Resource sourceToBeLoaded;
-    private Resource targetToBeLoaded;
-    private Resource corrToBeLoaded;
+    private final Resource sourceToBeLoaded;
+    private final Resource targetToBeLoaded;
 
-    public VitruviusTGGResourceHandler(Resource source, Resource target, Resource corr) throws IOException {
+    public VitruviusTGGResourceHandler(Resource source, Resource target) throws IOException {
         super();
         this.sourceToBeLoaded = source;
         this.targetToBeLoaded = target;
-        this.corrToBeLoaded = corr;
         // load protocol from file.
     }
 
@@ -33,11 +31,8 @@ public class VitruviusTGGResourceHandler extends TGGResourceHandler {
         this.rs.getResources().add(source);
         this.rs.getResources().add(target);
 
-        // for now, corr is also loaded from the ibex project (in the same way as the superclass does it
-//        corr = corrToBeLoaded;
+        // corr and protocol come from the ibex project (like it is done in the superclass)
         corr = this.createResource(this.options.project.path() + "/instances/corr.xmi");
-
-        // Load protocol in the same way as the superclass
         protocol = createResource(options.project.path() + "/instances/protocol.xmi");
     }
 
@@ -49,23 +44,16 @@ public class VitruviusTGGResourceHandler extends TGGResourceHandler {
 
     @Override
     public EPackage loadAndRegisterCorrMetamodel() throws IOException {
-        logger.info("Called loadAndRegisterMetamodel");
-        // TODO
         /*
             Correspondence Metamodel in eMoflon. This cannot be generated from Vitruvius, because it means a different thing.
-            Here, the correspondence metamodel is defined by the Schema.tgg.
+            Here, the correspondence metamodel is defined by the Schema.tgg in the IbeX eclipse project.
             This file has to be defined by the methodologist.
-            Further, it seems to be converted to ecore somehow and somewhere...
 
-            Result: In a huge clusterfuck, this is done by the Editor on save.
+            Result: In an ununderstandable manner, the conversion Schema.tgg -> ecore file is done by the Eclipse Editor on save.
             TODO if zu viel Zeit and/or need or want for getting rid of eclipse: do it here, so the methodologist does not have to click "save" in the eclipse editor.
-            TODO Download eclipse + 5 mrd IBeX-Addons + wurschtel the project hier irgendwie rein
-
          */
         EPackage corrMetamodel = super.loadAndRegisterCorrMetamodel();
-        logger.info("loaded corr metamodel: " + corrMetamodel);
-        logger.info("this.options.tgg.corrMetamodel(): " + this.options.tgg.corrMetamodel());
+        logger.debug("loaded corr metamodel: " + corrMetamodel);
         return corrMetamodel;
-//        return super.loadAndRegisterCorrMetamodel();
     }
 }

@@ -71,7 +71,7 @@ public class DefaultRegistrationHelper implements IRegistrationHelper {
         IbexOptions ibexOptions = new IbexOptions();
         // Handle resources with Vitruvius resources, not actual files.
         try {
-            ibexOptions.resourceHandler(new VitruviusTGGResourceHandler(source, target, corr));
+            ibexOptions.resourceHandler(new VitruviusTGGResourceHandler(source, target));
         } catch (IOException e) { throw new RuntimeException("Couldn't load TGG resources by using the models already loaded by Vitruvius! "); }
 
         ibexOptions // TODO here, insert the pattern matcher
