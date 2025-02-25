@@ -26,15 +26,11 @@ public class SYNCDefault extends SYNC {
     }
 
     /**
-     * Propagate {@link sourceChange}s in the source model to the {@link targetModel}.
+     * Propagate changes in the source model to the target model.
      * <br/>
      * Changes are expected to be recorded by the caller. See {@link tools.vitruv.change.propagation.impl.ChangePropagator}
-     * TODO redundant to provide source and target, they already come from registrationHelper...
-     * @param sourceModel
-     * @param targetModel
-     * @param sourceChange
      */
-    public void propagateChanges(Resource sourceModel, Resource targetModel, VitruviusChange<EObject> sourceChange) throws IOException {
+    public void propagateChanges() throws IOException {
         /* TODO here, we ignore the VitruviusChange.
             1. Make schön! Ideas:
                 * Create a superclass which defines this method.

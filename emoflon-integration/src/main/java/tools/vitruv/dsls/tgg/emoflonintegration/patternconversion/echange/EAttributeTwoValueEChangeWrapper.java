@@ -90,7 +90,7 @@ public class EAttributeTwoValueEChangeWrapper extends EChangeWrapper{
     protected EChangeWrapper shallowCopy() {
         EChangeWrapper copy = new EAttributeTwoValueEChangeWrapper(this.getEChangeType(), this.getAffectedElementEClass(), this.getAffectedElementPlaceholder(),
                 this.affectedEAttribute, this.oldValuePlaceholder, this.newValuePlaceholder);
-        copy.setParent(this);
+        copy.setOriginal(this);
         return copy;
     }
     /**

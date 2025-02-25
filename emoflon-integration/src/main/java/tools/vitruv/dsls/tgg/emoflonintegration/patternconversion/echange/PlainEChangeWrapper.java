@@ -51,7 +51,7 @@ public class PlainEChangeWrapper extends EChangeWrapper {
     @Override
     protected EChangeWrapper shallowCopy() {
         PlainEChangeWrapper copy = new PlainEChangeWrapper(this.getEChangeType(), this.getAffectedElementEClass(), this.getAffectedElementPlaceholder());
-        copy.setParent(this);
+        copy.setOriginal(this);
         return copy;
     }
     /**

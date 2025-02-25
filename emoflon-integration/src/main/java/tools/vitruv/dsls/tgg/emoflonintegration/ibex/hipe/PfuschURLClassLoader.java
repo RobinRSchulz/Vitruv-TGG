@@ -6,6 +6,12 @@ import java.net.URLStreamHandlerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ *
+ * This is not part of the thesis and it is unsure if this is even used in the evaluation...
+ *
+ * A classloader to maybe solve a problem that probably never existed. TODO try out and maybe remove
+ */
 public class PfuschURLClassLoader extends URLClassLoader {
     private final Map<String, Class<?>> packagelessClassNameToClass = new HashMap<>();
     public PfuschURLClassLoader(URL[] urls, ClassLoader parent) {

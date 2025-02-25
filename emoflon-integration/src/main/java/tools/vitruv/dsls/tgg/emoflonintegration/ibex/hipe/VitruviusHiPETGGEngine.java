@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 
 /**
  * Ibex initializes HiPE in a way that doesnt allow the flexibility for it to be called "as a library". So we override and override and override...
+ * This is not part of the thesis and it is unsure if this is even used in the evaluation...
  */
 public class VitruviusHiPETGGEngine extends HiPETGGEngine {
 

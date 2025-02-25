@@ -11,19 +11,18 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- *
- * Represents an EChange that affects an object which is also affected by other EChanges.
+ * Represents an EChange that affects an object (or more, in subclasses) which is also affected by other EChanges.
  * That is realized via ${@link EObjectPlaceholder}s which occur in multiple EChangeWrappers to be able to correctly map the pattern structure.<br/><br/>
  *
  * Enables referencing the affected EObjects in multiple EChangeWrappers before it is present.<br/>
- * This way, the pattern structure can be retained when multiple EChanges should be grouped together and share same entites.<br/>
+ * This way, the pattern structure can be retained when multiple EChanges should be grouped together and share same entities.<br/>
  * E.g. a CreateEObject and a InsertRootEObject EChange should reference the same EObject.<br/>
  * Before matching the PatternTemplate to the actual Change sequence, this EObject cannot be known.<br/><br/>
  *
  * Subclasses of this Placeholder represent different sets of parameters that EChanges can have.<br/>
  * We chose to not make a bijective mapping of all EChange subclasses to EChangeWrapper classes but instead group classes with the same set of parameters/ EObjects.<br/><br/>
  *
- * EChangeWrappers are placed their own package, because  the protected methods should be unreachable by the classes using the EChangeWrappers.
+ * EChangeWrappers are placed in their own package, because  the protected methods should be unreachable by the classes using the EChangeWrappers.
  */
 public abstract class EChangeWrapper {
 
@@ -38,14 +37,14 @@ public abstract class EChangeWrapper {
     private EObjectPlaceholder affectedElementPlaceholder;
 
     /**
-     * This is only filled in pattern instantiations. It refers to the "original" EChangeWrapper and is used in pattern matching.
+     * This is only filled in pattern instantiations. It refers to the "original" EChangeWrapper from the ${@link tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.ChangeSequenceTemplateSet} and is used in pattern matching.
      */
-    private EChangeWrapper parent;
+    private EChangeWrapper original;
 
     private boolean isInitialized;
 
     /**
-     * We use Eclasses instead of Classes where there is no difference because
+     * We use EClasses instead of Classes where there is no difference because
      *   * we stay in the "ecore-world"
      *   * no instanceof, which some don't like
      *   * maybe performance in switch-Statements?
@@ -61,26 +60,42 @@ public abstract class EChangeWrapper {
         this.isInitialized = false;
     }
 
-    public void setEChange(EChange eChange) {
+    /**
+     * Initialize this EChangeWrapper with the given EChange if it has the correct type. Else, throw.
+     */
+    public void setEChange(EChange<EObject> eChange) {
         // ye great old instanceof
         if (!eChangeType.isInstance(eChange)) {
-            throw new RuntimeException("eChange is not of type " + eChange.eClass().getName());
+            throw new IllegalStateException("eChange is not of type " + eChange.eClass().getName());
         }
         this.eChange = eChange;
     }
 
-    public EChange getEChange() {
+    /**
+     * @return the ${@link EChange} this wrapper holds if it holds one.
+     */
+    public EChange<EObject> getEChange() {
         return eChange;
     }
 
+    /**
+     * @return the type of ${@link EChange} this wrapper can hold.
+     */
     public EClass getEChangeType() {
         return eChangeType;
     }
 
+    /**
+     * @return the type the "main" element (affectedElement) that an ${@link EChange} which this wrapper can hold will affect.
+     */
     public EClass getAffectedElementEClass() {
         return affectedElementEClass;
     }
 
+    /**
+     * @return the placeholder for the affectedElement of the ${@link EChange} that this wrapper represents or will represent.
+     * This placeholder might be initialized although this Wrapper is not yet mapped to an ${@link EChange}. That is intentional.
+     */
     public EObjectPlaceholder getAffectedElementPlaceholder() {
         return affectedElementPlaceholder;
     }
@@ -88,17 +103,20 @@ public abstract class EChangeWrapper {
         this.affectedElementPlaceholder = newAffectedElementPlaceholder;
     }
 
-    protected void setParent(EChangeWrapper parent) {
-        this.parent = parent;
+    /**
+     * Remember the original EChangeWrapper that this is a copy of. todo maybe remove.
+     */
+    protected void setOriginal(EChangeWrapper original) {
+        this.original = original;
     }
-    public EChangeWrapper getParent() {
-        return this.parent;
+    public EChangeWrapper getOriginal() {
+        return this.original;
     }
 
     /**
-     * This is a basic check which every matches-implementation should use.
+     * This is a helper for this::matches()
      * @param eChange
-     * @return whether the eChange type and affectedEObject type of this and the eChange match.
+     * @return whether the eChange type and affectedEObject type of this and the eChange match. If the affectedElementPlaceholder is initialized, this is matched, too.
      */
     private boolean eChangeTypeAndAffectedEObjectMatches(EChange<EObject> eChange) {
         final EObject affectedEObjectFromEChange = Util.getAffectedEObjectFromEChange(eChange);
@@ -119,7 +137,6 @@ public abstract class EChangeWrapper {
      *         by initializing another EChangeWrapper belonging to the same ${@link ChangeSequenceTemplate} as this one.
      *         This introduces the requirement for matching not only the "statical properties" (meaning EClasses and EStructuralFeatures)
      *         but also checking whether the <b>already initialized</b> placeholders match the echange!
-     *         TODO implement this!
      */
     protected abstract boolean extendedDataMatches(EChange<EObject> eChange);
 

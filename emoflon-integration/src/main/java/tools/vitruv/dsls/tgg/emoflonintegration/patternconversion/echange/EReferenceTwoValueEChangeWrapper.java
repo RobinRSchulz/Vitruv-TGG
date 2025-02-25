@@ -89,7 +89,7 @@ public class EReferenceTwoValueEChangeWrapper extends EChangeWrapper {
     protected EChangeWrapper shallowCopy() {
         EChangeWrapper copy = new EReferenceTwoValueEChangeWrapper(this.getEChangeType(), this.getAffectedElementEClass(), this.getAffectedElementPlaceholder(),
                 this.affectedEReference, this.oldValuePlaceholder, this.newValuePlaceholder);
-        copy.setParent(this);
+        copy.setOriginal(this);
         return copy;
     }
     /**
