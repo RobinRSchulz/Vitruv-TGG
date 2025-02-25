@@ -48,9 +48,9 @@ public class ChangeSequenceTemplateSet {
                     ibexPatternTemplate.getEChangeWrappers().stream()
                             .filter(eChangeWrapper ->
                                     // das reicht nicht! TODO ich muss eine matches(EChange, VitruviusChange)-Methode in EChangeWrapper implementieren, die dann Klassenabhängig checkt!
-//                                    eChangeWrapper.matches(eChange))
-                                    eChangeWrapper.getEChangeType().equals(eChange.eClass()) &&
-                                    eChangeWrapper.getAffectedElementEClass().equals(Util.getAffectedEObjectFromEChange(eChange).eClass()))
+                                    eChangeWrapper.matches(eChange))
+//                                    eChangeWrapper.getEChangeType().equals(eChange.eClass()) &&
+//                                    eChangeWrapper.getAffectedElementEClass().equals(Util.getAffectedEObjectFromEChange(eChange).eClass()))
                             .forEach(eChangeWrapper -> {
                                 // we got a pattern with >= 1 eChangewrappers matching the eChange. We now want to create one invoked IbexPatternTemplate with the respective eChangeWrapper already initialized.
                                 // thus, we initialize the one eChangeWrapper here
