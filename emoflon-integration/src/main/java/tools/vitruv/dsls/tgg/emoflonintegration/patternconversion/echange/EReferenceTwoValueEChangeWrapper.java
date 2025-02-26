@@ -14,6 +14,8 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
+ * Wraps EChanges that represent a replacement of an old value of an EReference of an EObject with a new Value.<br/><br/>
+ *
  * Applicable to the following types of EChange:
  * <li> ${@link tools.vitruv.change.atomic.feature.reference.ReplaceSingleValuedEReference}
  */
@@ -24,10 +26,6 @@ public class EReferenceTwoValueEChangeWrapper extends EChangeWrapper {
     private EObjectPlaceholder newValuePlaceholder;
 
     /**
-     * We use Eclasses instead of Classes where there is no difference because
-     * * we stay in the "ecore-world"
-     * * no instanceof, which some don't like
-     * * maybe performance in switch-Statements?
      *
      * @param eChangeType                this template can only be matched against eChanges of this type.
      * @param affectedElementEClass      this template can only be matched against eChanges whose affectedElements are instances of that Eclass
@@ -54,7 +52,6 @@ public class EReferenceTwoValueEChangeWrapper extends EChangeWrapper {
     public EObjectPlaceholder getNewValuePlaceholder() {
         return newValuePlaceholder;
     }
-    //todo add isInitialized method in superclass which this overrides
 
     @Override
     protected boolean extendedDataMatches(EChange<EObject> eChange) {
@@ -81,10 +78,6 @@ public class EReferenceTwoValueEChangeWrapper extends EChangeWrapper {
         } else throw new IllegalStateException("Unexpected eChange: " + eChange);
     }
 
-    /**
-     * [COPY helper]
-     * @return a copy of this EChangeWrapper that has the identical Placeholder as this eChangeWrapper.
-     */
     @Override
     protected EChangeWrapper shallowCopy() {
         EChangeWrapper copy = new EReferenceTwoValueEChangeWrapper(this.getEChangeType(), this.getAffectedElementEClass(), this.getAffectedElementPlaceholder(),
@@ -92,10 +85,7 @@ public class EReferenceTwoValueEChangeWrapper extends EChangeWrapper {
         copy.setOriginal(this);
         return copy;
     }
-    /**
-     * [COPY helper]
-     * @return all placeholders this EChangeWrapper holds
-     */
+
     @Override
     protected Set<EObjectPlaceholder> getAllPlaceholders() {
         Set<EObjectPlaceholder> retSet = new HashSet<>();
@@ -104,10 +94,7 @@ public class EReferenceTwoValueEChangeWrapper extends EChangeWrapper {
         retSet.add(this.newValuePlaceholder);
         return retSet;
     }
-    /**
-     * [COPY helper]
-     * Replace all placeholders with their new objects from the map
-     */
+
     @Override
     protected void replaceAllPlaceholders(Map<EObjectPlaceholder, EObjectPlaceholder> oldToNewPlaceholders) {
         if (!oldToNewPlaceholders.containsKey(this.getAffectedElementPlaceholder())) {

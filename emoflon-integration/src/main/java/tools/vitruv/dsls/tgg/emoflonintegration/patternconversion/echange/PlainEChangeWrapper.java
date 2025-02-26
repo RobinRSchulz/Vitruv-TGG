@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
+ * Wraps EChanges that affect only one element (and its model), e.g. existence changing or root setting
  *
  * This wrapper is applicable to the following types of EChange:
  * <li> ${@link tools.vitruv.change.atomic.eobject.CreateEObject}
@@ -20,11 +21,8 @@ import java.util.Set;
  * <li> ${@link tools.vitruv.change.atomic.feature.UnsetFeature}
  */
 public class PlainEChangeWrapper extends EChangeWrapper {
+
     /**
-     * We use Eclasses instead of Classes where there is no difference because
-     * * we stay in the "ecore-world"
-     * * no instanceof, which some don't like
-     * * maybe performance in switch-Statements?
      *
      * @param eChangeType                this template can only be matched against eChanges of this type.
      * @param affectedElementEClass      this template can only be matched against eChanges whose affectedElements are instances of that Eclass
@@ -44,20 +42,13 @@ public class PlainEChangeWrapper extends EChangeWrapper {
         // nothing more to do here.
     }
 
-    /**
-     * [COPY helper]
-     * @return a copy of this EChangeWrapper that has the identical Placeholder as this eChangeWrapper.
-     */
     @Override
     protected EChangeWrapper shallowCopy() {
         PlainEChangeWrapper copy = new PlainEChangeWrapper(this.getEChangeType(), this.getAffectedElementEClass(), this.getAffectedElementPlaceholder());
         copy.setOriginal(this);
         return copy;
     }
-    /**
-     * [COPY helper]
-     * @return all placeholders this EChangeWrapper holds
-     */
+
     @Override
     protected Set<EObjectPlaceholder> getAllPlaceholders() {
         Set<EObjectPlaceholder> retSet = new HashSet<>();
@@ -65,10 +56,6 @@ public class PlainEChangeWrapper extends EChangeWrapper {
         return retSet;
     }
 
-    /**
-     * [COPY helper]
-     * Replace all placeholders with their new objects from the map
-     */
     @Override
     protected void replaceAllPlaceholders(Map<EObjectPlaceholder, EObjectPlaceholder> oldToNewPlaceholders) {
         if (!oldToNewPlaceholders.containsKey(getAffectedElementPlaceholder())) {
@@ -84,6 +71,7 @@ public class PlainEChangeWrapper extends EChangeWrapper {
                 + (this.isInitialized() ? ", initialized with " + Util.eChangeToString(getEChange()) : ", uninitialized");
     }
 
+    @Override
     public String toString(String indent) {
         return "[PlainEChangeWrapper of " + getEChangeType().getName() + ". AE-type: " + getAffectedElementEClass().getName() + "] holding: \n" + indent + "AE: " + getAffectedElementPlaceholder()
                 + (this.isInitialized() ? ", initialized with " + Util.eChangeToString(getEChange()) : ", uninitialized");

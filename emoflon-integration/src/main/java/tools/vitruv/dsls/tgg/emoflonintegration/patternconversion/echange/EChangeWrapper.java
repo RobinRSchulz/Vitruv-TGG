@@ -64,7 +64,6 @@ public abstract class EChangeWrapper {
      * Initialize this EChangeWrapper with the given EChange if it has the correct type. Else, throw.
      */
     public void setEChange(EChange<EObject> eChange) {
-        // ye great old instanceof
         if (!eChangeType.isInstance(eChange)) {
             throw new IllegalStateException("eChange is not of type " + eChange.eClass().getName());
         }
@@ -192,16 +191,23 @@ public abstract class EChangeWrapper {
      * @return a copy of this EChangeWrapper that has the identical Placeholder as this eChangeWrapper.
      */
     protected abstract EChangeWrapper shallowCopy();
+
     /**
      * [COPY helper]
      * @return all placeholders this EChangeWrapper holds
      */
     protected abstract Set<EObjectPlaceholder> getAllPlaceholders();
+
     /**
      * [COPY helper]
      * Replace all placeholders with their new objects from the map
      */
     protected abstract void replaceAllPlaceholders(Map<EObjectPlaceholder, EObjectPlaceholder> oldToNewPlaceholders);
 
+    /**
+     * [DEBUG helper]
+     * @param indent
+     * @return a string representation that looks bettern on console print
+     */
     public abstract String toString(String indent);
 }

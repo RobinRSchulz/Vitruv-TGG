@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Wraps EChanges, that represent a modification of an EAttribute of an EObject with a Value.
+ * Wraps EChanges that represent a modification of an EAttribute of an EObject with a Value.<br/><br/>
  *
  * Applicable to the following types of EChange:
  * <li> ${@link tools.vitruv.change.atomic.feature.attribute.InsertEAttributeValue}
@@ -26,10 +26,6 @@ public class EAttributeValueEChangeWrapper extends EChangeWrapper {
     private EObjectPlaceholder valuePlaceholder;
 
     /**
-     * We use Eclasses instead of Classes where there is no difference because
-     * * we stay in the "ecore-world"
-     * * no instanceof, which some don't like
-     * * maybe performance in switch-Statements?
      *
      * @param eChangeType this template can only be matched against eChanges of this type.
      * @param affectedElementEClass this template can only be matched against eChanges whose affectedElements are instances of that Eclass
@@ -84,10 +80,6 @@ public class EAttributeValueEChangeWrapper extends EChangeWrapper {
         }
     }
 
-    /**
-     * [COPY helper]
-     * @return a copy of this EChangeWrapper that has the identical Placeholder as this eChangeWrapper.
-     */
     @Override
     protected EChangeWrapper shallowCopy() {
         EChangeWrapper copy = new EAttributeValueEChangeWrapper(this.getEChangeType(), this.getAffectedElementEClass(), this.getAffectedElementPlaceholder(),
@@ -95,10 +87,7 @@ public class EAttributeValueEChangeWrapper extends EChangeWrapper {
         copy.setOriginal(this);
         return copy;
     }
-    /**
-     * [COPY helper]
-     * @return all placeholders this EChangeWrapper holds
-     */
+
     @Override
     protected Set<EObjectPlaceholder> getAllPlaceholders() {
         Set<EObjectPlaceholder> retSet = new HashSet<>();
@@ -106,10 +95,7 @@ public class EAttributeValueEChangeWrapper extends EChangeWrapper {
         retSet.add(this.valuePlaceholder);
         return retSet;
     }
-    /**
-     * [COPY helper]
-     * Replace all placeholders with their new objects from the map
-     */
+
     @Override
     protected void replaceAllPlaceholders(Map<EObjectPlaceholder, EObjectPlaceholder> oldToNewPlaceholders) {
         if (!oldToNewPlaceholders.containsKey(this.getAffectedElementPlaceholder())) {
@@ -122,6 +108,7 @@ public class EAttributeValueEChangeWrapper extends EChangeWrapper {
         this.setAffectedElementPlaceholder(oldToNewPlaceholders.get(this.getAffectedElementPlaceholder()));
         this.valuePlaceholder = oldToNewPlaceholders.get(this.valuePlaceholder);
     }
+
     @Override
     public String toString() {
         return "[EAttributeValueEChangeWrapper of " + getEChangeType().getName() + ". AE-type: " + getAffectedElementEClass().getName() + ", attribute: " + affectedEAttribute.getName() + "] " +
