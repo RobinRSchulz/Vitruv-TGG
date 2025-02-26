@@ -13,6 +13,9 @@ import tools.vitruv.dsls.tgg.emoflonintegration.ibex.hipe.VitruviusHiPETGGEngine
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.stream.Collectors;
 
 public class DefaultRegistrationHelper implements IRegistrationHelper {
     protected static final Logger logger = Logger.getRootLogger();
@@ -22,6 +25,9 @@ public class DefaultRegistrationHelper implements IRegistrationHelper {
 
     private final EPackage sourceMetamodel;
     private final EPackage targetMetamodel;
+
+    private final String sourceMetamodelPlatformUri;
+    private final String targetMetamodelPlatformUri;
 
     private final File ibexProjectPath;
 
@@ -36,10 +42,14 @@ public class DefaultRegistrationHelper implements IRegistrationHelper {
      * @param ibexProjectPath path to the eclipse ibex project where the TGG rules have been defined and compiled(!) (see README).
      * @param patternMatcher the pattern matcher which should be used to find forward and broken matches of TGG rules.
      */
-    public DefaultRegistrationHelper(EPackage sourceMetamodel, EPackage targetMetamodel, Resource source, Resource target,
+    public DefaultRegistrationHelper(EPackage sourceMetamodel, EPackage targetMetamodel,
+                                     String sourceMetamodelPlatformUri, String targetMetamodelPlatformUri,
+                                     Resource source, Resource target,
                                      File ibexProjectPath, IBlackInterpreter patternMatcher) {
         this.sourceMetamodel = sourceMetamodel;
         this.targetMetamodel = targetMetamodel;
+        this.sourceMetamodelPlatformUri = sourceMetamodelPlatformUri;
+        this.targetMetamodelPlatformUri = targetMetamodelPlatformUri;
         this.source = source;
         this.target = target;
         this.ibexProjectPath = ibexProjectPath;
@@ -52,13 +62,11 @@ public class DefaultRegistrationHelper implements IRegistrationHelper {
         resourceSet.getAllContents().forEachRemaining(content -> logger.debug("    - " + content));
         resourceSet.getPackageRegistry().put(sourceMetamodel.getNsURI() + ".ecore", sourceMetamodel);
         resourceSet.getPackageRegistry().put(targetMetamodel.getNsURI() + ".ecore", targetMetamodel);
-        //TODO this is required. de-hardcode!
-        resourceSet.getPackageRegistry().put("platform:/resource/tools.vitruv.methodologisttemplate.model/src/main/ecore/model.ecore", sourceMetamodel);
-        resourceSet.getPackageRegistry().put("platform:/resource/tools.vitruv.methodologisttemplate.model/src/main/ecore/model2.ecore", targetMetamodel);
 
-        //TODO necessary?
-        ibexExecutable.getResourceHandler().loadAndRegisterMetamodel("platform:/resource/tools.vitruv.methodologisttemplate.model/src/main/ecore/model.ecore");
-        ibexExecutable.getResourceHandler().loadAndRegisterMetamodel("platform:/resource/tools.vitruv.methodologisttemplate.model/src/main/ecore/model2.ecore");
+        resourceSet.getPackageRegistry().put(sourceMetamodelPlatformUri, sourceMetamodel);
+        resourceSet.getPackageRegistry().put(targetMetamodelPlatformUri, targetMetamodel);
+        ibexExecutable.getResourceHandler().loadAndRegisterMetamodel(sourceMetamodelPlatformUri);
+        ibexExecutable.getResourceHandler().loadAndRegisterMetamodel(targetMetamodelPlatformUri);
 
         // TODO: Here,  metamodels are registered twice, under different uris. (from DemoclesRegistrationHelper in an eMoflon test). Maybe we need to do that also??
 //        rs.getPackageRegistry().put("http://de.ubt.ai1.bw.qvt.examples.gantt.ecore", ganttPack);
@@ -78,12 +86,10 @@ public class DefaultRegistrationHelper implements IRegistrationHelper {
 
         ibexOptions
                 .blackInterpreter(patternMatcher)
-//                .project.name(ibexProjectPath.getName()) //TODO maybe solve that via some strategy, e.g. TGGChangePropagationSpecification has to be extended for each new consistency relation and must explicitly specify
-                .project.name("Something2Else") //TODO de-hardcode
+                .project.name(ibexProjectPath.getName())
                 .project.workspacePath(ibexProjectPath.getParentFile().getAbsolutePath())
-//                .project.path(ibexProjectPath.getAbsolutePath())
-                .project.path("Something2Else")
-                .debug.ibexDebug(true)  //TODO change back
+                .project.path(ibexProjectPath.getName())
+                .debug.ibexDebug(true)
                 .csp.userDefinedConstraints(new UserDefinedRuntimeTGGAttrConstraintFactory())
                 .registrationHelper(this);
         return ibexOptions;

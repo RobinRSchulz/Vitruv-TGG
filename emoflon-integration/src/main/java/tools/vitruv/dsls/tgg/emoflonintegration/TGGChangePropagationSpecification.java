@@ -31,6 +31,9 @@ import java.util.concurrent.atomic.AtomicReference;
 public abstract class TGGChangePropagationSpecification extends AbstractChangePropagationSpecification {
     static Logger logger = Logger.getLogger(TGGChangePropagationSpecification.class);
 
+    private final String sourceMetamodelPlatformUri;
+    private final String targetMetamodelPlatformUri;
+
     private File ibexProjectPath;
     private EClass targetRootEclass;
     private URI targetRootURI;
@@ -44,9 +47,12 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
      * @param targetRootURI URI under which to persist the model created on calling {@code propagateChanges } if no corresponding model already exist.
      */
     public TGGChangePropagationSpecification(MetamodelDescriptor sourceMetamodelDescriptor, MetamodelDescriptor targetMetamodelDescriptor,
+                                             String sourceMetamodelPlatformUri, String targetMetamodelPlatformUri,
                                              File ibexProjectPath,
                                              EClass targetRootEclass, URI targetRootURI) {
         super(sourceMetamodelDescriptor, targetMetamodelDescriptor);
+        this.sourceMetamodelPlatformUri = sourceMetamodelPlatformUri;
+        this.targetMetamodelPlatformUri = targetMetamodelPlatformUri;
         this.ibexProjectPath = ibexProjectPath;
         this.targetRootEclass = targetRootEclass;
         this.targetRootURI = targetRootURI;
@@ -100,8 +106,8 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
 
         logger.info("------- Calling ibex -------");
         try {
-            new SYNCDefault(new DefaultRegistrationHelper(sourceMetamodel, targetMetamodel, sourceModel, targetModel,
-                    ibexProjectPath, new VitruviusBackwardConversionTGGEngine(change))) // alternative: new VitruviusHiPETGGEngine()
+            new SYNCDefault(new DefaultRegistrationHelper(sourceMetamodel, targetMetamodel, sourceMetamodelPlatformUri, targetMetamodelPlatformUri,
+                    sourceModel, targetModel, ibexProjectPath, new VitruviusBackwardConversionTGGEngine(change))) // alternative: new VitruviusHiPETGGEngine()
                     .propagateChanges();
         } catch (IOException e) {
             throw new RuntimeException("Could not set up eMoflon! " + e);

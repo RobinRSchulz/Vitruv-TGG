@@ -71,8 +71,6 @@ public class ChangeSequenceTemplate {
         });
     }
 
-    //TODO restructure this class after the pattern matching algorithm design is complete
-
     private PatternType getPatternType(IBeXContextPattern pattern) {
         return PatternSuffixes.extractType(pattern.getName());
     }
