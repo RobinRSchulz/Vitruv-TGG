@@ -103,14 +103,25 @@ public abstract class EChangeWrapper {
     }
 
     /**
-     * Remember the original EChangeWrapper that this is a copy of. todo maybe remove.
+     * Remember the original EChangeWrapper that this is an invocation (copy) of.
      */
     protected void setOriginal(EChangeWrapper original) {
         this.original = original;
     }
+
+    /**
+     *
+     * @return the original EChangeWrapper that this is an invocation (copy) of, IF this is a copy. If this is an original, return null.
+     */
     public EChangeWrapper getOriginal() {
         return this.original;
     }
+
+    /**
+     *
+     * @return whether this is an original or an invocation (copy) of one.
+     */
+    public boolean isOriginal() { return this.original == null; }
 
     /**
      * This is a helper for this::matches()
@@ -188,7 +199,7 @@ public abstract class EChangeWrapper {
 
     /**
      * [COPY helper]
-     * @return a copy of this EChangeWrapper that has the identical Placeholder as this eChangeWrapper.
+     * @return a copy of this EChangeWrapper that has the identical Placeholder as this eChangeWrapper and has this eChangeWrapper set as its original.
      */
     protected abstract EChangeWrapper shallowCopy();
 

@@ -30,6 +30,12 @@ public class VitruviusChangePatternMatcher {
      */
     private Map<EChange<EObject>, Set<TGGRule>> alreadyInvokedPatternTypes;
 
+    /**
+     * To avoid duplicates in invoking patterns (the same EChange with the same EChangeWrapper original(!) (which is distinctly mapped to a pattern type),
+     * remember which EChangeWrapper originals have already been invoked for each EChange.
+     */
+    private Map<EChange<EObject>, Set<EChangeWrapper>> alreadyInvokedEChangeWrappers;
+
     public VitruviusChangePatternMatcher(VitruviusChange<EObject> vitruviusChange) {
         this.vitruviusChange = vitruviusChange;
         initialize();
@@ -53,14 +59,18 @@ public class VitruviusChangePatternMatcher {
         Set<ChangeSequenceTemplate> allInvokedPatternTemplates = new HashSet<>();
         vitruviusChange.getEChanges().forEach(eChange -> {
             Set<ChangeSequenceTemplate> patternTemplates = changeSequenceTemplateSet.getAndInitRelevantIbexPatternTemplatesByEChange(eChange);
-            // to avoid duplicates, remember which pattern types are already invoked for the current eChange.
-            removeAlreadyInvokedPatternTypes(eChange, patternTemplates);
-            rememberInvokedPatternTypes(eChange, patternTemplates);
+            /*
+                To avoid duplicates, remember which EChangeWrapper originals are already invoked for the current eChange and discard the templates which invoked the
+             */
+            removeDuplicateTemplateInvocations(eChange, patternTemplates);
+            rememberWrappersInvokedWithEChange(eChange, patternTemplates);
+            allInvokedPatternTemplates.addAll(patternTemplates);
+
             logger.debug("[VitruviusChangePatternMatcher] Matching the following eChange against " + patternTemplates.size() + " suitable pattern templates: \n" + Util.eChangeToString(eChange));
             logger.debug("[VitruviusChangePatternMatcher] The suitable pattern templates: ");
             patternTemplates.forEach(patternTemplate -> logger.debug("\n- " + patternTemplate));
-            allInvokedPatternTemplates.addAll(patternTemplates);
             logger.debug("[VitruviusChangePatternMatcher] Trying to match the uninitialized wrappers, too...");
+
             patternTemplates.forEach(patternTemplate -> {
                 for (EChangeWrapper eChangeWrapper : patternTemplate.getUninitializedEChangeWrappers()) {
                     logger.debug("[VitruviusChangePatternMatcher] Trying to match " + eChangeWrapper);
@@ -73,7 +83,7 @@ public class VitruviusChangePatternMatcher {
                             eChangeWrapper.initialize(eChangeCandidate);
                             eChangeWrapperInitialized = true;
                             // to avoid duplicates, remember which pattern types are already invoked for the current eChange.
-                            rememberInvokedPatternType(eChangeCandidate, patternTemplate);
+                            rememberWrapperInvokedWithEChange(eChangeCandidate, patternTemplate);
                             // we can break, since we're finished with this eChangeWrapper. TODO do we miss anything by not continuing the search and splitting the pattern invocation again?
                             break;
                         }
@@ -86,9 +96,8 @@ public class VitruviusChangePatternMatcher {
                 }
             });
         });
-        //TODO log the patterns
-        logger.info("\n[VitruviusChangePatternMatcher] +++ Computed the following matches +++\n");
-        allInvokedPatternTemplates.forEach(logger::info);
+        logger.debug("\n[VitruviusChangePatternMatcher] +++ Computed the following matches +++\n");
+        allInvokedPatternTemplates.forEach(logger::debug);
         visualizeÜberdeckung(allInvokedPatternTemplates);
 
         //TODO need to verhinder duplicates that occur if a patterntemplate has more than one EChangewrapper (1 match for each wrapper...)
@@ -121,25 +130,66 @@ public class VitruviusChangePatternMatcher {
 
     private void initialize() {
         this.eChangesByEChangeType = new HashMap<>();
-        this.alreadyInvokedPatternTypes = new HashMap<>();
+//        this.alreadyInvokedPatternTypes = new HashMap<>();
+        //TODO remove above
+        alreadyInvokedEChangeWrappers = new HashMap<>();
         this.vitruviusChange.getEChanges()
                 .forEach(eChange -> {
                     this.eChangesByEChangeType.computeIfAbsent(eChange.eClass(), k -> new HashSet<>()).add(eChange);
                 });
     }
 
-    private void removeAlreadyInvokedPatternTypes(EChange<EObject> eChange, Set<ChangeSequenceTemplate> changeSequenceTemplates) {
+    /**
+     * Remove all ${@link ChangeSequenceTemplate}s from the given set that have an EChangeWrapper invoked with the eChange that has already been invoked before.
+     * That means that the templates would be duplicates of already existing ones.
+     * @param eChange
+     * @param changeSequenceTemplates templates that have been partly invoked with the given eChange.
+     */
+    private void removeDuplicateTemplateInvocations(EChange<EObject> eChange, Set<ChangeSequenceTemplate> changeSequenceTemplates) {
+//        changeSequenceTemplates.removeAll(
+//                changeSequenceTemplates.stream()
+//                        .filter(ibexPatternTemplate -> alreadyInvokedPatternTypes.containsKey(eChange) && alreadyInvokedPatternTypes.get(eChange).contains(ibexPatternTemplate.getTggRule()))
+//                        .collect(Collectors.toSet())
+//        );
+        //TODO remove above
+
         changeSequenceTemplates.removeAll(
                 changeSequenceTemplates.stream()
-                        .filter(ibexPatternTemplate -> alreadyInvokedPatternTypes.containsKey(eChange) && alreadyInvokedPatternTypes.get(eChange).contains(ibexPatternTemplate.getTggRule()))
+                        .filter(ibexPatternTemplate -> {
+                            // remove all pattern templates that would be copies of an already existing template.
+                            Optional<EChangeWrapper> eChangeWrapperHolding = ibexPatternTemplate.getEChangeWrapperHolding(eChange);
+                            if (eChangeWrapperHolding.isPresent()) {
+                                return alreadyInvokedEChangeWrappers.containsKey(eChange) &&
+                                        alreadyInvokedEChangeWrappers.get(eChange).contains(eChangeWrapperHolding.get().getOriginal());
+                            } else {
+                                throw new IllegalStateException("This method expects changeSequenceTemplates that have been invoked with the given EChange!");
+                            }
+                        })
                         .collect(Collectors.toSet())
         );
+
+
     }
 
-    private void rememberInvokedPatternTypes(EChange<EObject> eChange, Collection<ChangeSequenceTemplate> changeSequenceTemplates) {
-        changeSequenceTemplates.forEach(ibexPatternTemplate -> {rememberInvokedPatternType(eChange, ibexPatternTemplate);});
+    private void rememberWrappersInvokedWithEChange(EChange<EObject> eChange, Collection<ChangeSequenceTemplate> changeSequenceTemplates) {
+        changeSequenceTemplates.forEach(ibexPatternTemplate -> {
+            rememberWrapperInvokedWithEChange(eChange, ibexPatternTemplate);});
     }
-    private void rememberInvokedPatternType(EChange<EObject> eChange, ChangeSequenceTemplate changeSequenceTemplate) {
-        this.alreadyInvokedPatternTypes.computeIfAbsent(eChange, k -> new HashSet<>()).add(changeSequenceTemplate.getTggRule());
+    private void rememberWrapperInvokedWithEChange(EChange<EObject> eChange, ChangeSequenceTemplate changeSequenceTemplate) {
+//        this.alreadyInvokedPatternTypes
+//                .computeIfAbsent(eChange, k -> new HashSet<>())
+//                .add(changeSequenceTemplate.getTggRule());
+        //TODO remove above
+        changeSequenceTemplate.getEChangeWrapperHolding(eChange).ifPresentOrElse(
+                eChangeWrapper -> {
+                    EChangeWrapper eChangeWrapperOriginal = eChangeWrapper.getOriginal();
+                    if (!eChangeWrapperOriginal.isOriginal()) throw new IllegalStateException("The given EChangeWrapper is not an original!");
+                    alreadyInvokedEChangeWrappers
+                            .computeIfAbsent(eChange, k -> new HashSet<>())
+                            .add(eChangeWrapperOriginal);
+                }, () -> {
+                    throw new IllegalStateException("ChangeSequenceTemplate doesn't hold echange, which it should: " + Util.eChangeToString(eChange));
+                }
+        );
     }
 }

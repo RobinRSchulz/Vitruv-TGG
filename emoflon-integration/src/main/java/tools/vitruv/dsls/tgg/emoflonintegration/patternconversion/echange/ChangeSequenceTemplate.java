@@ -3,9 +3,12 @@ package tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange;
 
 import language.TGGRule;
 import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.EObject;
 import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXContextPattern;
 import org.emoflon.ibex.tgg.compiler.patterns.PatternSuffixes;
 import org.emoflon.ibex.tgg.compiler.patterns.PatternType;
+import tools.vitruv.change.atomic.EChange;
+import tools.vitruv.dsls.tgg.emoflonintegration.Util;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.EObjectPlaceholder;
 
 import java.util.*;
@@ -25,14 +28,14 @@ import java.util.stream.Collectors;
  */
 public class ChangeSequenceTemplate {
 
-    private Collection<EChangeWrapper> eChangeWrappers;
+    private final Collection<EChangeWrapper> eChangeWrappers;
     /**
      * maps an Echange Type to all EChange-Wrappers this pattern contains
      */
     private Map<EClass, Set<EChangeWrapper>> eChangeWrappersByEChangeType;
 
-    private TGGRule tggRule;
-    private Map<PatternType, IBeXContextPattern> iBeXContextPatternMap;
+    private final TGGRule tggRule;
+    private final Map<PatternType, IBeXContextPattern> iBeXContextPatternMap;
 
     /**
      * This is a convenvience field for instantiated Pattern Template, mapping wrappers of the original to this instances wrappers.
@@ -107,6 +110,20 @@ public class ChangeSequenceTemplate {
 
     /**
      *
+     * @param eChange
+     * @return the EChangeWrapper that holds the given eChange, if there is any.
+     */
+    public Optional<EChangeWrapper> getEChangeWrapperHolding(EChange<EObject> eChange) {
+        Set<EChangeWrapper> holdingWrappers = this.getRelevantEChangeWrappersByEChangeType(eChange.eClass()).stream()
+                .filter(eChangeWrapper -> eChangeWrapper.getEChange().equals(eChange))
+                .collect(Collectors.toSet());
+
+        if (holdingWrappers.size() > 1) throw new IllegalStateException("More than one EChangeWrapper holds " + Util.eChangeToString(eChange) + "!");
+        return holdingWrappers.stream().findAny();
+    }
+
+    /**
+     *
      * @return the tgg rule this pattern template is based on.
      */
     public TGGRule getTggRule() {
@@ -116,10 +133,13 @@ public class ChangeSequenceTemplate {
     /**
      *
      * @return a deep copy with new wrappers and placeholders, while retaining the placeholder structure.
+     * Also, this ChangeSequenceTemplate's EChangeWrappers are remembered as originals of the copy's wrappers, which is useful for duplicate avoidance/ detection.
      */
     public ChangeSequenceTemplate deepCopy() {
-        // copy the echange wrapper and their placeholder. Afterwards, we got NEW eChangeWrappers with OLD Placeholders.
-        //TODO store a reference to the parent in the copy (maybe in the EChangeWrappers themselves?)
+        /*
+         * copy the echange wrapper and their placeholder. Afterwards, we got NEW eChangeWrappers with OLD Placeholders.
+         * The new eChangeWrappers have their originals set as original.
+         */
         Collection<EChangeWrapper> newEChangeWrappers = new LinkedList<>();
         Map<EChangeWrapper, EChangeWrapper> oldToNewEChangeWrapperMap = new HashMap<>();
         this.eChangeWrappers.stream().forEach(eChangeWrapper -> {
@@ -130,7 +150,7 @@ public class ChangeSequenceTemplate {
         ChangeSequenceTemplate copiedTemplate = new ChangeSequenceTemplate(this.tggRule, this.iBeXContextPatternMap, newEChangeWrappers, oldToNewEChangeWrapperMap);
 
         // now, we can systematically replace the OLD placeholders in the NEW eChangeWrappers with NEW placeholders to achieve a deep copy
-        // 1. Create a Map OLDplaceholder -> NEWPlaceholder
+        // 1. Create a Map OLDPlaceholder -> NEWPlaceholder
         Set<EObjectPlaceholder> allPlaceholders = new HashSet<>();
         copiedTemplate.getEChangeWrappers().forEach(eChangeWrapper -> {
             allPlaceholders.addAll(eChangeWrapper.getAllPlaceholders());
