@@ -14,10 +14,9 @@ import tools.vitruv.change.correspondence.Correspondence;
 import tools.vitruv.change.correspondence.view.EditableCorrespondenceModelView;
 import tools.vitruv.change.propagation.impl.AbstractChangePropagationSpecification;
 import tools.vitruv.change.utils.ResourceAccess;
-import tools.vitruv.dsls.tgg.emoflonintegration.ibex.DefaultRegistrationHelper;
-import tools.vitruv.dsls.tgg.emoflonintegration.ibex.SYNCDefault;
+import tools.vitruv.dsls.tgg.emoflonintegration.ibex.VitruviusTGGChangePropagationRegistrationHelper;
+import tools.vitruv.dsls.tgg.emoflonintegration.ibex.VitruviusTGGChangePropagationIbexEntrypoint;
 import tools.vitruv.dsls.tgg.emoflonintegration.ibex.VitruviusBackwardConversionTGGEngine;
-import tools.vitruv.dsls.tgg.emoflonintegration.ibex.hipe.VitruviusHiPETGGEngine;
 
 import java.io.File;
 import java.io.IOException;
@@ -106,7 +105,7 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
 
         logger.info("------- Calling ibex -------");
         try {
-            new SYNCDefault(new DefaultRegistrationHelper(sourceMetamodel, targetMetamodel, sourceMetamodelPlatformUri, targetMetamodelPlatformUri,
+            new VitruviusTGGChangePropagationIbexEntrypoint(new VitruviusTGGChangePropagationRegistrationHelper(sourceMetamodel, targetMetamodel, sourceMetamodelPlatformUri, targetMetamodelPlatformUri,
                     sourceModel, targetModel, ibexProjectPath, new VitruviusBackwardConversionTGGEngine(change))) // alternative: new VitruviusHiPETGGEngine()
                     .propagateChanges();
         } catch (IOException e) {

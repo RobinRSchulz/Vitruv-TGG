@@ -8,16 +8,11 @@ import org.emoflon.ibex.tgg.compiler.defaults.IRegistrationHelper;
 import org.emoflon.ibex.tgg.operational.IBlackInterpreter;
 import org.emoflon.ibex.tgg.operational.defaults.IbexOptions;
 import org.emoflon.ibex.tgg.operational.strategies.modules.IbexExecutable;
-import tools.vitruv.change.composite.description.VitruviusChange;
-import tools.vitruv.dsls.tgg.emoflonintegration.ibex.hipe.VitruviusHiPETGGEngine;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.stream.Collectors;
 
-public class DefaultRegistrationHelper implements IRegistrationHelper {
+public class VitruviusTGGChangePropagationRegistrationHelper implements IRegistrationHelper {
     protected static final Logger logger = Logger.getRootLogger();
 
     private final Resource source;
@@ -37,15 +32,17 @@ public class DefaultRegistrationHelper implements IRegistrationHelper {
      *
      * @param sourceMetamodel
      * @param targetMetamodel
+     * @param sourceMetamodelPlatformUri eclipse/ ibex need that. Look in your ibex project to find it...
+     * @param targetMetamodelPlatformUri eclipse/ ibex need that. Look in your ibex project to find it...
      * @param source source model where the changes occur
      * @param target target model where the source changes are to be propagated to.
      * @param ibexProjectPath path to the eclipse ibex project where the TGG rules have been defined and compiled(!) (see README).
      * @param patternMatcher the pattern matcher which should be used to find forward and broken matches of TGG rules.
      */
-    public DefaultRegistrationHelper(EPackage sourceMetamodel, EPackage targetMetamodel,
-                                     String sourceMetamodelPlatformUri, String targetMetamodelPlatformUri,
-                                     Resource source, Resource target,
-                                     File ibexProjectPath, IBlackInterpreter patternMatcher) {
+    public VitruviusTGGChangePropagationRegistrationHelper(EPackage sourceMetamodel, EPackage targetMetamodel,
+                                                           String sourceMetamodelPlatformUri, String targetMetamodelPlatformUri,
+                                                           Resource source, Resource target,
+                                                           File ibexProjectPath, IBlackInterpreter patternMatcher) {
         this.sourceMetamodel = sourceMetamodel;
         this.targetMetamodel = targetMetamodel;
         this.sourceMetamodelPlatformUri = sourceMetamodelPlatformUri;
