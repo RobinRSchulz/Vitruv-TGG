@@ -11,6 +11,11 @@ In the [proposal document](doc/Proposal.pdf), the concept behind this project an
 In the following, the process of getting sequences of changes to a source model, given by Vitruvius,
 and using IbeX and a pattern matching process, which this project mainly consists of, to propagate those changes to a target model, is shown.
 
+### Architecture Diagram
+The following diagram illustrates the architecture based on a selection of important classes and packages.
+The green packages are what this project contains.
+<img src="doc/architecture.png">
+
 ### Rule definition
 The rules are defined by the methodologist in an Eclipse eMoflon::IBeX project.
 Further information about the creation of a project and the TGG rule specification with eMoflon::IBeX  can be found 
@@ -106,11 +111,6 @@ Both is handed to SYNC. SYNC applies the matches and (hopefully) keeps the proto
 Since the ultimate goal is to transform source model changes to target model changes, after the pattern matching process is through, 
 we translate the pattern coverage plus the pattern matches introduced by SYNC (as a result of handling broken matches) into target model changes.
 
-## todo 4 code review
-* Code-Review anleitung (im Email-Text, nicht hier...)
-* ((((Bild malen und hier reinhauen))))
-* Git Tag machen
-* Mail schreiben
 
 ## TODO next
 * IBlackinterpreter-Sachen erfüllen
