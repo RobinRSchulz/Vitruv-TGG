@@ -107,8 +107,6 @@ Since the ultimate goal is to transform source model changes to target model cha
 we translate the pattern coverage plus the pattern matches introduced by SYNC (as a result of handling broken matches) into target model changes.
 
 ## todo 4 code review
-* Urls in der Documentation ergänzen!
-* Proposal hier einchecken und referenzieren
 * Code-Review anleitung (im Email-Text, nicht hier...)
 * ((((Bild malen und hier reinhauen))))
 * Git Tag machen
