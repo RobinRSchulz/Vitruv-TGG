@@ -1,5 +1,6 @@
 package tools.vitruv.dsls.tgg.emoflonintegration.patternconversion;
 
+import language.TGGRuleNode;
 import org.eclipse.emf.ecore.EObject;
 
 /**
@@ -7,12 +8,21 @@ import org.eclipse.emf.ecore.EObject;
  *
  * This enables referencing the affected ${@link EObject}s in multiple EChangeWrappers before it is present.
  * This way, the pattern structure can be retained when multiple EChanges should be grouped together and share same entites.
+ *
+ * Also, placeholders represent nodes in the pattern whence they came from.
  */
 public class EObjectPlaceholder {
 
     private EObject affectedEObject;
+    private TGGRuleNode tggRuleNode;
 
-    public EObjectPlaceholder() {  }
+    /**
+     *
+     * @param tggRuleNode remember the node for pattern matching later on.
+     */
+    public EObjectPlaceholder(TGGRuleNode tggRuleNode) {
+        this.tggRuleNode = tggRuleNode;
+    }
 
     /**
      * Initialize this placeholder with the given ${@link EObject}.
@@ -38,6 +48,14 @@ public class EObjectPlaceholder {
      */
     public EObject getAffectedEObject() {
         return affectedEObject;
+    }
+
+    /**
+     *
+     * @return the node in the TGG rule that this placeholder represents.
+     */
+    public TGGRuleNode getTggRuleNode() {
+        return tggRuleNode;
     }
 
     @Override

@@ -79,8 +79,35 @@ public class ChangeSequenceTemplate {
         return "[IbexPatternTemplate of " + tggRule.getName() + "] \n  - " + eChangeWrappers.stream().map(eChangeWrapper -> eChangeWrapper.toString("      ")).collect(Collectors.joining(",\n  - "));
     }
 
+    /**
+     *
+     * @param patternType
+     * @return the IBexContextPattern this ChangeSequenceTemplate represents, typed with the given PatternType.
+     */
+    public IBeXContextPattern getIBeXContextPattern(PatternType patternType) {
+        return this.iBeXContextPatternMap.get(patternType);
+    }
+
+    /**
+     *
+     * @return whether all eChanges this ChangeSequenceTemplate holds have been full initialized with EChanges.
+     */
+    public boolean isInitialized() {
+        return this.eChangeWrappers.stream().allMatch(EChangeWrapper::isInitialized);
+    }
+
     public Collection<EChangeWrapper> getEChangeWrappers() {
         return eChangeWrappers;
+    }
+
+    /**
+     *
+     * @return all placeholders that are being held by the EChangeWrappers this ChangeSequenceTemplate consists of.
+     */
+    public Set<EObjectPlaceholder> getAllPlaceholders() {
+        return this.getEChangeWrappers().stream()
+                .map(EChangeWrapper::getAllPlaceholders).flatMap(Collection::stream)
+                .collect(Collectors.toSet());
     }
 
     public Collection<EChangeWrapper> getUninitializedEChangeWrappers() {
@@ -154,7 +181,7 @@ public class ChangeSequenceTemplate {
             allPlaceholders.addAll(eChangeWrapper.getAllPlaceholders());
         });
         Map<EObjectPlaceholder, EObjectPlaceholder> oldToNewPlaceholders = new HashMap<>();
-        allPlaceholders.forEach(oldPlaceholder -> oldToNewPlaceholders.put(oldPlaceholder, new EObjectPlaceholder()));
+        allPlaceholders.forEach(oldPlaceholder -> oldToNewPlaceholders.put(oldPlaceholder, new EObjectPlaceholder(oldPlaceholder.getTggRuleNode())));
 
         // 2. Replace the OLD placeholders in the NEW eChangeWrappers with the NEW placeholders.
         copiedTemplate.getEChangeWrappers().forEach(eChangeWrapper -> eChangeWrapper.replaceAllPlaceholders(oldToNewPlaceholders));

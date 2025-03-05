@@ -12,6 +12,7 @@ import org.emoflon.ibex.common.operational.IContextPatternInterpreter;
 import org.emoflon.ibex.common.operational.IMatch;
 import org.emoflon.ibex.common.operational.IMatchObserver;
 import org.emoflon.ibex.common.operational.IPatternInterpreterProperties;
+import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXContext;
 import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXModel;
 import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXPatternSet;
 import org.emoflon.ibex.tgg.compiler.patterns.PatternSuffixes;
@@ -27,11 +28,13 @@ import tools.vitruv.change.composite.description.VitruviusChange;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.IbexPatternToChangeSequenceTemplateConverter;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange.ChangeSequenceTemplate;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.ChangeSequenceTemplateSet;
+import tools.vitruv.dsls.tgg.emoflonintegration.patternmatching.VitruviusBackwardConversionMatch;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternmatching.VitruviusChangePatternMatcher;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -88,8 +91,10 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     }
     @Override
     public void initialise(IbexExecutable ibexExecutable, IbexOptions ibexOptions, EPackage.Registry registry, IMatchObserver iMatchObserver) {
+        //TODO maybe need todo the same as below!
         this.ibexExecutable = ibexExecutable;
         this.ibexOptions = ibexOptions;
+        this.iMatchObserver = iMatchObserver;
         this.setIbexPatternsResource(new File(ibexOptions.project.workspacePath() + "/"
                 + ibexOptions.project.path() + "/bin/" + ibexOptions.project.path() + "/"
                 + "sync/hipe/engine/ibex-patterns.xmi"));
@@ -98,6 +103,45 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
 
         this.initPatterns(ibexModel.getPatternSet());
     }
+
+//    public void initialise(IbexExecutable executable, IbexOptions options, EPackage.Registry registry, IMatchObserver matchObserver) {
+//        //TODO work this shit into the above (?)
+//        super.initialise(registry, matchObserver);
+//        this.options = options;
+//        this.executable = executable;
+//        String cp = "";
+//        String path = executable.getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
+//        if (!path.contains("bin/")) {
+//            path = path + "bin/";
+//        }
+//
+//        path = path + this.generateHiPEClassName().replace(".", "/").replace("HiPEEngine", "ibex-patterns.xmi");
+//        File file = new File(path);
+//
+//        try {
+//            cp = file.getCanonicalPath();
+//            cp = cp.replace("%20", " ");
+//        } catch (IOException e1) {
+//            e1.printStackTrace();
+//        }
+//
+//        Resource r = null;
+//
+//        try {
+//            r = this.loadResource("file://" + cp);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//
+//        IBeXModel ibexModel = (IBeXModel)r.getContents().get(0);
+//        this.ibexPatterns = ibexModel.getPatternSet();
+//
+//        for(IBeXContext context : this.ibexPatterns.getContextPatterns()) {
+//            PatternUtil.registerPattern(context.getName(), PatternSuffixes.extractType(context.getName()));
+//        }
+//
+//        this.initPatterns(this.ibexPatterns);
+//    }
 
     @Override
     public void initPatterns(IBeXPatternSet iBeXPatternSet) {
@@ -147,14 +191,15 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
         Timer.setEnabled(true);
         Timer.start();
 
-        // new forward matches
-        Set<ChangeSequenceTemplate> matches = new VitruviusChangePatternMatcher(vitruviusChange).matchPatterns(changeSequenceTemplateSet);
+        // new forward matches.
+        Set<IMatch> matches = new VitruviusChangePatternMatcher(vitruviusChange).matchPatterns(changeSequenceTemplateSet);
+
         long stop = Timer.stop();
         logger.info("Pattern Matching took " + (stop / 1000000d) + " ms");
-        this.iMatchObserver.addMatches(convertMatches(matches));
+        this.iMatchObserver.addMatches(matches);
         // broken matches
         this.iMatchObserver.removeMatches(getBrokenMatches());
-        throw new RuntimeException("TODO implement!");
+//        throw new RuntimeException("TODO implement!");
     }
 
     @Override
@@ -179,9 +224,6 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
         return this.times;
     }
 
-    private Collection<IMatch> convertMatches(Set<ChangeSequenceTemplate> matches) {
-        throw new RuntimeException("TODO implement");
-    }
     private Collection<IMatch> getBrokenMatches() {
         /*
         todo was überlegen, das so vorgeht:
@@ -190,7 +232,8 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
              *      check if broken (entweder anhand des eChanges oder anhand des graphen)
              *      daraus matches basteln
          */
-        throw new RuntimeException("TODO implement");
+//        throw new RuntimeException("TODO implement");
+        return new LinkedList<>();
     }
 
 

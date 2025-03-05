@@ -5,6 +5,7 @@ import org.apache.log4j.Logger;
 import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXContext;
 import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXContextPattern;
 import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXModel;
+import org.emoflon.ibex.tgg.compiler.patterns.PatternSuffixes;
 import tools.vitruv.change.atomic.eobject.EobjectPackage;
 import tools.vitruv.change.atomic.feature.reference.ReferencePackage;
 import tools.vitruv.change.atomic.root.RootPackage;
@@ -155,7 +156,7 @@ public class IbexPatternToChangeSequenceTemplateConverter {
                             ruleEdge.getSrcNode().getType(), // the affected EObject always is the node where this edge comes from
                             getOrCreatePlaceHolder(ruleEdge.getSrcNode()),
                             ruleEdge.getType(),
-                            new EObjectPlaceholder(), // this isn't mapped by TGGs
+                            new EObjectPlaceholder(null), // this isn't mapped by TGGs
                             getOrCreatePlaceHolder(ruleEdge.getTrgNode()))
             );
         }
@@ -177,7 +178,7 @@ public class IbexPatternToChangeSequenceTemplateConverter {
         if (nodeToPlaceholderMap.containsKey(tggRuleNode)) {
             return nodeToPlaceholderMap.get(tggRuleNode);
         } else {
-            EObjectPlaceholder placeholder = new EObjectPlaceholder();
+            EObjectPlaceholder placeholder = new EObjectPlaceholder(tggRuleNode);
             nodeToPlaceholderMap.putIfAbsent(tggRuleNode, placeholder);
             return placeholder;
         }
@@ -187,6 +188,21 @@ public class IbexPatternToChangeSequenceTemplateConverter {
      * Map a ${@link TGGRule} to its related ${@link IBeXContextPattern}.
      */
     private Collection<IBeXContextPattern> getRelatedPatterns(TGGRule rule) {
+
+
+        //TODO remove debug!
+        logger.debug("+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~");
+        logger.debug("PATTERNS FOR RULE: " + rule.getName());
+        this.iBeXModel.getPatternSet().getContextPatterns().stream()
+                .filter(IBeXContextPattern.class::isInstance)
+                .map(IBeXContextPattern.class::cast)
+                .filter(ibexContextPattern -> ibexContextPattern.getName().startsWith(rule.getName()))
+                .forEach(iBeXContextPattern -> logger.debug("  - [" + iBeXContextPattern.getName() + "] patternType=" + PatternSuffixes.extractType(iBeXContextPattern.getName())));
+        logger.debug("+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~");
+
+
+
+
         return this.iBeXModel.getPatternSet().getContextPatterns().stream()
                 .filter(IBeXContextPattern.class::isInstance)
                 .map(IBeXContextPattern.class::cast)

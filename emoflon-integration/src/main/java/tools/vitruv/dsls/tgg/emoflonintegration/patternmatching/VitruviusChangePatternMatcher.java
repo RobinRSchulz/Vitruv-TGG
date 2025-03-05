@@ -4,6 +4,7 @@ import language.TGGRule;
 import org.apache.log4j.Logger;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
+import org.emoflon.ibex.common.operational.IMatch;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.composite.description.VitruviusChange;
 import tools.vitruv.dsls.tgg.emoflonintegration.Util;
@@ -51,7 +52,7 @@ public class VitruviusChangePatternMatcher {
      * @param changeSequenceTemplateSet
      * @return
      */
-    public Set<ChangeSequenceTemplate> matchPatterns(ChangeSequenceTemplateSet changeSequenceTemplateSet) {
+    public Set<IMatch> matchPatterns(ChangeSequenceTemplateSet changeSequenceTemplateSet) {
         logger.debug("\n[VitruviusChangePatternMatcher] matching the following eChanges against " + changeSequenceTemplateSet.getPatternTemplateParents().size() + " pattern templates:");
         vitruviusChange.getEChanges().forEach(eChange -> {logger.info("  - " + Util.eChangeToString(eChange));});
         // 1. compute all possible matches
@@ -110,7 +111,7 @@ public class VitruviusChangePatternMatcher {
         // 3. choose patterns to form a Überdeckung where each change belongs to exactly one pattern (todo maybe less than exactly one since not everything is consistency-relevant)
 
         // 4. todo
-        return null;
+        return allInvokedPatternTemplates.stream().map(VitruviusBackwardConversionMatch::new).collect(Collectors.toSet());
     }
 
     private void visualizeÜberdeckung(Set<ChangeSequenceTemplate> überdeckung) {
