@@ -2,6 +2,7 @@ package tools.vitruv.dsls.tgg.emoflonintegration.ibex;
 
 import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
@@ -12,7 +13,6 @@ import org.emoflon.ibex.common.operational.IContextPatternInterpreter;
 import org.emoflon.ibex.common.operational.IMatch;
 import org.emoflon.ibex.common.operational.IMatchObserver;
 import org.emoflon.ibex.common.operational.IPatternInterpreterProperties;
-import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXContext;
 import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXModel;
 import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXPatternSet;
 import org.emoflon.ibex.tgg.compiler.patterns.PatternSuffixes;
@@ -21,21 +21,27 @@ import org.emoflon.ibex.tgg.operational.IBlackInterpreter;
 import org.emoflon.ibex.tgg.operational.benchmark.TimeMeasurable;
 import org.emoflon.ibex.tgg.operational.benchmark.Timer;
 import org.emoflon.ibex.tgg.operational.benchmark.Times;
+import org.emoflon.ibex.tgg.operational.debug.LoggerConfig;
 import org.emoflon.ibex.tgg.operational.defaults.IbexOptions;
+import org.emoflon.ibex.tgg.operational.matches.ITGGMatch;
+import org.emoflon.ibex.tgg.operational.monitoring.AbstractIbexObserver;
+import org.emoflon.ibex.tgg.operational.monitoring.IbexObservable;
+import org.emoflon.ibex.tgg.operational.monitoring.IbexObserver;
+import org.emoflon.ibex.tgg.operational.patterns.IGreenPattern;
+import org.emoflon.ibex.tgg.operational.patterns.IGreenPatternFactory;
+import org.emoflon.ibex.tgg.operational.strategies.OperationalStrategy;
 import org.emoflon.ibex.tgg.operational.strategies.modules.IbexExecutable;
 import org.emoflon.smartemf.persistence.SmartEMFResourceFactoryImpl;
 import tools.vitruv.change.composite.description.VitruviusChange;
+import tools.vitruv.dsls.tgg.emoflonintegration.Util;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.IbexPatternToChangeSequenceTemplateConverter;
-import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange.ChangeSequenceTemplate;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.ChangeSequenceTemplateSet;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternmatching.VitruviusBackwardConversionMatch;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternmatching.VitruviusChangePatternMatcher;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -64,7 +70,8 @@ import java.util.stream.Collectors;
  * 2.
  *
  */
-public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, TimeMeasurable, IContextPatternInterpreter {
+//public class VitruviusBackwardConversionTGGEngine extends AbstractIbexObserver, implements IBlackInterpreter, TimeMeasurable, IContextPatternInterpreter{
+public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, TimeMeasurable, IContextPatternInterpreter, IbexObserver {
 
     protected static final Logger logger = Logger.getRootLogger();
     private EPackage.Registry registry;
@@ -75,6 +82,9 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     private Resource ibexPatternsResource;
     private IBeXModel ibexModel;
     private IbexExecutable ibexExecutable;
+    private Set<IMatch> matchesFound;
+    private Set<IMatch> matchesThatHaveBeenApplied;
+    private OperationalStrategy observedOperationalStrategy;
 
     private ChangeSequenceTemplateSet changeSequenceTemplateSet;
     private VitruviusChange vitruviusChange;
@@ -88,6 +98,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
         this.vitruviusChange = vitruviusChange;
         this.times = new Times();
         this.baseURI = URI.createPlatformResourceURI("/", true);
+        this.matchesThatHaveBeenApplied = new HashSet<>();
     }
     @Override
     public void initialise(IbexExecutable ibexExecutable, IbexOptions ibexOptions, EPackage.Registry registry, IMatchObserver iMatchObserver) {
@@ -191,12 +202,13 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
         Timer.setEnabled(true);
         Timer.start();
 
-        // new forward matches.
-        Set<IMatch> matches = new VitruviusChangePatternMatcher(vitruviusChange).matchPatterns(changeSequenceTemplateSet);
+        // new forward matches. TODO currently only creating forward matches ONCE since we match against the whole change sequence...
+        createMatchesIfNotAlreadyPresent();
+        Set<IMatch> remainingMatches = getMatchesThatHaventBeenApplied();
 
         long stop = Timer.stop();
         logger.info("Pattern Matching took " + (stop / 1000000d) + " ms");
-        this.iMatchObserver.addMatches(matches);
+        this.iMatchObserver.addMatches(remainingMatches);
         // broken matches
         this.iMatchObserver.removeMatches(getBrokenMatches());
 //        throw new RuntimeException("TODO implement!");
@@ -215,6 +227,10 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     @Override
     public IPatternInterpreterProperties getProperties() {
         return new IPatternInterpreterProperties() {
+//            @Override
+//            public boolean needs_paranoid_modificiations() {
+//                return true;
+//            }
             //TODO implement methods if needed (e.g. smartEMF support??) this by default returns false for every method
         };
     }
@@ -234,6 +250,63 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
          */
 //        throw new RuntimeException("TODO implement");
         return new LinkedList<>();
+    }
+
+    private void createMatchesIfNotAlreadyPresent() {
+        if (this.matchesFound == null) {
+            this.matchesFound = new VitruviusChangePatternMatcher(vitruviusChange).matchPatterns(changeSequenceTemplateSet);
+
+            // TODO remove debug
+            logger.debug("ALL MATCHES FOUND");
+            for (IMatch iMatch : matchesFound) {
+                ITGGMatch itggMatch = (ITGGMatch) iMatch;
+                VitruviusBackwardConversionMatch vitruviusBackwardConversionMatch = (VitruviusBackwardConversionMatch) itggMatch;
+                logger.debug("- Match: " + vitruviusBackwardConversionMatch.getMatchedChangeSequenceTemplate().getTggRule().getName());
+                logger.debug(iMatch.toString());
+                IGreenPatternFactory factory = this.observedOperationalStrategy.getGreenFactories().get(itggMatch.getRuleName());
+                IGreenPattern greenPattern = factory.create(itggMatch.getType());
+                ITGGMatch comatch = itggMatch.copy();
+
+                logger.debug("  - greenPattern.getSrcEdges");
+                greenPattern.getSrcEdges().forEach(edge -> {
+                    EObject src = (EObject) comatch.get(edge.getSrcNode().getName());
+                    String comatchGetSrc = src != null ? Util.eObjectToString(src): "null";
+                    logger.debug("    - " + edge.getName() + ", srcnodeName=" + edge.getSrcNode().getName() + " -> comatch-get: " + comatchGetSrc);
+                });
+//                vitruviusBackwardConversionMatch.getMatchedChangeSequenceTemplate().getTggRule().getEdges()
+
+                logger.debug("  - greenPattern.getTrgEdges");
+                greenPattern.getTrgEdges().forEach(edge -> {
+                    EObject src = (EObject) comatch.get(edge.getSrcNode().getName());
+                    String comatchGetSrc = src != null ? Util.eObjectToString(src): "null";
+                    logger.debug("    - " + edge.getName() + ", srcnodeName=" + edge.getSrcNode().getName() + " -> comatch-get: " + comatchGetSrc);
+                });
+
+
+                logger.debug("  - greenPattern.getCorrEdges");
+                greenPattern.getCorrEdges().forEach(edge -> {
+                    EObject src = (EObject) comatch.get(edge.getSrcNode().getName());
+                    String comatchGetSrc = src != null ? Util.eObjectToString(src): "null";
+                    logger.debug("    - " + edge.getName() + ", srcnodeName=" + edge.getSrcNode().getName() + " -> comatch-get: " + comatchGetSrc);
+                });
+
+                logger.debug("  - greenPattern.getTrgNodes");
+                greenPattern.getTrgNodes().forEach(node -> logger.debug("    - " + node.getName()));
+                logger.debug("  - greenPattern.getSrcNodes");
+                greenPattern.getSrcNodes().forEach(node -> logger.debug("    - " + node.getName()));
+                logger.debug("  - greenPattern.getCorrNodes");
+                greenPattern.getCorrNodes().forEach(node -> logger.debug("    - " + node.getName()));
+
+            }
+        }
+    }
+
+    /**
+     *
+     */
+    private Set<IMatch> getMatchesThatHaventBeenApplied() {
+        // we know what matches have been applied by monitoring what our ping-pong opponent does (in ::update()).
+        return this.matchesFound.stream().filter(match -> !this.matchesThatHaveBeenApplied.contains(match)).collect(Collectors.toSet());
     }
 
 
@@ -256,5 +329,36 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void update(ObservableEvent eventType, Object... objects) {
+        if (Objects.requireNonNull(eventType) == ObservableEvent.MATCHAPPLIED) {
+            //                this.getObservers().forEach((o) -> o.update(ObservableEvent.MATCHAPPLIED, new Object[]{match})); // this the code of the caller.
+            if (!(objects[0] instanceof ITGGMatch match)) {
+                throw new IllegalStateException("MATCHAPPLIED events must be of type IMatch");
+            }
+            logger.info("SYNC has applied a match: " + match);
+
+            this.matchesThatHaveBeenApplied.add(match);
+//                IbexObservable var4;
+//                if ((var4 = this.getObservable()) instanceof OperationalStrategy) {
+//                    OperationalStrategy op = (OperationalStrategy)var4;
+//                    this.operationalMatchContainer = op.getMatchContainer();
+//                    this.matchesSize = this.operationalMatchContainer.getMatches().size();
+//                    String patternName = this.operationalMatchContainer.getNext().getRuleName();
+//                    logger.info("Pattern: " + patternName + " hasMatches: " + this.matchesSize);
+//                }
+
+            logger.debug("  - updated CORR-CACHING?: ");
+            this.observedOperationalStrategy.getResourceHandler().getCorrCaching().forEach((eObject, corrs) -> {
+                logger.debug("    - " + Util.eObjectToString(eObject) + " -> " + corrs.stream().map(Util::eObjectToString).collect(Collectors.joining(", ")));
+
+            });
+        }
+    }
+
+    public void addObservedOperationalStrategy(OperationalStrategy observedOperationalStrategy) {
+        this.observedOperationalStrategy = observedOperationalStrategy;
     }
 }

@@ -1,6 +1,7 @@
 package tools.vitruv.dsls.tgg.emoflonintegration.ibex;
 
 import org.emoflon.ibex.tgg.compiler.defaults.IRegistrationHelper;
+import org.emoflon.ibex.tgg.operational.IBlackInterpreter;
 import org.emoflon.ibex.tgg.operational.benchmark.FullBenchmarkLogger;
 import org.emoflon.ibex.tgg.operational.strategies.sync.SYNC;
 
@@ -23,6 +24,14 @@ public class VitruviusTGGChangePropagationIbexEntrypoint extends SYNC {
     public VitruviusTGGChangePropagationIbexEntrypoint(VitruviusTGGChangePropagationRegistrationHelper registrationHelper) throws IOException {
         super(registrationHelper.createIbexOptions());
         this.registrationHelper = registrationHelper;
+        IBlackInterpreter patternMatcher = this.getOptions().blackInterpreter();
+        if (patternMatcher instanceof VitruviusBackwardConversionTGGEngine vitruviusBackwardConversionTGGEngine) {
+            // we need feedback about matches created...
+            this.registerObserver(vitruviusBackwardConversionTGGEngine);
+            // TODO currently only for debug purposes...
+            vitruviusBackwardConversionTGGEngine.addObservedOperationalStrategy(this);
+        }
+
     }
 
     /**
@@ -38,7 +47,14 @@ public class VitruviusTGGChangePropagationIbexEntrypoint extends SYNC {
         this.options.debug.benchmarkLogger(new FullBenchmarkLogger());
         long tic = System.currentTimeMillis();
         //TODO needs to be backward, depending on the direction the rules were specified and what currently is source and target! The ChangePropagationSpecification's source and target change, the ibex's don't...
+//        try {
+//            this.forward();
+//        } catch (Exception e) {
+//            logger.error("Problem while propagating changes: " + e.getMessage());
+//            logger.warn("DELETE THIS CRAP ASAP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+//        }
         this.forward();
+        this.getResourceHandler().getCorrCaching();
 
         long toc = System.currentTimeMillis();
         logger.info("Completed SYNC in: " + (toc - tic) + " ms");

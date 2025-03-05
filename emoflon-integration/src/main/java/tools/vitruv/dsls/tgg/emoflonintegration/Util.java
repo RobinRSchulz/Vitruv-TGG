@@ -1,5 +1,6 @@
 package tools.vitruv.dsls.tgg.emoflonintegration;
 
+import language.*;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.resource.Resource;
@@ -16,6 +17,8 @@ import tools.vitruv.change.atomic.feature.reference.ReplaceSingleValuedEReferenc
 import tools.vitruv.change.atomic.root.InsertRootEObject;
 import tools.vitruv.change.atomic.root.RemoveRootEObject;
 import tools.vitruv.change.composite.description.VitruviusChange;
+
+import java.util.Collection;
 
 public class Util {
 
@@ -97,5 +100,11 @@ public class Util {
 
     public static boolean isManyValued(EReference eReference) {
         return eReference.getUpperBound() == -1;
+    }
+    public static  Collection<TGGRuleEdge> filterEdges(TGGRule tggRule, BindingType bindingType, DomainType domainType) {
+        return tggRule.getEdges().stream().filter(tggRuleEdge -> tggRuleEdge.getBindingType().equals(bindingType) && tggRuleEdge.getDomainType().equals(domainType)).toList();
+    }
+    public static  Collection<TGGRuleNode> filterNodes(TGGRule tggRule, BindingType bindingType, DomainType domainType) {
+        return tggRule.getNodes().stream().filter(tggRuleNode -> tggRuleNode.getBindingType().equals(bindingType) && tggRuleNode.getDomainType().equals(domainType)).toList();
     }
 }

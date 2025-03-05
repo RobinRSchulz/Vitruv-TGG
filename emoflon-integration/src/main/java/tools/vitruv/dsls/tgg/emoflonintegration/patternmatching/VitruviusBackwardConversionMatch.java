@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 public class VitruviusBackwardConversionMatch extends SimpleTGGMatch implements ITGGMatch {
 
     protected static final Logger logger = Logger.getRootLogger();
+    private ChangeSequenceTemplate matchedChangeSequenceTemplate;
     /**
      *
      * @param matchedChangeSequenceTemplate a ${@link ChangeSequenceTemplate} that has been matched against a couple of EChanges
@@ -29,6 +30,11 @@ public class VitruviusBackwardConversionMatch extends SimpleTGGMatch implements 
             throw new IllegalStateException("The changeSequenceTemplate must be initialized");
         }
         init(matchedChangeSequenceTemplate);
+        this.matchedChangeSequenceTemplate = matchedChangeSequenceTemplate;
+    }
+
+    public ChangeSequenceTemplate getMatchedChangeSequenceTemplate() {
+        return matchedChangeSequenceTemplate;
     }
 
     private void init(ChangeSequenceTemplate matchedChangeSequenceTemplate) {
@@ -38,12 +44,15 @@ public class VitruviusBackwardConversionMatch extends SimpleTGGMatch implements 
                 .forEach(eObjectPlaceholder ->
                         this.put(eObjectPlaceholder.getTggRuleNode().getName(), eObjectPlaceholder.getAffectedEObject())
                 );
+        //TODO maybe we also need that!
+        // add corr nodes
+//        matchedChangeSequenceTemplate.getTggRule().getNodes()
     }
 
     public ITGGMatch copy() {
         SimpleTGGMatch copy = new SimpleTGGMatch(this.getPatternName());
         this.getParameterNames().forEach((n) -> copy.put(n, this.get(n)));
-        logger.debug("todo-delete-this-log: VitruvBackConvMatch::copy : \n  -" + copy.getParameterNames().stream()
+        logger.debug("VitruvBackConvMatch::copy : \n  -" + copy.getParameterNames().stream()
                 .map(paramName -> paramName + ": " + Util.eObjectToString((EObject)copy.get(paramName)))
                 .collect(Collectors.joining("\n  -")));
         return copy;
@@ -51,6 +60,11 @@ public class VitruviusBackwardConversionMatch extends SimpleTGGMatch implements 
 
     public PatternType getType() {
         return PatternUtil.resolve(this.getPatternName());
+    }
+
+    @Override
+    public String toString() {
+        return "[VitruviusBackwardConversionMatch] patternName=" + this.getPatternName() + ", type=" + getType() + ", ruleName=" + getRuleName();
     }
 
 //    private void init(ProductionMatch match) {

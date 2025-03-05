@@ -3,6 +3,8 @@ package tools.vitruv.dsls.tgg.emoflonintegration.ibex.hipe;
 import hipe.engine.HiPEContentAdapter;
 import hipe.engine.IHiPEEngine;
 import hipe.engine.config.HiPEOptions;
+import hipe.engine.match.ProductionMatch;
+import hipe.engine.message.production.ProductionResult;
 import org.apache.log4j.Logger;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource;
@@ -12,9 +14,11 @@ import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXModel;
 import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXPatternSet;
 import org.emoflon.ibex.tgg.compiler.patterns.PatternSuffixes;
 import org.emoflon.ibex.tgg.compiler.patterns.PatternUtil;
+import org.emoflon.ibex.tgg.operational.benchmark.Timer;
 import org.emoflon.ibex.tgg.operational.defaults.IbexOptions;
 import org.emoflon.ibex.tgg.operational.strategies.modules.IbexExecutable;
 import org.emoflon.ibex.tgg.runtime.hipe.HiPETGGEngine;
+import tools.vitruv.dsls.tgg.emoflonintegration.Util;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,6 +29,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Collection;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -143,6 +148,38 @@ public class VitruviusHiPETGGEngine extends HiPETGGEngine {
         }
 
         adapter = new HiPEContentAdapter(resources.stream().filter(res -> !res.getURI().toString().contains("-trash")).collect(Collectors.toSet()), engine);
+    }
+
+    @Override
+    public void updateMatches() {
+        Timer.start();
+
+        try {
+            Map<String, ProductionResult> extractData = this.engine.extractData();
+            this.getTimes().addTo("findMatches", Timer.stop());
+
+            //my shit
+            for(String patternName : extractData.keySet()) {
+                if (this.patterns.get(patternName) != null) {
+                    String pName = (String)this.patterns.get(patternName);
+                    logger.debug("In VitruviusHiPETGGEngine: pattern debug: patternName=" + patternName + ", pName=" + pName + ", productionMatchesNames: " +
+                            extractData.get(patternName).getNewMatches().stream().map(productionMatch -> productionMatch.patternName).collect(Collectors.joining(", ")));
+
+                    Collection<ProductionMatch> matches = ((ProductionResult)extractData.get(patternName)).getNewMatches();
+                    matches.stream().map((m) -> this.createMatch(m, pName)).forEach( match -> {
+                        logger.debug("  - HIPE MATCH: [" + match.getPatternName() + "] params= ");
+                        match.getParameterNames().forEach(paramName -> logger.debug("    - " + paramName + "=" + Util.eObjectToString(match.get(paramName))));
+                    });
+                }
+            }
+
+
+            this.addNewMatches(extractData);
+            this.deleteInvalidMatches(extractData);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
     }
 
     /**

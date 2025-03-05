@@ -1,12 +1,15 @@
 package tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange;
 
 
-import language.TGGRule;
+import language.*;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EStructuralFeature;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXContextPattern;
 import org.emoflon.ibex.tgg.compiler.patterns.PatternSuffixes;
 import org.emoflon.ibex.tgg.compiler.patterns.PatternType;
+import org.emoflon.ibex.tgg.operational.strategies.modules.TGGResourceHandler;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.dsls.tgg.emoflonintegration.Util;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.EObjectPlaceholder;
@@ -187,5 +190,163 @@ public class ChangeSequenceTemplate {
         copiedTemplate.getEChangeWrappers().forEach(eChangeWrapper -> eChangeWrapper.replaceAllPlaceholders(oldToNewPlaceholders));
 
         return copiedTemplate;
+    }
+
+    /**
+     * @param tggResourceHandler we need access to the CORRs
+     *
+     * This must be initialized to be able to return sth meaningful.
+     * Further, this only returns something meaningful, if changes that create sth in the "target" model that this context match relies on are already applied by the SYNC!
+     * @return whether this (matched!) template also has the context that the ${@link TGGRule} this represents requires!
+     */
+    public boolean contextMatches(TGGResourceHandler tggResourceHandler) {
+        ContextMatcher contextMatcher = new ContextMatcher(tggResourceHandler);
+        if (!contextMatcher.contextMatches()) {
+            return false;
+        } else {
+            // keep the results for later. Todo here? must be present in the VitruviusBackwardConversionMatch
+            throw new RuntimeException("not implemented yet");
+        }
+    }
+    private class ContextMatcher {
+
+        /**
+         * initially only contains CREATE nodes.
+         */
+        private Map<TGGRuleNode, EObject> tggRuleNode2EObjectMap;
+        private Set<TGGRuleNode> nodesVisited;
+        private boolean matchingFailed;
+
+        private TGGResourceHandler tggResourceHandler;
+
+        public ContextMatcher(TGGResourceHandler tggResourceHandler) {
+            this.tggRuleNode2EObjectMap = new HashMap<>();
+            this.nodesVisited = new HashSet<>();
+            this.matchingFailed = false;
+            this.tggResourceHandler = tggResourceHandler;
+
+            initTggRuleNode2EObjectMap();
+        }
+
+        /**
+         * Only call this after successfully having called ::contextMatches. Otherwise, we throw.
+         *
+         * @return the map containing the collected context nodes mapped to their eObjects. (also the pre-known create node mappings).
+         */
+        public Map<TGGRuleNode, EObject> getTggRuleNode2EObjectMap() {
+            if (matchingFailed) throw new IllegalStateException("Matching failed! No Context nodes mapped! You should not be calling this.");
+            return tggRuleNode2EObjectMap;
+        }
+
+        public boolean contextMatches() {
+            // Precondition: Each CREATE node and edge has been matched with the respective EObjects
+            if (!isInitialized()) return false;
+        /*
+            Idea: (Backwards) DFS through the pattern. CREATE nodes and edges are related to EObjects because of the precondition.
+            * recurse through all(!) CONTEXT nodes, always following along the eObject-"hierarchy" provided by the CREATE nodes.
+            * mark visited nodes
+
+         */
+            //TODO that stupid bijectivity...
+            for (TGGRuleNode createNode : Util.filterNodes(tggRule, BindingType.CREATE, DomainType.SRC)) {
+                if (!visitCREATENode(createNode)) {
+                    matchingFailed = true;
+                    // early return
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private boolean visitCREATENode(TGGRuleNode createNode) {
+            /*  Only check all context nodes/edges, if this is adjacent to a CREATE node, that will be handled by the caller!
+                Since we also switch domains in this recursion (because we also match the target contexts),
+                this hinders us breaking our precondition by mistakenly assuming that we have already matched "TRG" CREATE nodes!
+             */
+            nodesVisited.add(createNode);
+            EObject createNodeEObject = tggRuleNode2EObjectMap.get(createNode);
+            for (TGGRuleEdge incomingEdge : createNode.getIncomingEdges()) {
+                // incoming edges can be CREATEing or CONTEXT. THey can be of THIS domain or of THE OTHER.
+                if (incomingEdge.getSrcNode().getBindingType().equals(BindingType.CREATE)) {continue;}
+                assert incomingEdge.getBindingType().equals(BindingType.CONTEXT);
+
+                if (incomingEdge.getDomainType().equals(createNode.getDomainType())) {
+                    // we stay in the domain and have a CONTEXT node
+                    //TODO map the context node to the EObject that has the createNode's eObject as a referenced child.
+                    Set<EObject> parentCandidates = EcoreUtil.UsageCrossReferencer.find(createNodeEObject, createNodeEObject.eResource()).stream()
+                            .filter(setting -> setting.getEStructuralFeature().equals(incomingEdge))
+                            .map(EStructuralFeature.Setting::getEObject)
+                            .collect(Collectors.toSet());
+                    if (handleParentCandidatesFor(parentCandidates, incomingEdge.getSrcNode())) {
+                        if (!visitCONTEXTNode(incomingEdge.getSrcNode())) {
+                            return false;
+                        }
+                    } else return false;
+
+                    createNode.getType();
+                } else if (incomingEdge.getDomainType().equals(DomainType.CORR)) {
+                    // we leave the domain and have a CONTEXT node
+                    tggResourceHandler.getCorrCaching().get(createNodeEObject).stream().filter(corrEObject -> {
+                        //TODO how the fuck to access the target of that... look at usages of that stuff..
+                    })
+                    //TODO don't know whats best here... we need the target model resource or the EcoreUtil search...
+                    // TODO we need the ibex CORR map, all else makes no sense..
+                    /* TODO
+                        PROBLEM: if we check the "Target side" before a change that possibly creates the relevant correlation and target context is applied, this match is wrongfully labelled as invalid
+                        SOLUTION options: not checking the context immediately after matching, but EACH time that SYNC wants new matches!
+                        GOOD SIDE: This way, this crap here is always called by the VItruvius...TGGEngine (IBlackInterpreter), which means that we have access to the corr map!!!
+                    */
+                    throw new RuntimeException("TODO impl");
+                } else {
+                    throw new IllegalStateException("This must be an algorithm error!");
+                }
+            }
+
+            for (TGGRuleEdge outgoingEdge : createNode.getOutgoingEdges()) {
+                // created nodes cannot have outgoing edges that "already exist".
+                assert outgoingEdge.getBindingType().equals(BindingType.CREATE);
+                if (outgoingEdge.getTrgNode().getBindingType().equals(BindingType.CREATE)) {continue;}
+                if (outgoingEdge.getDomainType().equals(createNode.getDomainType())) {
+                    // we stay in the domain
+
+
+                    throw new RuntimeException("TODO impl");
+                    visitCreateSameDomainEdge(outgoingEdge);
+                } else if (outgoingEdge.getDomainType().equals(DomainType.CORR)) {
+                    throw new RuntimeException("TODO impl");
+                    visitCreateCorrEdge(outgoingEdge);
+                } else {
+                    throw new IllegalStateException("This must be an algorithm error!");
+                }
+            }
+
+            return true;
+        }
+
+        private boolean visitCONTEXTNode(TGGRuleNode contextNode) {
+
+            throw new RuntimeException("TODO impl");
+        }
+
+        private boolean handleParentCandidatesFor(Set<EObject> parentCandidates, TGGRuleNode parentNode) {
+            // this can possibly be more than one. But we need the one that satisfies our match, if there is one. For now, we assume that there is only one...
+            EObject parentEObject = parentCandidates.iterator().next();
+            if (parentCandidates.size() > 1) {
+                throw new IllegalStateException("Checking for more than one parent currently not supported. Maybe this should just fail the check instead of throwing...");
+            } else if (parentCandidates.size() == 1) {
+                // found!
+                tggRuleNode2EObjectMap.put(parentNode, parentEObject);
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        /**
+         * Init the map with what is already known.
+         */
+        private void initTggRuleNode2EObjectMap() {
+            getAllPlaceholders().forEach(eObjectPlaceholder -> tggRuleNode2EObjectMap.put(eObjectPlaceholder.getTggRuleNode(), eObjectPlaceholder.getAffectedEObject()));
+        }
     }
 }

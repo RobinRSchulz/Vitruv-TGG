@@ -17,6 +17,7 @@ import tools.vitruv.change.utils.ResourceAccess;
 import tools.vitruv.dsls.tgg.emoflonintegration.ibex.VitruviusTGGChangePropagationRegistrationHelper;
 import tools.vitruv.dsls.tgg.emoflonintegration.ibex.VitruviusTGGChangePropagationIbexEntrypoint;
 import tools.vitruv.dsls.tgg.emoflonintegration.ibex.VitruviusBackwardConversionTGGEngine;
+import tools.vitruv.dsls.tgg.emoflonintegration.ibex.hipe.VitruviusHiPETGGEngine;
 
 import java.io.File;
 import java.io.IOException;
@@ -106,8 +107,11 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
         logger.info("------- Calling ibex -------");
         try {
             new VitruviusTGGChangePropagationIbexEntrypoint(new VitruviusTGGChangePropagationRegistrationHelper(sourceMetamodel, targetMetamodel, sourceMetamodelPlatformUri, targetMetamodelPlatformUri,
-                    sourceModel, targetModel, ibexProjectPath, new VitruviusBackwardConversionTGGEngine(change))) // alternative: new VitruviusHiPETGGEngine()
-                    .propagateChanges();
+                    sourceModel, targetModel, ibexProjectPath,
+                    //TODO remove this switching crap, it is only for debug!
+                    new VitruviusBackwardConversionTGGEngine(change) // alternative: new VitruviusHiPETGGEngine()
+//                    new VitruviusHiPETGGEngine()
+            )).propagateChanges();
         } catch (IOException e) {
             throw new RuntimeException("Could not set up eMoflon! " + e);
         }

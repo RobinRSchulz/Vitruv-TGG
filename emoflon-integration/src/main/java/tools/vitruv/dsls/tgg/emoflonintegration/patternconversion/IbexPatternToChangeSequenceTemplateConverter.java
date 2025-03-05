@@ -59,8 +59,8 @@ public class IbexPatternToChangeSequenceTemplateConverter {
      */
     private ChangeSequenceTemplate parseRule(final TGGRule rule) {
         eChangeWrappers = new HashSet<>();
-        filterNodes(rule, BindingType.CONTEXT, DomainType.SRC).forEach(this::parseContextNode);
-        filterNodes(rule, BindingType.CREATE, DomainType.SRC).forEach(this::parseCreateNode);
+        Util.filterNodes(rule, BindingType.CONTEXT, DomainType.SRC).forEach(this::parseContextNode);
+        Util.filterNodes(rule, BindingType.CREATE, DomainType.SRC).forEach(this::parseCreateNode);
 
         return new ChangeSequenceTemplate(rule, getRelatedPatterns(rule) ,eChangeWrappers);
     }
@@ -198,6 +198,10 @@ public class IbexPatternToChangeSequenceTemplateConverter {
                 .map(IBeXContextPattern.class::cast)
                 .filter(ibexContextPattern -> ibexContextPattern.getName().startsWith(rule.getName()))
                 .forEach(iBeXContextPattern -> logger.debug("  - [" + iBeXContextPattern.getName() + "] patternType=" + PatternSuffixes.extractType(iBeXContextPattern.getName())));
+        logger.debug(" ANY ALTERNATIVES???");
+        this.iBeXModel.getPatternSet().getContextPatterns().stream()
+                .filter(pattern -> !IBeXContextPattern.class.isInstance(pattern))
+                .forEach(pattern -> logger.debug("  - [" + pattern.getName() + "] patternType=" + PatternSuffixes.extractType(pattern.getName())));
         logger.debug("+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~");
 
 
@@ -210,12 +214,7 @@ public class IbexPatternToChangeSequenceTemplateConverter {
                 .toList();
     }
 
-    private Collection<TGGRuleEdge> filterEdges(TGGRule tggRule, BindingType bindingType, DomainType domainType) {
-        return tggRule.getEdges().stream().filter(tggRuleEdge -> tggRuleEdge.getBindingType().equals(bindingType) && tggRuleEdge.getDomainType().equals(domainType)).toList();
-    }
-    private Collection<TGGRuleNode> filterNodes(TGGRule tggRule, BindingType bindingType, DomainType domainType) {
-        return tggRule.getNodes().stream().filter(tggRuleNode -> tggRuleNode.getBindingType().equals(bindingType) && tggRuleNode.getDomainType().equals(domainType)).toList();
-    }
+
 
 
     /**
@@ -228,7 +227,7 @@ public class IbexPatternToChangeSequenceTemplateConverter {
 //            rule.getNodes().forEach(tggRuleNode -> logger.info("    - [" +tggRuleNode.getType() + "]: " + tggRuleNode.getName()));
 
 //            filterEdges(rule, BindingType.CONTEXT, DomainType.SRC).forEach( edge -> logger.info("    - Context_src_edge: " + edgeToString(edge)));
-            filterEdges(rule, BindingType.CREATE, DomainType.SRC).forEach( edge -> logger.info("    - Create_src_edge: " + edgeToString(edge)));
+            Util.filterEdges(rule, BindingType.CREATE, DomainType.SRC).forEach( edge -> logger.info("    - Create_src_edge: " + edgeToString(edge)));
 //            filterEdges(rule, BindingType.CONTEXT, DomainType.TRG).forEach( edge -> logger.info("    - Context_trg_edge: " + edge));
 //            filterEdges(rule, BindingType.CREATE, DomainType.TRG).forEach( edge -> logger.info("    - Create_trg_edge: " + edge));
 //            filterEdges(rule, BindingType.CONTEXT, DomainType.CORR).forEach( edge -> logger.info("    - Context_corr_edge: " + edgeToString(edge)));
