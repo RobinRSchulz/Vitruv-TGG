@@ -41,7 +41,7 @@ public class ChangeSequenceTemplate {
     private final Map<PatternType, IBeXContextPattern> iBeXContextPatternMap;
 
     /**
-     * This is a convenvience field for instantiated Pattern Template, mapping wrappers of the original to this instances wrappers.
+     * This is a convenvience field for instantiated Pattern Template, mapping wrappers of the original to this instance's wrappers.
      */
     Map<EChangeWrapper, EChangeWrapper> parentToChildEChangeWrapperMap;
 
@@ -84,7 +84,6 @@ public class ChangeSequenceTemplate {
 
     /**
      *
-     * @param patternType
      * @return the IBexContextPattern this ChangeSequenceTemplate represents, typed with the given PatternType.
      */
     public IBeXContextPattern getIBeXContextPattern(PatternType patternType) {
@@ -129,7 +128,6 @@ public class ChangeSequenceTemplate {
 
     /**
      *
-     * @param eChangeType
      * @return all EChangeWrappers that match the given eChangeType and thus are a possible candidate
      */
     public Set<EChangeWrapper> getRelevantEChangeWrappersByEChangeType(EClass eChangeType) {
@@ -138,7 +136,6 @@ public class ChangeSequenceTemplate {
 
     /**
      *
-     * @param eChange
      * @return the EChangeWrapper that holds the given eChange, if there is any.
      */
     public Optional<EChangeWrapper> getEChangeWrapperHolding(EChange<EObject> eChange) {
@@ -194,7 +191,6 @@ public class ChangeSequenceTemplate {
 
     /**
      * @param tggResourceHandler we need access to the CORRs
-     *
      * This must be initialized to be able to return sth meaningful.
      * Further, this only returns something meaningful, if changes that create sth in the "target" model that this context match relies on are already applied by the SYNC!
      * @return whether this (matched!) template also has the context that the ${@link TGGRule} this represents requires!
@@ -213,11 +209,11 @@ public class ChangeSequenceTemplate {
         /**
          * initially only contains CREATE nodes.
          */
-        private Map<TGGRuleNode, EObject> tggRuleNode2EObjectMap;
-        private Set<TGGRuleNode> nodesVisited;
+        private final Map<TGGRuleNode, EObject> tggRuleNode2EObjectMap;
+        private final Set<TGGRuleNode> nodesVisited;
         private boolean matchingFailed;
 
-        private TGGResourceHandler tggResourceHandler;
+        private final TGGResourceHandler tggResourceHandler;
 
         public ContextMatcher(TGGResourceHandler tggResourceHandler) {
             this.tggRuleNode2EObjectMap = new HashMap<>();
@@ -287,8 +283,9 @@ public class ChangeSequenceTemplate {
                 } else if (incomingEdge.getDomainType().equals(DomainType.CORR)) {
                     // we leave the domain and have a CONTEXT node
                     tggResourceHandler.getCorrCaching().get(createNodeEObject).stream().filter(corrEObject -> {
-                        //TODO how the fuck to access the target of that... look at usages of that stuff..
-                    })
+                        //TODO how to access the target of that... look at usages of that stuff..
+                        return false;
+                    });
                     //TODO don't know whats best here... we need the target model resource or the EcoreUtil search...
                     // TODO we need the ibex CORR map, all else makes no sense..
                     /* TODO
@@ -309,12 +306,9 @@ public class ChangeSequenceTemplate {
                 if (outgoingEdge.getDomainType().equals(createNode.getDomainType())) {
                     // we stay in the domain
 
-
                     throw new RuntimeException("TODO impl");
-                    visitCreateSameDomainEdge(outgoingEdge);
                 } else if (outgoingEdge.getDomainType().equals(DomainType.CORR)) {
                     throw new RuntimeException("TODO impl");
-                    visitCreateCorrEdge(outgoingEdge);
                 } else {
                     throw new IllegalStateException("This must be an algorithm error!");
                 }

@@ -51,7 +51,7 @@ public class VitruviusTGGChangePropagationIbexEntrypoint extends SYNC {
 //            this.forward();
 //        } catch (Exception e) {
 //            logger.error("Problem while propagating changes: " + e.getMessage());
-//            logger.warn("DELETE THIS CRAP ASAP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+//            logger.warn("DELETE THIS ASAP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 //        }
         this.forward();
         this.getResourceHandler().getCorrCaching();

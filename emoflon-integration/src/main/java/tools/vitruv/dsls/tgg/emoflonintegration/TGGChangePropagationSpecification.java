@@ -109,8 +109,8 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
             new VitruviusTGGChangePropagationIbexEntrypoint(new VitruviusTGGChangePropagationRegistrationHelper(sourceMetamodel, targetMetamodel, sourceMetamodelPlatformUri, targetMetamodelPlatformUri,
                     sourceModel, targetModel, ibexProjectPath,
                     //TODO remove this switching crap, it is only for debug!
-                    new VitruviusBackwardConversionTGGEngine(change) // alternative: new VitruviusHiPETGGEngine()
-//                    new VitruviusHiPETGGEngine()
+//                    new VitruviusBackwardConversionTGGEngine(change) // alternative: new VitruviusHiPETGGEngine()
+                    new VitruviusHiPETGGEngine()
             )).propagateChanges();
         } catch (IOException e) {
             throw new RuntimeException("Could not set up eMoflon! " + e);

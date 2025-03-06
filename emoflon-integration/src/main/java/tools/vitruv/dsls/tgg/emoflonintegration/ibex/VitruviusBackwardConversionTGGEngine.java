@@ -21,11 +21,8 @@ import org.emoflon.ibex.tgg.operational.IBlackInterpreter;
 import org.emoflon.ibex.tgg.operational.benchmark.TimeMeasurable;
 import org.emoflon.ibex.tgg.operational.benchmark.Timer;
 import org.emoflon.ibex.tgg.operational.benchmark.Times;
-import org.emoflon.ibex.tgg.operational.debug.LoggerConfig;
 import org.emoflon.ibex.tgg.operational.defaults.IbexOptions;
 import org.emoflon.ibex.tgg.operational.matches.ITGGMatch;
-import org.emoflon.ibex.tgg.operational.monitoring.AbstractIbexObserver;
-import org.emoflon.ibex.tgg.operational.monitoring.IbexObservable;
 import org.emoflon.ibex.tgg.operational.monitoring.IbexObserver;
 import org.emoflon.ibex.tgg.operational.patterns.IGreenPattern;
 import org.emoflon.ibex.tgg.operational.patterns.IGreenPatternFactory;
@@ -52,7 +49,7 @@ import java.util.stream.Collectors;
  *      * todo precompiled (for performance opt.)
  *      * todo short-cut-rules?
  * * matching those templates onto a given VitruviusChange
- *
+ * <br/>
  * TODO:
  * 1. Generating pattern templates
  *      1. Design a class structure for pattern templates
@@ -70,31 +67,30 @@ import java.util.stream.Collectors;
  * 2.
  *
  */
-//public class VitruviusBackwardConversionTGGEngine extends AbstractIbexObserver, implements IBlackInterpreter, TimeMeasurable, IContextPatternInterpreter{
 public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, TimeMeasurable, IContextPatternInterpreter, IbexObserver {
 
     protected static final Logger logger = Logger.getRootLogger();
     private EPackage.Registry registry;
     private IMatchObserver iMatchObserver;
-    private URI baseURI;
+    private final URI baseURI;
     private IbexOptions ibexOptions;
     private ResourceSet resourceSet;
     private Resource ibexPatternsResource;
     private IBeXModel ibexModel;
     private IbexExecutable ibexExecutable;
     private Set<IMatch> matchesFound;
-    private Set<IMatch> matchesThatHaveBeenApplied;
+    private final Set<IMatch> matchesThatHaveBeenApplied;
     private OperationalStrategy observedOperationalStrategy;
 
     private ChangeSequenceTemplateSet changeSequenceTemplateSet;
-    private VitruviusChange vitruviusChange;
+    private VitruviusChange<EObject> vitruviusChange;
     private final Times times;
 
     /**
      * TODO input here or in init function?
      * VitruviusChange cannot be given in initialize, so here.
      */
-    public VitruviusBackwardConversionTGGEngine(VitruviusChange vitruviusChange) {
+    public VitruviusBackwardConversionTGGEngine(VitruviusChange<EObject> vitruviusChange) {
         this.vitruviusChange = vitruviusChange;
         this.times = new Times();
         this.baseURI = URI.createPlatformResourceURI("/", true);
@@ -109,14 +105,14 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
         this.setIbexPatternsResource(new File(ibexOptions.project.workspacePath() + "/"
                 + ibexOptions.project.path() + "/bin/" + ibexOptions.project.path() + "/"
                 + "sync/hipe/engine/ibex-patterns.xmi"));
-        this.ibexModel = ((IBeXModel) ibexPatternsResource.getContents().get(0));
+        this.ibexModel = ((IBeXModel) ibexPatternsResource.getContents().getFirst());
         logger.info("Now initializing patterns: ");
 
         this.initPatterns(ibexModel.getPatternSet());
     }
 
 //    public void initialise(IbexExecutable executable, IbexOptions options, EPackage.Registry registry, IMatchObserver matchObserver) {
-//        //TODO work this shit into the above (?)
+//        //TODO work this stuff into the above (?)
 //        super.initialise(registry, matchObserver);
 //        this.options = options;
 //        this.executable = executable;
@@ -228,7 +224,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     public IPatternInterpreterProperties getProperties() {
         return new IPatternInterpreterProperties() {
 //            @Override
-//            public boolean needs_paranoid_modificiations() {
+//            public boolean needs_paranoid_modifications() {
 //                return true;
 //            }
             //TODO implement methods if needed (e.g. smartEMF support??) this by default returns false for every method

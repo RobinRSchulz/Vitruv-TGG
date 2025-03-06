@@ -53,12 +53,11 @@ public class EAttributeTwoValueEChangeWrapper extends EChangeWrapper {
     public EObjectPlaceholder getNewValuePlaceholder() {
         return newValuePlaceholder;
     }
-    //todo add isInitialized method in superclass which this overrides
 
     @Override
     protected boolean extendedDataMatches(EChange<EObject> eChange) {
         switch (eChange) {
-            case ReplaceSingleValuedEAttribute replaceSingleValuedEAttribute:
+            case ReplaceSingleValuedEAttribute<EObject, ?> replaceSingleValuedEAttribute:
                 if (oldValuePlaceholder.isInitialized() && !oldValuePlaceholder.getAffectedEObject().equals(replaceSingleValuedEAttribute.getOldValue())) {
                     // if this EChangeWrapper is partly initialized, the EObject it holds must be matched, too!
                     return false;
@@ -74,7 +73,7 @@ public class EAttributeTwoValueEChangeWrapper extends EChangeWrapper {
 
     @Override
     public void initializeExtension(EChange<EObject> eChange) {
-        if (Objects.requireNonNull(eChange) instanceof ReplaceSingleValuedEAttribute replaceSingleValuedEAttribute) {
+        if (Objects.requireNonNull(eChange) instanceof ReplaceSingleValuedEAttribute<EObject, ?> replaceSingleValuedEAttribute) {
             this.newValuePlaceholder.initialize((EObject) replaceSingleValuedEAttribute.getNewValue());
             this.oldValuePlaceholder.initialize((EObject) replaceSingleValuedEAttribute.getNewValue());
         } else throw new IllegalStateException("Unexpected eChange: " + eChange);

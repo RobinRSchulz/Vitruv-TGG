@@ -10,7 +10,7 @@ import java.io.IOException;
 public class VitruviusTGGResourceHandler extends TGGResourceHandler {
     protected static final Logger logger = Logger.getRootLogger();
 
-    //duplicate to avoid possible conflicts. Resources should only be present after loadModels was called.
+    //duplicates to avoid possible conflicts. Resources should only be present after loadModels was called. So at construction time, we can only store them.
     private final Resource sourceToBeLoaded;
     private final Resource targetToBeLoaded;
 
@@ -50,7 +50,7 @@ public class VitruviusTGGResourceHandler extends TGGResourceHandler {
             This file has to be defined by the methodologist.
 
             Result: In an ununderstandable manner, the conversion Schema.tgg -> ecore file is done by the Eclipse Editor on save.
-            TODO if zu viel Zeit and/or need or want for getting rid of eclipse: do it here, so the methodologist does not have to click "save" in the eclipse editor.
+            If there is need or want for getting rid of eclipse: do it here, so the methodologist does not have to click "save" in the eclipse editor.
          */
         EPackage corrMetamodel = super.loadAndRegisterCorrMetamodel();
         logger.debug("loaded corr metamodel: " + corrMetamodel);

@@ -64,12 +64,6 @@ public class VitruviusTGGChangePropagationRegistrationHelper implements IRegistr
         resourceSet.getPackageRegistry().put(targetMetamodelPlatformUri, targetMetamodel);
         ibexExecutable.getResourceHandler().loadAndRegisterMetamodel(sourceMetamodelPlatformUri);
         ibexExecutable.getResourceHandler().loadAndRegisterMetamodel(targetMetamodelPlatformUri);
-
-        // TODO: Here,  metamodels are registered twice, under different uris. (from DemoclesRegistrationHelper in an eMoflon test). Maybe we need to do that also??
-//        rs.getPackageRegistry().put("http://de.ubt.ai1.bw.qvt.examples.gantt.ecore", ganttPack);
-//        rs.getPackageRegistry().put("http://de.ubt.ai1.bw.qvt.examples.cpm.ecore", cpmPack);
-//        rs.getPackageRegistry().put("platform:/resource/Gantt/model/Gantt.ecore", ganttPack);
-//        rs.getPackageRegistry().put("platform:/resource/CPM/model/CPM.ecore", cpmPack);
         logger.debug("After registerMetamodels");
     }
 
@@ -87,7 +81,6 @@ public class VitruviusTGGChangePropagationRegistrationHelper implements IRegistr
                 .project.workspacePath(ibexProjectPath.getParentFile().getAbsolutePath())
                 .project.path(ibexProjectPath.getName())
                 .debug.ibexDebug(true)
-                .csp.userDefinedConstraints(new UserDefinedRuntimeTGGAttrConstraintFactory())
                 .registrationHelper(this);
         return ibexOptions;
     }

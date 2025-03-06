@@ -143,7 +143,7 @@ public abstract class EChangeWrapper {
      *
      * @param eChange
      * @return whether this eChange matches this eChangeWrapper.
-     *         Obacht! This EChangeWrapper might be partly initialized, as some placeholders could have already been filled
+     *         Beware! This EChangeWrapper might be partly initialized, as some placeholders could have already been filled
      *         by initializing another EChangeWrapper belonging to the same ${@link ChangeSequenceTemplate} as this one.
      *         This introduces the requirement for matching not only the "statical properties" (meaning EClasses and EStructuralFeatures)
      *         but also checking whether the <b>already initialized</b> placeholders match the echange!
@@ -154,7 +154,7 @@ public abstract class EChangeWrapper {
      *
      * @param eChange
      * @return whether this eChange matches this eChangeWrapper.
-     *         Obacht! This EChangeWrapper might be partly initialized, as some placeholders could have already been filled
+     *         Beware! This EChangeWrapper might be partly initialized, as some placeholders could have already been filled
      *         by initializing another EChangeWrapper belonging to the same ${@link ChangeSequenceTemplate} as this one.
      *         This introduces the requirement for matching not only the "statical properties" (meaning EClasses and EStructuralFeatures)
      *         but also checking whether the <b>already initialized</b> placeholders match the echange!
@@ -165,7 +165,7 @@ public abstract class EChangeWrapper {
 
     /**
      * Initialize everything that doesn't concern setting the eChange and filling the affectedElementPlaceholder.
-     * Obacht! This EChangeWrapper might be partly initialized, as some placeholders could have already been filled
+     * Beware! This EChangeWrapper might be partly initialized, as some placeholders could have already been filled
      * by initializing another EChangeWrapper belonging to the same ${@link ChangeSequenceTemplate} as this one.
      * Implementations need to account for that by throwing ${@link IllegalStateException}. TODO implement that!
      * @param eChange
@@ -174,7 +174,7 @@ public abstract class EChangeWrapper {
 
     /**
      * Initialize this wrapper with an actual eChange, by filling all this wrapper's placeholders.
-     * Obacht! This EChangeWrapper might be partly initialized, as some placeholders could have already been filled
+     * Beware! This EChangeWrapper might be partly initialized, as some placeholders could have already been filled
      * by initializing another EChangeWrapper belonging to the same ${@link ChangeSequenceTemplate} as this one.
      * This is intended and this method accounts for that.
      * It is intended that the caller calls ${@code matches()} first.
