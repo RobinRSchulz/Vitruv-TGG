@@ -34,14 +34,12 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
     private final String sourceMetamodelPlatformUri;
     private final String targetMetamodelPlatformUri;
 
-    private File ibexProjectPath;
-    private EClass targetRootEclass;
-    private URI targetRootURI;
+    private final File ibexProjectPath;
+    private final EClass targetRootEclass;
+    private final URI targetRootURI;
 
     /**
      *
-     * @param sourceMetamodelDescriptor
-     * @param targetMetamodelDescriptor
      * @param ibexProjectPath file system path to the eMoflon TGG project
      * @param targetRootEclass the root class for the target model to be able to create a corresponding model if none already exists. todo check if this strategy is required.
      * @param targetRootURI URI under which to persist the model created on calling {@code propagateChanges } if no corresponding model already exist.
@@ -58,17 +56,22 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
         this.targetRootURI = targetRootURI;
     }
 
+    /**
+     * @return false, This type of CPS only handles change sequences.
+     */
     @Override
     public boolean doesHandleChange(EChange<EObject> eChange,
                                     EditableCorrespondenceModelView<Correspondence> editableCorrespondenceModelView) {
-        return false; //todo maybe we need true here, if it's called elsewhere to filter CPSs before the ChangePropagator.
+        return false;
     }
 
+    /**
+     *  This class does not propagate single changes. Calls to this result in a warning.
+     */
     @Override
     public void propagateChange(EChange<EObject> eChange,
                                 EditableCorrespondenceModelView<Correspondence> editableCorrespondenceModelView,
                                 ResourceAccess resourceAccess) {
-        final String message = "propagateChange not implemented, use propagateChanges (with an s).";
         logger.warn("propagateChange not implemented, use propagateChanges (with an s).");
     }
 
@@ -77,6 +80,11 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
         return true;
     }
 
+    /**
+     * Propagate change sequences to the target model by using the tgg emoflon integration, with BackwardConversionPatternMatching.
+     *
+     * @param change the change sequence which is to be propagated to this CPS's target model
+     */
     @Override
     public void propagateNonAtomicChange(VitruviusChange<EObject> change,
                                          EditableCorrespondenceModelView<Correspondence> correspondenceModel,
@@ -92,10 +100,10 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
         if (this.getTargetMetamodelDescriptor().getNsUris().size() != 1) {
             throw new IllegalStateException("none or more than one target metamodel. Can only handle exactly one! " + this.getTargetMetamodelDescriptor());
         }
-        EPackage sourceMetamodel = org.eclipse.emf.ecore.EPackage.Registry.INSTANCE.getEPackage(this.getSourceMetamodelDescriptor().getNsUris().stream()
+        EPackage sourceMetamodel = EPackage.Registry.INSTANCE.getEPackage(this.getSourceMetamodelDescriptor().getNsUris().stream()
                 .findAny().orElseThrow(() -> new IllegalStateException("No source metamodel registered! " + this.getSourceMetamodelDescriptor()))
         );
-        EPackage targetMetamodel = org.eclipse.emf.ecore.EPackage.Registry.INSTANCE.getEPackage(this.getTargetMetamodelDescriptor().getNsUris().stream()
+        EPackage targetMetamodel = EPackage.Registry.INSTANCE.getEPackage(this.getTargetMetamodelDescriptor().getNsUris().stream()
                 .findAny().orElseThrow(() -> new IllegalStateException("No target metamodel registered! " + this.getTargetMetamodelDescriptor()))
         );
 
@@ -172,7 +180,7 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
      */
     private Resource getTargetModel(Resource sourceModel,
                                     EditableCorrespondenceModelView<Correspondence> correspondenceModel) {
-        Resource targetModel = null;
+        Resource targetModel;
         /*  If no target model exists yet, we need to create one. There are different possible approaches. Currently, the third is in place.
          */
         if (!correspondenceModel.hasCorrespondences(sourceModel.getContents())) {

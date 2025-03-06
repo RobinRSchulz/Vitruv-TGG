@@ -18,8 +18,8 @@ public class VitruviusTGGChangePropagationRegistrationHelper implements IRegistr
     private final Resource source;
     private final Resource target;
 
-    private final EPackage sourceMetamodel;
-    private final EPackage targetMetamodel;
+    private final EPackage sourceMetamodelPackage;
+    private final EPackage targetMetamodelPackage;
 
     private final String sourceMetamodelPlatformUri;
     private final String targetMetamodelPlatformUri;
@@ -30,8 +30,8 @@ public class VitruviusTGGChangePropagationRegistrationHelper implements IRegistr
 
     /**
      *
-     * @param sourceMetamodel
-     * @param targetMetamodel
+     * @param sourceMetamodelPackage
+     * @param targetMetamodelPackage
      * @param sourceMetamodelPlatformUri eclipse/ ibex need that. Look in your ibex project to find it...
      * @param targetMetamodelPlatformUri eclipse/ ibex need that. Look in your ibex project to find it...
      * @param source source model where the changes occur
@@ -39,12 +39,12 @@ public class VitruviusTGGChangePropagationRegistrationHelper implements IRegistr
      * @param ibexProjectPath path to the eclipse ibex project where the TGG rules have been defined and compiled(!) (see README).
      * @param patternMatcher the pattern matcher which should be used to find forward and broken matches of TGG rules.
      */
-    public VitruviusTGGChangePropagationRegistrationHelper(EPackage sourceMetamodel, EPackage targetMetamodel,
+    public VitruviusTGGChangePropagationRegistrationHelper(EPackage sourceMetamodelPackage, EPackage targetMetamodelPackage,
                                                            String sourceMetamodelPlatformUri, String targetMetamodelPlatformUri,
                                                            Resource source, Resource target,
                                                            File ibexProjectPath, IBlackInterpreter patternMatcher) {
-        this.sourceMetamodel = sourceMetamodel;
-        this.targetMetamodel = targetMetamodel;
+        this.sourceMetamodelPackage = sourceMetamodelPackage;
+        this.targetMetamodelPackage = targetMetamodelPackage;
         this.sourceMetamodelPlatformUri = sourceMetamodelPlatformUri;
         this.targetMetamodelPlatformUri = targetMetamodelPlatformUri;
         this.source = source;
@@ -57,11 +57,11 @@ public class VitruviusTGGChangePropagationRegistrationHelper implements IRegistr
         //the democles way
         logger.debug("Called registerMetamodels with " );
         resourceSet.getAllContents().forEachRemaining(content -> logger.debug("    - " + content));
-        resourceSet.getPackageRegistry().put(sourceMetamodel.getNsURI() + ".ecore", sourceMetamodel);
-        resourceSet.getPackageRegistry().put(targetMetamodel.getNsURI() + ".ecore", targetMetamodel);
+        resourceSet.getPackageRegistry().put(sourceMetamodelPackage.getNsURI() + ".ecore", sourceMetamodelPackage);
+        resourceSet.getPackageRegistry().put(targetMetamodelPackage.getNsURI() + ".ecore", targetMetamodelPackage);
 
-        resourceSet.getPackageRegistry().put(sourceMetamodelPlatformUri, sourceMetamodel);
-        resourceSet.getPackageRegistry().put(targetMetamodelPlatformUri, targetMetamodel);
+        resourceSet.getPackageRegistry().put(sourceMetamodelPlatformUri, sourceMetamodelPackage);
+        resourceSet.getPackageRegistry().put(targetMetamodelPlatformUri, targetMetamodelPackage);
         ibexExecutable.getResourceHandler().loadAndRegisterMetamodel(sourceMetamodelPlatformUri);
         ibexExecutable.getResourceHandler().loadAndRegisterMetamodel(targetMetamodelPlatformUri);
         logger.debug("After registerMetamodels");

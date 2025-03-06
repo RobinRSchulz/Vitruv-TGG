@@ -3,7 +3,6 @@ package tools.vitruv.dsls.tgg.emoflonintegration;
 import language.*;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
-import org.eclipse.emf.ecore.resource.Resource;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.eobject.CreateEObject;
 import tools.vitruv.change.atomic.eobject.DeleteEObject;
@@ -16,7 +15,6 @@ import tools.vitruv.change.atomic.feature.reference.RemoveEReference;
 import tools.vitruv.change.atomic.feature.reference.ReplaceSingleValuedEReference;
 import tools.vitruv.change.atomic.root.InsertRootEObject;
 import tools.vitruv.change.atomic.root.RemoveRootEObject;
-import tools.vitruv.change.composite.description.VitruviusChange;
 
 import java.util.Collection;
 
@@ -62,14 +60,9 @@ public class Util {
         };
     }
 
-
     public static String eObjectToString(Object object) {
         EObject eObject = (EObject) object;
         return eObject.eClass().getName() + ":" + eObject.hashCode();
-    }
-
-    public static String resourceToString(Resource resource) {
-        return resource.getURI().toString();
     }
 
     public static boolean isManyValued(EReference eReference) {
