@@ -108,9 +108,9 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
         try {
             new VitruviusTGGChangePropagationIbexEntrypoint(new VitruviusTGGChangePropagationRegistrationHelper(sourceMetamodel, targetMetamodel, sourceMetamodelPlatformUri, targetMetamodelPlatformUri,
                     sourceModel, targetModel, ibexProjectPath,
-                    //TODO remove this switching crap, it is only for debug!
-//                    new VitruviusBackwardConversionTGGEngine(change) // alternative: new VitruviusHiPETGGEngine()
-                    new VitruviusHiPETGGEngine()
+                    //TODO remove this switching stuff, it is only for debug!
+                    new VitruviusBackwardConversionTGGEngine(change) // alternative: new VitruviusHiPETGGEngine()
+//                    new VitruviusHiPETGGEngine()
             )).propagateChanges();
         } catch (IOException e) {
             throw new RuntimeException("Could not set up eMoflon! " + e);
@@ -173,23 +173,10 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
     private Resource getTargetModel(Resource sourceModel,
                                     EditableCorrespondenceModelView<Correspondence> correspondenceModel) {
         Resource targetModel = null;
-        /*  If no target model exists yet, we need to create one. There are different possible approaches.
-            TODO currently not decided yet, so we keep the
+        /*  If no target model exists yet, we need to create one. There are different possible approaches. Currently, the third is in place.
          */
         if (!correspondenceModel.hasCorrespondences(sourceModel.getContents())) {
             logger.info("Source Model has no respective target model yet. Creating one.");
-
-            // [Second approach]
-            // we need a root EObject for registering a new model to Vitruvius, so we create one and also create a correspondence...
-//            EObject targetRoot = targetMetamodel.getEFactoryInstance().create(this.targetRootEclass);
-//            resourceAccess.persistAsRoot(targetRoot, this.targetRootURI);
-            // TODO maybe derive the source model root and the tag from a class field (to be given by the methodologist).
-//            correspondenceModel.addCorrespondenceBetween(sourceModel.getContents().getFirst(), targetRoot, "Root2Root");
-//            if (!correspondenceModel.hasCorrespondences(sourceModel.getContents())) {
-//                throw new RuntimeException("Target model creation failed!");
-//            }
-//            targetModel = resourceAccess.getModelResource(this.targetRootURI);
-
             // [Third approach]
             targetModel = sourceModel.getResourceSet().createResource(this.targetRootURI);
         } else {

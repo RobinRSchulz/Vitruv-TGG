@@ -99,40 +99,36 @@ public class VitruviusChangePatternMatcher {
         });
         logger.debug("\n[VitruviusChangePatternMatcher] +++ Computed the following matches +++\n");
         allInvokedPatternTemplates.forEach(logger::debug);
-        visualizeÜberdeckung(allInvokedPatternTemplates);
+        visualizeCoverage(allInvokedPatternTemplates);
 
-        //TODO need to verhinder duplicates that occur if a patterntemplate has more than one EChangewrapper (1 match for each wrapper...)
+        //TODO need to prevent duplicates that occur if a patterntemplate has more than one EChangewrapper (1 match for each wrapper...)
         /* Idea: We allow multiple an Echange to be covered by multiple patterns, but only one of each pattern type (i.e. via their rule reference?? That doesnt break anything!
          * --> Create a Map EChange -> TggRule
          */
 
         // 2. Check if the context of the patterns matches maybe by leveraging existing ibex functionality??
 
-        // 3. choose patterns to form a Überdeckung where each change belongs to exactly one pattern (todo maybe less than exactly one since not everything is consistency-relevant)
+        // 3. choose patterns to form a Coverage where each change belongs to exactly one pattern (todo maybe less than exactly one since not everything is consistency-relevant)
 
         // 4. todo
         return allInvokedPatternTemplates.stream().map(VitruviusBackwardConversionMatch::new).collect(Collectors.toSet());
     }
 
-    private void visualizeÜberdeckung(Set<ChangeSequenceTemplate> überdeckung) {
+    private void visualizeCoverage(Set<ChangeSequenceTemplate> coverage) {
         logger.info(
                 "[VitruviusChangePatternMatcher] Pattern Coverage of the given Vitruvius change:\n" +
                 "| # Patterns covering | EChange                                    |\n" +
                 "|---------------------|--------------------------------------------|\n" +
                 vitruviusChange.getEChanges().stream().map(eChange ->
-                                "| " + überdeckung.stream().filter(ibexPatternTemplate ->
+                                "| " + coverage.stream().filter(ibexPatternTemplate ->
                                         ibexPatternTemplate.getEChangeWrappers().stream().anyMatch(eChangeWrapper -> eChangeWrapper.getEChange().equals(eChange))).count()
                                         + "                  | " + Util.eChangeToString(eChange) + "       |")
                         .collect(Collectors.joining("\n"))
-
         );
-
     }
 
     private void initialize() {
         this.eChangesByEChangeType = new HashMap<>();
-//        this.alreadyInvokedPatternTypes = new HashMap<>();
-        //TODO remove above
         alreadyInvokedEChangeWrappers = new HashMap<>();
         this.vitruviusChange.getEChanges()
                 .forEach(eChange -> {
@@ -147,13 +143,6 @@ public class VitruviusChangePatternMatcher {
      * @param changeSequenceTemplates templates that have been partly invoked with the given eChange.
      */
     private void removeDuplicateTemplateInvocations(EChange<EObject> eChange, Set<ChangeSequenceTemplate> changeSequenceTemplates) {
-//        changeSequenceTemplates.removeAll(
-//                changeSequenceTemplates.stream()
-//                        .filter(ibexPatternTemplate -> alreadyInvokedPatternTypes.containsKey(eChange) && alreadyInvokedPatternTypes.get(eChange).contains(ibexPatternTemplate.getTggRule()))
-//                        .collect(Collectors.toSet())
-//        );
-        //TODO remove above
-
         changeSequenceTemplates.removeAll(
                 changeSequenceTemplates.stream()
                         .filter(ibexPatternTemplate -> {
@@ -168,8 +157,6 @@ public class VitruviusChangePatternMatcher {
                         })
                         .collect(Collectors.toSet())
         );
-
-
     }
 
     private void rememberWrappersInvokedWithEChange(EChange<EObject> eChange, Collection<ChangeSequenceTemplate> changeSequenceTemplates) {
@@ -177,10 +164,6 @@ public class VitruviusChangePatternMatcher {
             rememberWrapperInvokedWithEChange(eChange, ibexPatternTemplate);});
     }
     private void rememberWrapperInvokedWithEChange(EChange<EObject> eChange, ChangeSequenceTemplate changeSequenceTemplate) {
-//        this.alreadyInvokedPatternTypes
-//                .computeIfAbsent(eChange, k -> new HashSet<>())
-//                .add(changeSequenceTemplate.getTggRule());
-        //TODO remove above
         changeSequenceTemplate.getEChangeWrapperHolding(eChange).ifPresentOrElse(
                 eChangeWrapper -> {
                     EChangeWrapper eChangeWrapperOriginal = eChangeWrapper.getOriginal();

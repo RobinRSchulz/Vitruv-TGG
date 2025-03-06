@@ -14,7 +14,7 @@ import org.eclipse.emf.ecore.EObject;
 public class EObjectPlaceholder {
 
     private EObject affectedEObject;
-    private TGGRuleNode tggRuleNode;
+    private final TGGRuleNode tggRuleNode;
 
     /**
      *
@@ -27,7 +27,6 @@ public class EObjectPlaceholder {
     /**
      * Initialize this placeholder with the given ${@link EObject}.
      * This is an idempotent operation, but ${@link IllegalStateException} is thrown if this placeholder is already initialized but initialize is called with an EObject different to the one it already holds.
-     * @param affectedEObject
      */
     public void initialize(EObject affectedEObject) {
         if (this.isInitialized() && this.affectedEObject != affectedEObject) throw new IllegalStateException("EObjectPlaceholder already initialized. It cannot be initialized with a different EObject!");

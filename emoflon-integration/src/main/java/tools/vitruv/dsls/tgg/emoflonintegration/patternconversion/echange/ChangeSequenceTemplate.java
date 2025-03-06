@@ -291,7 +291,7 @@ public class ChangeSequenceTemplate {
                     /* TODO
                         PROBLEM: if we check the "Target side" before a change that possibly creates the relevant correlation and target context is applied, this match is wrongfully labelled as invalid
                         SOLUTION options: not checking the context immediately after matching, but EACH time that SYNC wants new matches!
-                        GOOD SIDE: This way, this crap here is always called by the VItruvius...TGGEngine (IBlackInterpreter), which means that we have access to the corr map!!!
+                        GOOD SIDE: This way, this is always called by the Vitruvius...TGGEngine (IBlackInterpreter), which means that we have access to the corr map!!!
                     */
                     throw new RuntimeException("TODO impl");
                 } else {

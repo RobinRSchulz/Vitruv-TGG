@@ -125,7 +125,6 @@ public abstract class EChangeWrapper {
 
     /**
      * This is a helper for this::matches()
-     * @param eChange
      * @return whether the eChange type and affectedEObject type of this and the eChange match. If the affectedElementPlaceholder is initialized, this is matched, too.
      */
     private boolean eChangeTypeAndAffectedEObjectMatches(EChange<EObject> eChange) {
@@ -141,7 +140,6 @@ public abstract class EChangeWrapper {
 
     /**
      *
-     * @param eChange
      * @return whether this eChange matches this eChangeWrapper.
      *         Beware! This EChangeWrapper might be partly initialized, as some placeholders could have already been filled
      *         by initializing another EChangeWrapper belonging to the same ${@link ChangeSequenceTemplate} as this one.
@@ -152,7 +150,6 @@ public abstract class EChangeWrapper {
 
     /**
      *
-     * @param eChange
      * @return whether this eChange matches this eChangeWrapper.
      *         Beware! This EChangeWrapper might be partly initialized, as some placeholders could have already been filled
      *         by initializing another EChangeWrapper belonging to the same ${@link ChangeSequenceTemplate} as this one.
@@ -168,7 +165,6 @@ public abstract class EChangeWrapper {
      * Beware! This EChangeWrapper might be partly initialized, as some placeholders could have already been filled
      * by initializing another EChangeWrapper belonging to the same ${@link ChangeSequenceTemplate} as this one.
      * Implementations need to account for that by throwing ${@link IllegalStateException}. TODO implement that!
-     * @param eChange
      */
     protected abstract void initializeExtension(EChange<EObject> eChange);
 
@@ -179,7 +175,6 @@ public abstract class EChangeWrapper {
      * This is intended and this method accounts for that.
      * It is intended that the caller calls ${@code matches()} first.
      * This method will throw ${@link IllegalStateException}, if a placeholder that already contains something would be overwritten by applying the given eChange.
-     * @param eChange
      */
     public void initialize(EChange<EObject> eChange) {
         this.setEChange(eChange);
@@ -217,7 +212,6 @@ public abstract class EChangeWrapper {
 
     /**
      * [DEBUG helper]
-     * @param indent
      * @return a string representation that looks bettern on console print
      */
     public abstract String toString(String indent);

@@ -17,15 +17,14 @@ import java.util.stream.Collectors;
 public class VitruviusBackwardConversionMatch extends SimpleTGGMatch implements ITGGMatch {
 
     protected static final Logger logger = Logger.getRootLogger();
-    private ChangeSequenceTemplate matchedChangeSequenceTemplate;
+    private final ChangeSequenceTemplate matchedChangeSequenceTemplate;
     /**
      *
      * @param matchedChangeSequenceTemplate a ${@link ChangeSequenceTemplate} that has been matched against a couple of EChanges
      */
     public VitruviusBackwardConversionMatch(ChangeSequenceTemplate matchedChangeSequenceTemplate) {
-        //TODO ähhhhh rausfinden wann FWD wann BWD und irgendwo einrichten... --> DIrectionholder-Struktur nutzen...
+        // TODO find out when FWD, when BWD and use Directionholder from ibex!
         super(matchedChangeSequenceTemplate.getIBeXContextPattern(PatternType.FWD).getName());
-//        super(matchedChangeSequenceTemplate.getIBeXContextPattern(PatternType.CONSISTENCY).getName());
         if (!matchedChangeSequenceTemplate.isInitialized()) {
             throw new IllegalStateException("The changeSequenceTemplate must be initialized");
         }
@@ -44,8 +43,7 @@ public class VitruviusBackwardConversionMatch extends SimpleTGGMatch implements 
                 .forEach(eObjectPlaceholder ->
                         this.put(eObjectPlaceholder.getTggRuleNode().getName(), eObjectPlaceholder.getAffectedEObject())
                 );
-        //TODO maybe we also need that!
-        // add corr nodes
+        //TODO Add all context nodes! also add corr? probably not...
 //        matchedChangeSequenceTemplate.getTggRule().getNodes()
     }
 
@@ -66,10 +64,4 @@ public class VitruviusBackwardConversionMatch extends SimpleTGGMatch implements 
     public String toString() {
         return "[VitruviusBackwardConversionMatch] patternName=" + this.getPatternName() + ", type=" + getType() + ", ruleName=" + getRuleName();
     }
-
-//    private void init(ProductionMatch match) {
-//        for(String label : match.getLabels()) {
-//            this.put(label, match.getNode(label));
-//        }
-//    }
 }
