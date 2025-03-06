@@ -28,7 +28,7 @@ public class IbexPatternToChangeSequenceTemplateConverter {
     /**
      * We need that because patterns are DAGs, not trees, and we want each node to be visited exactly once.
      */
-    private final Set<TGGRuleNode> graphElementVisitedSet;
+    private Set<TGGRuleNode> graphElementVisitedSet;
     /**
      * Collects EChangeWrappers belonging to ONE rule. That means this needs to be resetted before each rule parsing.
      */
@@ -59,6 +59,7 @@ public class IbexPatternToChangeSequenceTemplateConverter {
      */
     private ChangeSequenceTemplate parseRule(final TGGRule rule) {
         eChangeWrappers = new HashSet<>();
+        graphElementVisitedSet = new HashSet<>();
         Util.filterNodes(rule, BindingType.CONTEXT, DomainType.SRC).forEach(this::parseContextNode);
         Util.filterNodes(rule, BindingType.CREATE, DomainType.SRC).forEach(this::parseCreateNode);
 
