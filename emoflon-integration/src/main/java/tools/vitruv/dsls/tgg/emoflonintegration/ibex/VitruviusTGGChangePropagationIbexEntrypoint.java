@@ -1,5 +1,7 @@
 package tools.vitruv.dsls.tgg.emoflonintegration.ibex;
 
+import language.TGGRule;
+import org.eclipse.emf.ecore.EPackage;
 import org.emoflon.ibex.tgg.compiler.defaults.IRegistrationHelper;
 import org.emoflon.ibex.tgg.operational.IBlackInterpreter;
 import org.emoflon.ibex.tgg.operational.benchmark.FullBenchmarkLogger;
@@ -13,7 +15,7 @@ import java.io.IOException;
  */
 public class VitruviusTGGChangePropagationIbexEntrypoint extends SYNC {
 
-    private IRegistrationHelper registrationHelper;
+    private final IRegistrationHelper registrationHelper;
 
     /**
      *
@@ -74,22 +76,22 @@ public class VitruviusTGGChangePropagationIbexEntrypoint extends SYNC {
         logger.info("Printing TGG[" + this.getTGG().getName() + "]");
         logger.info("  - src: List[EPackage, size=" + this.getTGG().getSrc().size() + "]");
 
-        this.getTGG().getSrc().forEach(pkg ->  {
-            logger.info("    - EPackage[" + pkg + "]");
-        });
+        for (EPackage ePackage : this.getTGG().getSrc()) {
+            logger.info("    - EPackage[" + ePackage + "]");
+        }
         logger.info("  - trg: ");
-        this.getTGG().getTrg().forEach(pkg ->  {
-            logger.info("    - EPackage[" + pkg + "]");
-        });
+        for (EPackage ePackage : this.getTGG().getTrg()) {
+            logger.info("    - EPackage[" + ePackage + "]");
+        }
         logger.info("  - corr: " +  this.getTGG().getCorr());
         logger.debug("  - corr from ibexOptions: " + this.getOptions().tgg.corrMetamodel());
         logger.debug("  - corr from flattenedTGG: " + this.getOptions().tgg.flattenedTGG().getCorr());
 
         this.getTGG();
         logger.info("  - rules: ");
-        this.getTGG().getRules().forEach(pkg ->  {
+        for (TGGRule pkg : this.getTGG().getRules()) {
             logger.info("    - EPackage[" + pkg + "]");
-        });
+        }
     }
 
 }

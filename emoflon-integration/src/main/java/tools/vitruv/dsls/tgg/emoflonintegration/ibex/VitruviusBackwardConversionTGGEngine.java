@@ -1,5 +1,6 @@
 package tools.vitruv.dsls.tgg.emoflonintegration.ibex;
 
+import language.TGGRuleEdge;
 import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
@@ -13,6 +14,7 @@ import org.emoflon.ibex.common.operational.IContextPatternInterpreter;
 import org.emoflon.ibex.common.operational.IMatch;
 import org.emoflon.ibex.common.operational.IMatchObserver;
 import org.emoflon.ibex.common.operational.IPatternInterpreterProperties;
+import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXContext;
 import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXModel;
 import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXPatternSet;
 import org.emoflon.ibex.tgg.compiler.patterns.PatternSuffixes;
@@ -83,7 +85,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     private OperationalStrategy observedOperationalStrategy;
 
     private ChangeSequenceTemplateSet changeSequenceTemplateSet;
-    private VitruviusChange<EObject> vitruviusChange;
+    private final VitruviusChange<EObject> vitruviusChange;
     private final Times times;
 
     /**
@@ -159,8 +161,9 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
         long stop = Timer.stop();
 
         logger.info("Pattern Conversion took " + (stop / 1000000d) + " ms");
-        iBeXPatternSet.getContextPatterns().forEach( contextPattern ->
-                PatternUtil.registerPattern(contextPattern.getName(), PatternSuffixes.extractType(contextPattern.getName())));
+        for (IBeXContext contextPattern : iBeXPatternSet.getContextPatterns()) {
+            PatternUtil.registerPattern(contextPattern.getName(), PatternSuffixes.extractType(contextPattern.getName()));
+        }
     }
 
     @Override
@@ -264,27 +267,27 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
                 ITGGMatch comatch = itggMatch.copy();
 
                 logger.debug("  - greenPattern.getSrcEdges");
-                greenPattern.getSrcEdges().forEach(edge -> {
-                    EObject src = (EObject) comatch.get(edge.getSrcNode().getName());
-                    String comatchGetSrc = src != null ? Util.eObjectToString(src): "null";
-                    logger.debug("    - " + edge.getName() + ", srcnodeName=" + edge.getSrcNode().getName() + " -> comatch-get: " + comatchGetSrc);
-                });
+                for (TGGRuleEdge tggRuleEdge : greenPattern.getSrcEdges()) {
+                    EObject src = (EObject) comatch.get(tggRuleEdge.getSrcNode().getName());
+                    String comatchGetSrc = src != null ? Util.eObjectToString(src) : "null";
+                    logger.debug("    - " + tggRuleEdge.getName() + ", srcnodeName=" + tggRuleEdge.getSrcNode().getName() + " -> comatch-get: " + comatchGetSrc);
+                }
 //                vitruviusBackwardConversionMatch.getMatchedChangeSequenceTemplate().getTggRule().getEdges()
 
                 logger.debug("  - greenPattern.getTrgEdges");
-                greenPattern.getTrgEdges().forEach(edge -> {
-                    EObject src = (EObject) comatch.get(edge.getSrcNode().getName());
-                    String comatchGetSrc = src != null ? Util.eObjectToString(src): "null";
-                    logger.debug("    - " + edge.getName() + ", srcnodeName=" + edge.getSrcNode().getName() + " -> comatch-get: " + comatchGetSrc);
-                });
+                for (TGGRuleEdge tggRuleEdge : greenPattern.getTrgEdges()) {
+                    EObject src = (EObject) comatch.get(tggRuleEdge.getSrcNode().getName());
+                    String comatchGetSrc = src != null ? Util.eObjectToString(src) : "null";
+                    logger.debug("    - " + tggRuleEdge.getName() + ", srcnodeName=" + tggRuleEdge.getSrcNode().getName() + " -> comatch-get: " + comatchGetSrc);
+                }
 
 
                 logger.debug("  - greenPattern.getCorrEdges");
-                greenPattern.getCorrEdges().forEach(edge -> {
+                for (TGGRuleEdge edge : greenPattern.getCorrEdges()) {
                     EObject src = (EObject) comatch.get(edge.getSrcNode().getName());
-                    String comatchGetSrc = src != null ? Util.eObjectToString(src): "null";
+                    String comatchGetSrc = src != null ? Util.eObjectToString(src) : "null";
                     logger.debug("    - " + edge.getName() + ", srcnodeName=" + edge.getSrcNode().getName() + " -> comatch-get: " + comatchGetSrc);
-                });
+                }
 
                 logger.debug("  - greenPattern.getTrgNodes");
                 greenPattern.getTrgNodes().forEach(node -> logger.debug("    - " + node.getName()));
@@ -347,10 +350,9 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
 //                }
 
             logger.debug("  - updated CORR-CACHING?: ");
-            this.observedOperationalStrategy.getResourceHandler().getCorrCaching().forEach((eObject, corrs) -> {
-                logger.debug("    - " + Util.eObjectToString(eObject) + " -> " + corrs.stream().map(Util::eObjectToString).collect(Collectors.joining(", ")));
-
-            });
+            this.observedOperationalStrategy.getResourceHandler().getCorrCaching().forEach((eObject, corrs) ->
+                logger.debug("    - " + Util.eObjectToString(eObject) + " -> " + corrs.stream().map(Util::eObjectToString).collect(Collectors.joining(", ")))
+            );
         }
     }
 

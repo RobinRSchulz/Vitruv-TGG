@@ -17,7 +17,6 @@ import tools.vitruv.change.utils.ResourceAccess;
 import tools.vitruv.dsls.tgg.emoflonintegration.ibex.VitruviusTGGChangePropagationRegistrationHelper;
 import tools.vitruv.dsls.tgg.emoflonintegration.ibex.VitruviusTGGChangePropagationIbexEntrypoint;
 import tools.vitruv.dsls.tgg.emoflonintegration.ibex.VitruviusBackwardConversionTGGEngine;
-import tools.vitruv.dsls.tgg.emoflonintegration.ibex.hipe.VitruviusHiPETGGEngine;
 
 import java.io.File;
 import java.io.IOException;
@@ -143,11 +142,10 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
         AtomicReference<Optional<Resource>> resourceOptional = new AtomicReference<>();
         vitruviusChange.getEChanges().stream()
                 .filter( change -> !(change instanceof EObjectExistenceEChange))
-                .findAny().ifPresentOrElse((eChange) -> {
-                    resourceOptional.set(Optional.ofNullable(Util.getAffectedEObjectFromEChange(eChange).eResource()));
-                    }, () -> {
-                    resourceOptional.set(Optional.empty());
-                });
+                .findAny().ifPresentOrElse(
+                        (eChange) -> resourceOptional.set(Optional.ofNullable(Util.getAffectedEObjectFromEChange(eChange).eResource())),
+                        () -> resourceOptional.set(Optional.empty())
+                );
         return resourceOptional.get();
     }
 

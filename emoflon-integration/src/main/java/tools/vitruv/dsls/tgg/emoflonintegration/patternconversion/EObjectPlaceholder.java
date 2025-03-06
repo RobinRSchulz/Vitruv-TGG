@@ -5,10 +5,10 @@ import org.eclipse.emf.ecore.EObject;
 
 /**
  * A placeholder for an ${@link EObject} for initializing after creating the ${@link tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange.EChangeWrapper}.
- *
+ * <br/>
  * This enables referencing the affected ${@link EObject}s in multiple EChangeWrappers before it is present.
- * This way, the pattern structure can be retained when multiple EChanges should be grouped together and share same entites.
- *
+ * This way, the pattern structure can be retained when multiple EChanges should be grouped together and share same entities.
+ * <br/>
  * Also, placeholders represent nodes in the pattern whence they came from.
  */
 public class EObjectPlaceholder {

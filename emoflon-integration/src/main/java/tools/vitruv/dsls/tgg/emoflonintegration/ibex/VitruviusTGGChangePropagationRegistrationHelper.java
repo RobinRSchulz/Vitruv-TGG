@@ -30,8 +30,6 @@ public class VitruviusTGGChangePropagationRegistrationHelper implements IRegistr
 
     /**
      *
-     * @param sourceMetamodelPackage
-     * @param targetMetamodelPackage
      * @param sourceMetamodelPlatformUri eclipse/ ibex need that. Look in your ibex project to find it...
      * @param targetMetamodelPlatformUri eclipse/ ibex need that. Look in your ibex project to find it...
      * @param source source model where the changes occur

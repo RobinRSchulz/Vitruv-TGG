@@ -1,6 +1,5 @@
 package tools.vitruv.dsls.tgg.emoflonintegration.patternmatching;
 
-import language.TGGRule;
 import org.apache.log4j.Logger;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
@@ -27,12 +26,7 @@ public class VitruviusChangePatternMatcher {
     private Map<EClass, Set<EChange<EObject>>> eChangesByEChangeType;
 
     /**
-     * To avoid duplicates in invoking patterns, remember which types of patterns have already been invoked for each EChange
-     */
-    private Map<EChange<EObject>, Set<TGGRule>> alreadyInvokedPatternTypes;
-
-    /**
-     * To avoid duplicates in invoking patterns (the same EChange with the same EChangeWrapper original(!) (which is distinctly mapped to a pattern type),
+     * To avoid duplicates in invoking patterns (the same EChange with the same EChangeWrapper original(!) (which is distinctly mapped to a pattern type)),
      * remember which EChangeWrapper originals have already been invoked for each EChange.
      */
     private Map<EChange<EObject>, Set<EChangeWrapper>> alreadyInvokedEChangeWrappers;
@@ -45,12 +39,11 @@ public class VitruviusChangePatternMatcher {
     /**
      * todo evtl an Khelladi orientieren, bzw. überlegen ob mein sofort-matching wirklich besser ist
      *
-     * @param changeSequenceTemplateSet
-     * @return
+     * @return patterns that match against this class's VitruviusChange. Context is NOT checked yet, here!
      */
     public Set<IMatch> matchPatterns(ChangeSequenceTemplateSet changeSequenceTemplateSet) {
         logger.debug("\n[VitruviusChangePatternMatcher] matching the following eChanges against " + changeSequenceTemplateSet.getPatternTemplateParents().size() + " pattern templates:");
-        vitruviusChange.getEChanges().forEach(eChange -> {logger.info("  - " + Util.eChangeToString(eChange));});
+        vitruviusChange.getEChanges().forEach(eChange -> logger.info("  - " + Util.eChangeToString(eChange)));
         // 1. compute all possible matches
         // TODO optimization: not compute all matches but mark EChanges (at the possible cost of missing sth?)
         Set<ChangeSequenceTemplate> allInvokedPatternTemplates = new HashSet<>();
@@ -103,10 +96,7 @@ public class VitruviusChangePatternMatcher {
          */
 
         // 2. Check if the context of the patterns matches maybe by leveraging existing ibex functionality??
-
         // 3. choose patterns to form a Coverage where each change belongs to exactly one pattern (todo maybe less than exactly one since not everything is consistency-relevant)
-
-        // 4. todo
         return allInvokedPatternTemplates.stream().map(VitruviusBackwardConversionMatch::new).collect(Collectors.toSet());
     }
 
@@ -134,7 +124,6 @@ public class VitruviusChangePatternMatcher {
     /**
      * Remove all ${@link ChangeSequenceTemplate}s from the given set that have an EChangeWrapper invoked with the eChange that has already been invoked before.
      * That means that the templates would be duplicates of already existing ones.
-     * @param eChange
      * @param changeSequenceTemplates templates that have been partly invoked with the given eChange.
      */
     private void removeDuplicateTemplateInvocations(EChange<EObject> eChange, Set<ChangeSequenceTemplate> changeSequenceTemplates) {

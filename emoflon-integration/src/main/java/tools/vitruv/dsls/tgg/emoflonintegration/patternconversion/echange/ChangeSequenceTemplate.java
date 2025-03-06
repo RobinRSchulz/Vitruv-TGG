@@ -18,15 +18,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Todo: This class should
- * * represent a pattern in the form of Vitruvius EChanges
- * * contain
- *
- *
- * * Problem: We need multiple identical instantiations of the IbexPatternTemplate for the matching process...
- * * Idea: Maybe a Factory that has one set of EChangeWrappers and always copies those each time a fresh IbexPatternTemplate is needed?
- * * apply-Methode, die dann "angewandtes Template" zurückgibt.
- * * todo -> Mal Lars fragen
+ * This class represents a pattern in the form of Vitruvius EChanges.
  *
  */
 public class ChangeSequenceTemplate {
@@ -60,7 +52,9 @@ public class ChangeSequenceTemplate {
     public ChangeSequenceTemplate(TGGRule tggRule, Collection<IBeXContextPattern> iBeXContextPatterns, Collection<EChangeWrapper> eChangeWrappers) {
         this.tggRule = tggRule;
         this.iBeXContextPatternMap = new HashMap<>();
-        iBeXContextPatterns.forEach(iBeXContextPattern -> this.iBeXContextPatternMap.put(getPatternType(iBeXContextPattern), iBeXContextPattern));
+        for (IBeXContextPattern iBeXContextPattern : iBeXContextPatterns) {
+            this.iBeXContextPatternMap.put(getPatternType(iBeXContextPattern), iBeXContextPattern);
+        }
 
         this.eChangeWrappers = eChangeWrappers;
         initialize();
@@ -69,9 +63,9 @@ public class ChangeSequenceTemplate {
     private void initialize() {
         // make the mapping EChangeType -> relevant eChangeWrappers easily accessible
         eChangeWrappersByEChangeType = new HashMap<>();
-        eChangeWrappers.forEach(eChangeWrapper -> {
+        for (EChangeWrapper eChangeWrapper : eChangeWrappers) {
             eChangeWrappersByEChangeType.computeIfAbsent(eChangeWrapper.getEChangeType(), k -> new HashSet<>()).add(eChangeWrapper);
-        });
+        }
     }
 
     private PatternType getPatternType(IBeXContextPattern pattern) {
@@ -167,24 +161,28 @@ public class ChangeSequenceTemplate {
          */
         Collection<EChangeWrapper> newEChangeWrappers = new LinkedList<>();
         Map<EChangeWrapper, EChangeWrapper> oldToNewEChangeWrapperMap = new HashMap<>();
-        this.eChangeWrappers.stream().forEach(eChangeWrapper -> {
-            EChangeWrapper newEChangeWrapper = eChangeWrapper.shallowCopy();
-            oldToNewEChangeWrapperMap.put(eChangeWrapper, newEChangeWrapper);
+        for (EChangeWrapper changeWrapper : this.eChangeWrappers) {
+            EChangeWrapper newEChangeWrapper = changeWrapper.shallowCopy();
+            oldToNewEChangeWrapperMap.put(changeWrapper, newEChangeWrapper);
             newEChangeWrappers.add(newEChangeWrapper);
-        });
+        }
         ChangeSequenceTemplate copiedTemplate = new ChangeSequenceTemplate(this.tggRule, this.iBeXContextPatternMap, newEChangeWrappers, oldToNewEChangeWrapperMap);
 
         // now, we can systematically replace the OLD placeholders in the NEW eChangeWrappers with NEW placeholders to achieve a deep copy
         // 1. Create a Map OLDPlaceholder -> NEWPlaceholder
         Set<EObjectPlaceholder> allPlaceholders = new HashSet<>();
-        copiedTemplate.getEChangeWrappers().forEach(eChangeWrapper -> {
-            allPlaceholders.addAll(eChangeWrapper.getAllPlaceholders());
-        });
+        for (EChangeWrapper changeWrapper : copiedTemplate.getEChangeWrappers()) {
+            allPlaceholders.addAll(changeWrapper.getAllPlaceholders());
+        }
         Map<EObjectPlaceholder, EObjectPlaceholder> oldToNewPlaceholders = new HashMap<>();
-        allPlaceholders.forEach(oldPlaceholder -> oldToNewPlaceholders.put(oldPlaceholder, new EObjectPlaceholder(oldPlaceholder.getTggRuleNode())));
+        for (EObjectPlaceholder oldPlaceholder : allPlaceholders) {
+            oldToNewPlaceholders.put(oldPlaceholder, new EObjectPlaceholder(oldPlaceholder.getTggRuleNode()));
+        }
 
         // 2. Replace the OLD placeholders in the NEW eChangeWrappers with the NEW placeholders.
-        copiedTemplate.getEChangeWrappers().forEach(eChangeWrapper -> eChangeWrapper.replaceAllPlaceholders(oldToNewPlaceholders));
+        for (EChangeWrapper eChangeWrapper : copiedTemplate.getEChangeWrappers()) {
+            eChangeWrapper.replaceAllPlaceholders(oldToNewPlaceholders);
+        }
 
         return copiedTemplate;
     }
@@ -340,7 +338,9 @@ public class ChangeSequenceTemplate {
          * Init the map with what is already known.
          */
         private void initTggRuleNode2EObjectMap() {
-            getAllPlaceholders().forEach(eObjectPlaceholder -> tggRuleNode2EObjectMap.put(eObjectPlaceholder.getTggRuleNode(), eObjectPlaceholder.getAffectedEObject()));
+            for (EObjectPlaceholder eObjectPlaceholder : getAllPlaceholders()) {
+                tggRuleNode2EObjectMap.put(eObjectPlaceholder.getTggRuleNode(), eObjectPlaceholder.getAffectedEObject());
+            }
         }
     }
 }

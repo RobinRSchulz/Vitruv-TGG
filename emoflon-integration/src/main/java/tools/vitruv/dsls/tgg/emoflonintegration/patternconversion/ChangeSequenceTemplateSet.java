@@ -4,6 +4,7 @@ import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange.ChangeSequenceTemplate;
+import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange.EChangeWrapper;
 
 import java.util.*;
 
@@ -29,11 +30,11 @@ public class ChangeSequenceTemplateSet {
     private void initialize() {
         // make the mapping EChangeType -> relevant patterns easily accessible
         ibexPatternTemplatesByEChangeType = new HashMap<>();
-        patternTemplateParents.forEach(ibexPatternTemplate -> {
-            ibexPatternTemplate.getEChangeWrappers().forEach(eChangeWrapper -> {
+        for (ChangeSequenceTemplate ibexPatternTemplate : patternTemplateParents) {
+            for (EChangeWrapper eChangeWrapper : ibexPatternTemplate.getEChangeWrappers()) {
                 ibexPatternTemplatesByEChangeType.computeIfAbsent(eChangeWrapper.getEChangeType(), k -> new HashSet<>()).add(ibexPatternTemplate);
-            });
-        });
+            }
+        }
     }
 
     /**
@@ -47,18 +48,17 @@ public class ChangeSequenceTemplateSet {
      */
     public Set<ChangeSequenceTemplate> getAndInitRelevantIbexPatternTemplatesByEChange(EChange<EObject> eChange) {
         Set<ChangeSequenceTemplate> partlyInitializedTemplates = new HashSet<>();
-        ibexPatternTemplatesByEChangeType.get(eChange.eClass())
-                .forEach(ibexPatternTemplate -> {
-                    ibexPatternTemplate.getEChangeWrappers().stream()
-                            .filter(eChangeWrapper -> eChangeWrapper.matches(eChange))
-                            .forEach(eChangeWrapper -> {
-                                // we got a pattern with >= 1 eChangewrappers matching the eChange. We now want to create one invoked IbexPatternTemplate with the respective eChangeWrapper already initialized.
-                                // thus, we initialize the one eChangeWrapper here
-                                ChangeSequenceTemplate changeSequenceTemplateCopy = ibexPatternTemplate.deepCopy();
-                                changeSequenceTemplateCopy.getThisInstancesEChangeWrapperFromParent(eChangeWrapper).initialize(eChange);
-                                partlyInitializedTemplates.add(changeSequenceTemplateCopy);
-                            });
-                });
+        for (ChangeSequenceTemplate ibexPatternTemplate : ibexPatternTemplatesByEChangeType.get(eChange.eClass())) {
+            for (EChangeWrapper eChangeWrapper : ibexPatternTemplate.getEChangeWrappers()) {
+                if (eChangeWrapper.matches(eChange)) {
+                    // we got a pattern with >= 1 eChangewrappers matching the eChange. We now want to create one invoked IbexPatternTemplate with the respective eChangeWrapper already initialized.
+                    // thus, we initialize the one eChangeWrapper here
+                    ChangeSequenceTemplate changeSequenceTemplateCopy = ibexPatternTemplate.deepCopy();
+                    changeSequenceTemplateCopy.getThisInstancesEChangeWrapperFromParent(eChangeWrapper).initialize(eChange);
+                    partlyInitializedTemplates.add(changeSequenceTemplateCopy);
+                }
+            }
+        }
         return partlyInitializedTemplates;
     }
 

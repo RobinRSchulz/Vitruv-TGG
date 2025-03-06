@@ -1,12 +1,8 @@
 package tools.vitruv.dsls.tgg.emoflonintegration.patternmatching;
 
-import hipe.engine.match.ProductionMatch;
 import org.apache.log4j.Logger;
-import org.eclipse.emf.ecore.EObject;
-import org.emoflon.ibex.common.operational.SimpleMatch;
 import org.emoflon.ibex.tgg.compiler.patterns.PatternType;
 import org.emoflon.ibex.tgg.compiler.patterns.PatternUtil;
-import org.emoflon.ibex.tgg.compiler.patterns.TGGPatternUtil;
 import org.emoflon.ibex.tgg.operational.matches.ITGGMatch;
 import org.emoflon.ibex.tgg.operational.matches.SimpleTGGMatch;
 import tools.vitruv.dsls.tgg.emoflonintegration.Util;
@@ -49,9 +45,11 @@ public class VitruviusBackwardConversionMatch extends SimpleTGGMatch implements 
 
     public ITGGMatch copy() {
         SimpleTGGMatch copy = new SimpleTGGMatch(this.getPatternName());
-        this.getParameterNames().forEach((n) -> copy.put(n, this.get(n)));
+        for (String n : this.getParameterNames()) {
+            copy.put(n, this.get(n));
+        }
         logger.debug("VitruvBackConvMatch::copy : \n  -" + copy.getParameterNames().stream()
-                .map(paramName -> paramName + ": " + Util.eObjectToString((EObject)copy.get(paramName)))
+                .map(paramName -> paramName + ": " + Util.eObjectToString(copy.get(paramName)))
                 .collect(Collectors.joining("\n  -")));
         return copy;
     }

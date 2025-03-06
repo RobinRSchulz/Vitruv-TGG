@@ -50,30 +50,32 @@ public class EAttributeValueEChangeWrapper extends EChangeWrapper {
 
     @Override
     protected boolean extendedDataMatches(EChange<EObject> eChange) {
-        switch (eChange) {
-            case InsertEAttributeValue insertEAttributeValue:
+        return switch (eChange) {
+            case InsertEAttributeValue<EObject, ?> insertEAttributeValue -> {
                 if (valuePlaceholder.isInitialized() && !valuePlaceholder.getAffectedEObject().equals(insertEAttributeValue.getNewValue())) {
                     // if this EChangeWrapper is partly initialized, the EObject it holds must be matched, too!
-                    return false;
+                    yield false;
                 }
-                return insertEAttributeValue.getAffectedFeature().equals(affectedEAttribute);
-            case RemoveEAttributeValue removeEAttributeValue:
+                yield insertEAttributeValue.getAffectedFeature().equals(affectedEAttribute);
+            }
+            case RemoveEAttributeValue<EObject, ?> removeEAttributeValue -> {
                 if (valuePlaceholder.isInitialized() && !valuePlaceholder.getAffectedEObject().equals(removeEAttributeValue.getOldValue())) {
                     // if this EChangeWrapper is partly initialized, the EObject it holds must be matched, too!
-                    return false;
+                    yield false;
                 }
-                return removeEAttributeValue.getAffectedFeature().equals(affectedEAttribute);
-            default: return false;
-        }
+                yield removeEAttributeValue.getAffectedFeature().equals(affectedEAttribute);
+            }
+            default -> false;
+        };
     }
 
     @Override
     public void initializeExtension(EChange<EObject> eChange) {
         switch (eChange) {
-            case InsertEAttributeValue insertEAttributeValue:
+            case InsertEAttributeValue<EObject, ?> insertEAttributeValue:
                 this.valuePlaceholder.initialize((EObject) insertEAttributeValue.getNewValue());
                 break;
-            case RemoveEAttributeValue removeEAttributeValue:
+            case RemoveEAttributeValue<EObject, ?> removeEAttributeValue:
                 this.valuePlaceholder.initialize((EObject) removeEAttributeValue.getOldValue());
                 break;
             default: throw new IllegalStateException("Unexpected eChange: " + eChange);

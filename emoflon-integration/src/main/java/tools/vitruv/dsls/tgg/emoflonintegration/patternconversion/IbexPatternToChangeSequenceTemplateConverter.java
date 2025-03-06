@@ -2,7 +2,6 @@ package tools.vitruv.dsls.tgg.emoflonintegration.patternconversion;
 
 import language.*;
 import org.apache.log4j.Logger;
-import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXContext;
 import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXContextPattern;
 import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXModel;
 import org.emoflon.ibex.tgg.compiler.patterns.PatternSuffixes;
@@ -95,11 +94,10 @@ public class IbexPatternToChangeSequenceTemplateConverter {
 
         // continue further on
         graphElementVisitedSet.add(ruleNode);
-        ruleNode.getOutgoingEdges().forEach(edge -> {
-            // created nodes cannot have outgoing edges that "already exist".
+        for (TGGRuleEdge edge : ruleNode.getOutgoingEdges()) {// created nodes cannot have outgoing edges that "already exist".
             assert edge.getBindingType().equals(BindingType.CREATE);
             parseCreateEdge(edge);
-        });
+        }
 
     }
 
@@ -112,14 +110,14 @@ public class IbexPatternToChangeSequenceTemplateConverter {
         // recurse through context nodes and edges until a CREATE node or edge is found.
         assert ruleNode.getBindingType().equals(BindingType.CONTEXT);
         graphElementVisitedSet.add(ruleNode);
-        ruleNode.getOutgoingEdges().forEach(edge -> {
+        for (TGGRuleEdge edge : ruleNode.getOutgoingEdges()) {
             if (edge.getBindingType().equals(BindingType.CONTEXT)) {
                 assert edge.getTrgNode().getBindingType().equals(BindingType.CONTEXT);
                 parseContextNode(edge.getTrgNode());
             } else if (edge.getBindingType().equals(BindingType.CREATE)) {
                 parseCreateEdge(edge);
             }
-        });
+        }
     }
 
     /**
@@ -201,7 +199,7 @@ public class IbexPatternToChangeSequenceTemplateConverter {
                 .forEach(iBeXContextPattern -> logger.debug("  - [" + iBeXContextPattern.getName() + "] patternType=" + PatternSuffixes.extractType(iBeXContextPattern.getName())));
         logger.debug(" ANY ALTERNATIVES???");
         this.iBeXModel.getPatternSet().getContextPatterns().stream()
-                .filter(pattern -> !IBeXContextPattern.class.isInstance(pattern))
+                .filter(pattern -> !(pattern instanceof IBeXContextPattern))
                 .forEach(pattern -> logger.debug("  - [" + pattern.getName() + "] patternType=" + PatternSuffixes.extractType(pattern.getName())));
         logger.debug("+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~");
 
@@ -223,12 +221,12 @@ public class IbexPatternToChangeSequenceTemplateConverter {
      */
     private void printDebugInfo() {
         logger.debug("Rules: ");
-        this.tgg.getRules().forEach(rule -> {
+        for (TGGRule rule : this.tgg.getRules()) {
             logger.debug("  - " + rule.getName());
 //            rule.getNodes().forEach(tggRuleNode -> logger.info("    - [" +tggRuleNode.getType() + "]: " + tggRuleNode.getName()));
 
 //            filterEdges(rule, BindingType.CONTEXT, DomainType.SRC).forEach( edge -> logger.info("    - Context_src_edge: " + edgeToString(edge)));
-            Util.filterEdges(rule, BindingType.CREATE, DomainType.SRC).forEach( edge -> logger.info("    - Create_src_edge: " + edgeToString(edge)));
+            Util.filterEdges(rule, BindingType.CREATE, DomainType.SRC).forEach(edge -> logger.info("    - Create_src_edge: " + edgeToString(edge)));
 //            filterEdges(rule, BindingType.CONTEXT, DomainType.TRG).forEach( edge -> logger.info("    - Context_trg_edge: " + edge));
 //            filterEdges(rule, BindingType.CREATE, DomainType.TRG).forEach( edge -> logger.info("    - Create_trg_edge: " + edge));
 //            filterEdges(rule, BindingType.CONTEXT, DomainType.CORR).forEach( edge -> logger.info("    - Context_corr_edge: " + edgeToString(edge)));
@@ -240,7 +238,7 @@ public class IbexPatternToChangeSequenceTemplateConverter {
 //            filterNodes(rule, BindingType.CONTEXT, DomainType.TRG).forEach( node -> logger.info("    - Context_trg_node: " + node));
 //            filterNodes(rule, BindingType.CONTEXT, DomainType.CORR).forEach( node -> logger.info("    - Context_corr_node: " + node));
 //            filterNodes(rule, BindingType.CREATE, DomainType.CORR).forEach( node -> logger.info("    - Create_corr_node: " + node));
-        });
+        }
 
 //        this.iBeXModel.getPatternSet().getContextPatterns().forEach(contextPattern -> {
 //            logger.info("ContextPattern: " + contextPattern.getName());
@@ -262,11 +260,5 @@ public class IbexPatternToChangeSequenceTemplateConverter {
                 "type.eContainingFeature=" + edge.getType().eContainingFeature().getName() + ", " +
                 "type.eContainingFeature.eContainingFeature=" + edge.getType().eContainingFeature().eContainingFeature().getName() + ", " +
                 "type.upperbound=" + edge.getType().getUpperBound();
-//                "type.eContainer=" + edge.getType().eContainer() + ",\n                               " +
-//                "type.eContainer=" + edge.getType().eContainer().eClass().getName() + ",\n                               " +
-//                "type.eClass=" + edge.getType().eClass().getName() + ", \n                               " +
-//                "EReferences of the Eclass: " + edge.getType().eContainer().eClass().getEAllReferences().stream().map(ENamedElement::getName).reduce("", (a, b) -> a + ", " + b) + "\n                               " +
-//                "EAttributes of the Eclass: " + edge.getType().eContainer().eClass().getEAllAttributes().stream().map(ENamedElement::getName).reduce("", (a, b) -> a + ", " + b) + "\n                               " +
-//                "type.eContainer=" + edge.getType().eContainer() + ", ";
     }
 }

@@ -12,7 +12,7 @@ import java.util.Set;
 
 /**
  * Wraps EChanges that affect only one element (and its model), e.g. existence changing or root setting
- *
+ * <br/>
  * This wrapper is applicable to the following types of EChange:
  * <li> ${@link tools.vitruv.change.atomic.eobject.CreateEObject}
  * <li> ${@link tools.vitruv.change.atomic.eobject.DeleteEObject}

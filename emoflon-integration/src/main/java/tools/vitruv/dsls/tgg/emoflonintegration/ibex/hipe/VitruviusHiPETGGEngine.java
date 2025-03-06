@@ -8,6 +8,7 @@ import hipe.engine.message.production.ProductionResult;
 import org.apache.log4j.Logger;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.emoflon.ibex.common.operational.IMatch;
 import org.emoflon.ibex.common.operational.IMatchObserver;
 import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXContext;
 import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXModel;
@@ -145,10 +146,13 @@ public class VitruviusHiPETGGEngine extends HiPETGGEngine {
                             extractData.get(patternName).getNewMatches().stream().map(productionMatch -> productionMatch.patternName).collect(Collectors.joining(", ")));
 
                     Collection<ProductionMatch> matches = extractData.get(patternName).getNewMatches();
-                    matches.stream().map((m) -> this.createMatch(m, pName)).forEach( match -> {
+                    for (ProductionMatch m : matches) {
+                        IMatch match = this.createMatch(m, pName);
                         logger.debug("  - HIPE MATCH: [" + match.getPatternName() + "] params= ");
-                        match.getParameterNames().forEach(paramName -> logger.debug("    - " + paramName + "=" + Util.eObjectToString(match.get(paramName))));
-                    });
+                        for (String paramName : match.getParameterNames()) {
+                            logger.debug("    - " + paramName + "=" + Util.eObjectToString(match.get(paramName)));
+                        }
+                    }
                 }
             }
 

@@ -55,21 +55,23 @@ public class EReferenceValueIndexEChangeWrapper extends EChangeWrapper {
 
     @Override
     protected boolean extendedDataMatches(EChange<EObject> eChange) {
-        switch (eChange) {
-            case InsertEReference<EObject> insertEReference:
+        return switch (eChange) {
+            case InsertEReference<EObject> insertEReference -> {
                 if (valuePlaceholder.isInitialized() && !valuePlaceholder.getAffectedEObject().equals(insertEReference.getNewValue())) {
                     // if this EChangeWrapper is partly initialized, the EObject it holds must be matched, too!
-                    return false;
+                    yield false;
                 }
-                return insertEReference.getAffectedFeature().equals(affectedEReference);
-            case RemoveEReference removeEReference:
+                yield insertEReference.getAffectedFeature().equals(affectedEReference);
+            }
+            case RemoveEReference<EObject> removeEReference -> {
                 if (valuePlaceholder.isInitialized() && !valuePlaceholder.getAffectedEObject().equals(removeEReference.getOldValue())) {
                     // if this EChangeWrapper is partly initialized, the EObject it holds must be matched, too!
-                    return false;
+                    yield false;
                 }
-                return removeEReference.getAffectedFeature().equals(affectedEReference);
-            default: return false;
-        }
+                yield removeEReference.getAffectedFeature().equals(affectedEReference);
+            }
+            default -> false;
+        };
     }
 
     @Override
