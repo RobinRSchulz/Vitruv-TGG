@@ -43,11 +43,7 @@ public class VitruviusChangePatternMatcher {
     }
 
     /**
-     * todo unit-tests schreiben!
      * todo evtl an Khelladi orientieren, bzw. überlegen ob mein sofort-matching wirklich besser ist
-     * todo CODE REVIEW am 06.03.2025,
-     * * Woche vorher Code den Teilnehmern schicken!
-     * * im Wiki Zeug lesen.
      *
      * @param changeSequenceTemplateSet
      * @return
@@ -58,7 +54,7 @@ public class VitruviusChangePatternMatcher {
         // 1. compute all possible matches
         // TODO optimization: not compute all matches but mark EChanges (at the possible cost of missing sth?)
         Set<ChangeSequenceTemplate> allInvokedPatternTemplates = new HashSet<>();
-        vitruviusChange.getEChanges().forEach(eChange -> {
+        for (EChange<EObject> eChange : vitruviusChange.getEChanges()) {
             Set<ChangeSequenceTemplate> patternTemplates = changeSequenceTemplateSet.getAndInitRelevantIbexPatternTemplatesByEChange(eChange);
             /*
                 To avoid duplicates, remember which EChangeWrapper originals are already invoked for the current eChange and discard the templates which invoked the
@@ -72,7 +68,7 @@ public class VitruviusChangePatternMatcher {
             patternTemplates.forEach(patternTemplate -> logger.debug("\n- " + patternTemplate));
             logger.debug("[VitruviusChangePatternMatcher] Trying to match the uninitialized wrappers, too...");
 
-            patternTemplates.forEach(patternTemplate -> {
+            for (ChangeSequenceTemplate patternTemplate : patternTemplates) {
                 for (EChangeWrapper eChangeWrapper : patternTemplate.getUninitializedEChangeWrappers()) {
                     logger.debug("[VitruviusChangePatternMatcher] Trying to match " + eChangeWrapper);
                     boolean eChangeWrapperInitialized = false;
@@ -95,8 +91,8 @@ public class VitruviusChangePatternMatcher {
                         break;
                     }
                 }
-            });
-        });
+            }
+        }
         logger.debug("\n[VitruviusChangePatternMatcher] +++ Computed the following matches +++\n");
         allInvokedPatternTemplates.forEach(logger::debug);
         visualizeCoverage(allInvokedPatternTemplates);
@@ -130,10 +126,9 @@ public class VitruviusChangePatternMatcher {
     private void initialize() {
         this.eChangesByEChangeType = new HashMap<>();
         alreadyInvokedEChangeWrappers = new HashMap<>();
-        this.vitruviusChange.getEChanges()
-                .forEach(eChange -> {
-                    this.eChangesByEChangeType.computeIfAbsent(eChange.eClass(), k -> new HashSet<>()).add(eChange);
-                });
+        for (EChange<EObject> eChange : vitruviusChange.getEChanges()) {
+            this.eChangesByEChangeType.computeIfAbsent(eChange.eClass(), k -> new HashSet<>()).add(eChange);
+        }
     }
 
     /**
@@ -160,8 +155,9 @@ public class VitruviusChangePatternMatcher {
     }
 
     private void rememberWrappersInvokedWithEChange(EChange<EObject> eChange, Collection<ChangeSequenceTemplate> changeSequenceTemplates) {
-        changeSequenceTemplates.forEach(ibexPatternTemplate -> {
-            rememberWrapperInvokedWithEChange(eChange, ibexPatternTemplate);});
+        for (ChangeSequenceTemplate changeSequenceTemplate : changeSequenceTemplates) {
+            rememberWrapperInvokedWithEChange(eChange, changeSequenceTemplate);
+        }
     }
     private void rememberWrapperInvokedWithEChange(EChange<EObject> eChange, ChangeSequenceTemplate changeSequenceTemplate) {
         changeSequenceTemplate.getEChangeWrapperHolding(eChange).ifPresentOrElse(
