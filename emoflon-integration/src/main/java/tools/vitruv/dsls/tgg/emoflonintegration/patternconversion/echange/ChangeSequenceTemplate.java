@@ -263,21 +263,37 @@ public class ChangeSequenceTemplate {
             return true;
         }
 
+        /**
+         * visit a CREATE node and DFS through its domain and, via corr, also move to the other domain.
+         * <br/><br/>
+         * Only check all context nodes/edges, if this is adjacent to a CREATE node, that will be handled by the caller!<br/>
+         * Since we also switch domains in this recursion (because we also match the target contexts),<br/>
+         * this hinders us breaking our precondition by mistakenly assuming that we have already matched "TRG" CREATE nodes!
+         * @param createNode
+         * @return
+         */
         private boolean visitCREATENode(TGGRuleNode createNode) {
-            /*  Only check all context nodes/edges, if this is adjacent to a CREATE node, that will be handled by the caller!
-                Since we also switch domains in this recursion (because we also match the target contexts),
-                this hinders us breaking our precondition by mistakenly assuming that we have already matched "TRG" CREATE nodes!
+            /*
              */
             nodesVisited.add(createNode);
             EObject createNodeEObject = tggRuleNode2EObjectMap.get(createNode);
             for (TGGRuleEdge incomingEdge : createNode.getIncomingEdges()) {
-                // incoming edges can be CREATEing or CONTEXT. THey can be of THIS domain or of THE OTHER.
+                /*
+                 * Let createNode.getDomainType be THIS and the other be OTHER
+                 * Incoming edges can be:
+                 *   * BindingType: CREATE or CONTEXT   (source nodes: CREATE or CONTEXT)
+                 *   * DomainType:  THIS or CORR        (source nodes: THIS or CORR)
+                 *
+                 * We ignore all edges where the source node is CREATE, since we handle that in the caller (iter over each CREATE).
+                 * In THIS domain, we look at a CONTEXT node and try to match it (and the edge) to actual model elements.
+                 * In CORR domain, we look at CONTEXT nodes and move to the respective node in the OTHER domain
+                 *    and try to find an existing correlation to an existing model element in the model of the OTHER domain.
+                 */
                 if (incomingEdge.getSrcNode().getBindingType().equals(BindingType.CREATE)) {continue;}
                 assert incomingEdge.getBindingType().equals(BindingType.CONTEXT);
 
                 if (incomingEdge.getDomainType().equals(createNode.getDomainType())) {
-                    // we stay in the domain and have a CONTEXT node
-                    //TODO map the context node to the EObject that has the createNode's eObject as a referenced child.
+                    // THIS domain, CONTEXT node
                     Set<EObject> parentCandidates = EcoreUtil.UsageCrossReferencer.find(createNodeEObject, createNodeEObject.eResource()).stream()
                             .filter(setting -> setting.getEStructuralFeature().equals(incomingEdge))
                             .map(EStructuralFeature.Setting::getEObject)
@@ -286,8 +302,11 @@ public class ChangeSequenceTemplate {
                         return visitCONTEXTNode(incomingEdge.getSrcNode());
                     } else return false;
                 } else if (incomingEdge.getDomainType().equals(DomainType.CORR)) {
-
-
+                    if (incomingEdge.getBindingType().equals(BindingType.CREATE)) {
+                        // cannot and should not be matched, because no corr exists in the model, yet!
+                        continue;
+                    }
+                    // we leave the domain and have a CONTEXT node
 //                    this.createCorrs(comatch, greenPattern.getCorrNodes(), this.resourceHandler.getCorrResource());
 //                        --calls-->
 //                    private EObject createCorr(ITGGMatch comatch, TGGRuleNode node, Object src, Object trg) { // src & trg sind die Namen der Regel-Knoten
@@ -297,32 +316,22 @@ public class ChangeSequenceTemplate {
 //                        ++this.numOfCreatedCorrNodes;
 //                        return corr;
 //                    }
-                    TGGRuleNode sourceTGGRuleNode = incomingEdge.getSrcNode();
-                    EList<TGGRuleCorr> corrsOfSourceTGGRuleNode = sourceTGGRuleNode.getDomainType().equals(DomainType.SRC)
-                            ? sourceTGGRuleNode.getIncomingCorrsSource()
-                            : sourceTGGRuleNode.getIncomingCorrsTarget();
-                    for (TGGRuleCorr corr : corrsOfSourceTGGRuleNode) {
-                        TGGRuleNode correlatedNode = sourceTGGRuleNode.getDomainType().equals(DomainType.SRC) ? corr.getTarget() : corr.getSource();
-                        if (correlatedNode.getBindingType().equals(BindingType.CONTEXT)) {
-                            // we are only interested in matching CONTEXT nodes in the other domain.
-                            //TODO correlatedNode was jetzt damit? wird aktuell nicht benutzt...
-                            Optional<EObject> correlatedEObject = getEObjectCorrellatedToAMatchingEObject(createNodeEObject, corr, correlatedNode);
-                            if (correlatedEObject.isPresent()) {
-                                //we have found a matching EObject -> put it in the global map
-                                tggRuleNode2EObjectMap.put(sourceTGGRuleNode, correlatedEObject.get());
-                                // TODO from here, we can recurse further. Remember that we are in the OTHER domain.
-                                // return recurseFurther(...);
-                                throw new RuntimeException("todo implement recursing further");
-                            }
+                    TGGRuleCorr sourceTGGRuleNode = (TGGRuleCorr) incomingEdge.getSrcNode(); // this MUST be a TGGRuleCorr node
+                    TGGRuleNode correlatedNodeInOTHERDomain = createNode.getDomainType().equals(DomainType.SRC) ? sourceTGGRuleNode.getTarget() : sourceTGGRuleNode.getSource();
+
+                    if (correlatedNodeInOTHERDomain.getBindingType().equals(BindingType.CONTEXT)) {
+                        // we are only interested in matching CONTEXT nodes in the other domain.
+                        Optional<EObject> correlatedEObject = getEObjectCorrellatedToAMatchingEObject(createNodeEObject, sourceTGGRuleNode, correlatedNodeInOTHERDomain);
+                        if (correlatedEObject.isPresent()) {
+                            //we have found a matching EObject -> put it in the global map
+                            tggRuleNode2EObjectMap.put(sourceTGGRuleNode, correlatedEObject.get());
+                            // TODO from here, we can recurse further. Remember that we are in the OTHER domain.
+                            visitCONTEXTNode(sourceTGGRuleNode);
+                            // return recurseFurther(...);
+                            throw new RuntimeException("todo implement recursing further");
                         }
                     }
-                    // we leave the domain and have a CONTEXT node
-//                    tggResourceHandler.getCorrResource().
-                    tggResourceHandler.getCorrCaching().get(createNodeEObject).stream()
-//                            .filter(corrEObject -> incomingEdge.)
-                            .filter(corrEObject -> corrEObject instanceof TGGRuleCorr);  // in case there are others...
-//                        getCorrelatedNodeInOtherModel(incomingEdge.getSrcNode(), corrEObject);
-
+                    // else we got a CREATE node in the OTHER domain which doesn't interest us...
                     //TODO don't know whats best here... we need the target model resource or the EcoreUtil search...
                     // TODO we need the ibex CORR map, all else makes no sense..
                     /* TODO
@@ -337,18 +346,25 @@ public class ChangeSequenceTemplate {
             }
 
             for (TGGRuleEdge outgoingEdge : createNode.getOutgoingEdges()) {
+                /*
+                 * Let createNode.getDomainType be THIS and the other be OTHER
+                 * Outgoing edges can be:
+                 *   * BindingType: CREATE  (target nodes: CREATE or CONTEXT)
+                 *   * DomainType:  THIS    (source nodes: THIS)
+                 *
+                 * We ignore all edges where the target node is CREATE, since we handle that in the caller (iter over each CREATE).
+                 * We stay in THIS domain.
+                 * We look at a CONTEXT target node and try to match it (and the edge) to actual model elements.
+                 */
+
                 // created nodes cannot have outgoing edges that "already exist".
                 assert outgoingEdge.getBindingType().equals(BindingType.CREATE);
-                if (outgoingEdge.getTrgNode().getBindingType().equals(BindingType.CREATE)) {continue;}
-                if (outgoingEdge.getDomainType().equals(createNode.getDomainType())) {
-                    // we stay in the domain
+                assert outgoingEdge.getDomainType().equals(createNode.getDomainType());
 
-                    throw new RuntimeException("TODO impl");
-                } else if (outgoingEdge.getDomainType().equals(DomainType.CORR)) {
-                    throw new RuntimeException("TODO impl");
-                } else {
-                    throw new IllegalStateException("This must be an algorithm error!");
+                if (outgoingEdge.getTrgNode().getBindingType().equals(BindingType.CONTEXT)) {
+                    // TODO do similar stuff as above
                 }
+                // not look at CREATE nodes...
             }
 
             return true;
@@ -382,8 +398,18 @@ public class ChangeSequenceTemplate {
             }
         }
 
-        private Optional<EObject> getEObjectCorrellatedToAMatchingEObject(EObject eObject, TGGRuleCorr tggRuleCorrFromRule, TGGRuleNode ruleNode) {
+        /**
+         * Check if the given eObject is correllated via a CORR node that resembles the tggRuleCorrFromRule to a node in the OTHER domain
+         * that matches the given ruleNodeInOtherDomain.
+         *
+         * @param eObject the eObject which is to be checked
+         * @param tggRuleCorrFromRule
+         * @param ruleNodeInOtherDomain
+         * @return
+         */
+        private Optional<EObject> getEObjectCorrellatedToAMatchingEObject(EObject eObject, TGGRuleCorr tggRuleCorrFromRule, TGGRuleNode ruleNodeInOtherDomain) {
 
+            //Todo remove this code from IbexGreenInterpreter
 //                    this.createCorrs(comatch, greenPattern.getCorrNodes(), this.resourceHandler.getCorrResource());
 //                        --calls-->
 //                    private EObject createCorr(ITGGMatch comatch, TGGRuleNode node, Object src, Object trg) { // src & trg sind die Namen der Regel-Knoten
@@ -394,6 +420,7 @@ public class ChangeSequenceTemplate {
 //                        return corr;
 //                    }
 
+            // find all Corrs for eObject that match the given tggRuleCorrFromRule.
             Set<TGGRuleCorr> matchingInstantiatedTGGRuleCorrs = tggResourceHandler.getCorrCaching().get(eObject).stream()
                     .filter(corrEObject -> corrEObject instanceof TGGRuleCorr) // in case there are others...
                     .map(corrEObject -> (TGGRuleCorr) corrEObject)
@@ -404,16 +431,15 @@ public class ChangeSequenceTemplate {
                         + " for eObject " + Util.eObjectToString(eObject) + " found.");
             } else if (matchingInstantiatedTGGRuleCorrs.size() == 1) {
                 TGGRuleCorr matchingInstantiatedTGGRuleCorr = matchingInstantiatedTGGRuleCorrs.stream().findAny().get();
-                // ensure to always return the eobjet from the OTHER Domain
-                EObject matchInstSourceEobject = (EObject) matchingInstantiatedTGGRuleCorr.eGet(matchingInstantiatedTGGRuleCorr.eClass().getEStructuralFeature("source"));
-                EObject matchInstTargetEobject = (EObject) matchingInstantiatedTGGRuleCorr.eGet(matchingInstantiatedTGGRuleCorr.eClass().getEStructuralFeature("target"));
-                return Optional.of(matchInstSourceEobject.equals(eObject) ? matchInstTargetEobject : matchInstSourceEobject);
+                // ensure to always return the eobject from the OTHER Domain
+                EObject matchingInstantiatedNodeInOtherDomain = (EObject) matchingInstantiatedTGGRuleCorr.eGet(matchingInstantiatedTGGRuleCorr.eClass().getEStructuralFeature(
+                        ruleNodeInOtherDomain.getDomainType().equals(DomainType.SRC) ? "source" : "target"
+                ));
+                // only return the EObject if it matches the rule node (which should be guaranteed via the corr node but who knows...)
+                return ruleNodeInOtherDomain.getType().equals(matchingInstantiatedNodeInOtherDomain.eClass())
+                        ? Optional.of(matchingInstantiatedNodeInOtherDomain)
+                        : Optional.empty();
             } else return Optional.empty();
-            throw new RuntimeException("TODO impl");
-        }
-
-        private boolean eObjectMatchesTGGRuleNode(EObject eObject, TGGRuleNode ruleNode) {
-            return ruleNode.getType().equals(eObject.eClass());
         }
     }
 }

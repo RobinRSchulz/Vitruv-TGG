@@ -220,13 +220,27 @@ public class IbexPatternToChangeSequenceTemplateConverter {
      * debug...
      */
     private void printDebugInfo() {
+        logger.debug("*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~");
+        logger.debug("*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~");
         logger.debug("Rules: ");
+        logger.debug("*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~");
+        logger.debug("*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~");
         for (TGGRule rule : this.tgg.getRules()) {
-            logger.debug("  - " + rule.getName());
+            logger.debug("  - TGGRule(" + rule.getName() + "): ");
+            rule.getNodes().forEach(tggRuleNode -> {
+                logger.debug("    - " + nodeToString(tggRuleNode));
+                logger.debug("      - incoming edges: ");
+                tggRuleNode.getIncomingEdges().forEach(edge -> logger.debug("        - " + edgeToString(edge)));
+                logger.debug("      - outgoing edges: ");
+                tggRuleNode.getOutgoingEdges().forEach(edge -> logger.debug("        - " + edgeToString(edge)));
+                logger.debug("      - incomingCorrsSource edges: ");
+                tggRuleNode.getIncomingCorrsSource().forEach(node -> logger.debug("        - " + nodeToString(node)));
+            });
+
 //            rule.getNodes().forEach(tggRuleNode -> logger.info("    - [" +tggRuleNode.getType() + "]: " + tggRuleNode.getName()));
 
 //            filterEdges(rule, BindingType.CONTEXT, DomainType.SRC).forEach( edge -> logger.info("    - Context_src_edge: " + edgeToString(edge)));
-            Util.filterEdges(rule, BindingType.CREATE, DomainType.SRC).forEach(edge -> logger.info("    - Create_src_edge: " + edgeToString(edge)));
+//            Util.filterEdges(rule, BindingType.CREATE, DomainType.SRC).forEach(edge -> logger.info("    - Create_src_edge: " + edgeToString(edge)));
 //            filterEdges(rule, BindingType.CONTEXT, DomainType.TRG).forEach( edge -> logger.info("    - Context_trg_edge: " + edge));
 //            filterEdges(rule, BindingType.CREATE, DomainType.TRG).forEach( edge -> logger.info("    - Create_trg_edge: " + edge));
 //            filterEdges(rule, BindingType.CONTEXT, DomainType.CORR).forEach( edge -> logger.info("    - Context_corr_edge: " + edgeToString(edge)));
@@ -251,14 +265,15 @@ public class IbexPatternToChangeSequenceTemplateConverter {
      * debug...
      */
     private String edgeToString(TGGRuleEdge edge) {
-        return "TGGRuleEdge(" + edge.getName() + "): " +
-                "type.EReferenceType()= " + edge.getType().getEReferenceType().getName() + ", " +
-                "domainType=" + edge.getDomainType() + ", " +
-                "bindingType=" + edge.getBindingType() + "\n                               " +
-                "type.getName=" + edge.getType().getName() + ", " +
-                "type.EReferenceType()= " + edge.getType().getEReferenceType().getName() + ", " +
-                "type.eContainingFeature=" + edge.getType().eContainingFeature().getName() + ", " +
-                "type.eContainingFeature.eContainingFeature=" + edge.getType().eContainingFeature().eContainingFeature().getName() + ", " +
-                "type.upperbound=" + edge.getType().getUpperBound();
+        return "TGGRuleEdge(" + edge.getName() + ")" +
+                "[ " + edge.getSrcNode().getName() + "->" + edge.getTrgNode().getName() + "]: " +
+                "domain=" + edge.getDomainType() + ", " +
+                "binding=" + edge.getBindingType();
+    }
+
+    private String nodeToString(TGGRuleNode node) {
+        return node.getClass().getSimpleName() + "(" + node.getName() + "): " +
+                "domain=" + node.getDomainType() + ", " +
+                "binding=" + node.getBindingType();
     }
 }
