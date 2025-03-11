@@ -1,19 +1,30 @@
 package tools.vitruv.dsls.tgg.emoflonintegration.patternmatching;
 
+import language.BindingType;
+import language.TGGRuleNode;
 import org.apache.log4j.Logger;
+import org.eclipse.emf.ecore.EObject;
 import org.emoflon.ibex.tgg.compiler.patterns.PatternType;
 import org.emoflon.ibex.tgg.compiler.patterns.PatternUtil;
 import org.emoflon.ibex.tgg.operational.matches.ITGGMatch;
 import org.emoflon.ibex.tgg.operational.matches.SimpleTGGMatch;
+import org.emoflon.ibex.tgg.operational.strategies.modules.TGGResourceHandler;
 import tools.vitruv.dsls.tgg.emoflonintegration.Util;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange.ChangeSequenceTemplate;
 
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class VitruviusBackwardConversionMatch extends SimpleTGGMatch implements ITGGMatch {
 
     protected static final Logger logger = Logger.getRootLogger();
     private final ChangeSequenceTemplate matchedChangeSequenceTemplate;
+    private boolean contextHasBeenMatchedSuccessfully;
+
+    private Map<TGGRuleNode, EObject> tggRuleNodeEObjectMap;
     /**
      *
      * @param matchedChangeSequenceTemplate a ${@link ChangeSequenceTemplate} that has been matched against a couple of EChanges
@@ -26,6 +37,33 @@ public class VitruviusBackwardConversionMatch extends SimpleTGGMatch implements 
         }
         init(matchedChangeSequenceTemplate);
         this.matchedChangeSequenceTemplate = matchedChangeSequenceTemplate;
+        this.contextHasBeenMatchedSuccessfully = false;
+    }
+
+    public boolean contextMatches(TGGResourceHandler tggResourceHandler) {
+        logger.debug("------------- contextMatches called for VitruviusBackwardConversionMatch: " + this.getMatchedChangeSequenceTemplate().getTggRule().getName());
+        if (contextHasBeenMatchedSuccessfully) {
+            return true;
+        } else {
+            Optional<Map<TGGRuleNode, EObject>> tggRuleNodeEObjectMapOptional = matchedChangeSequenceTemplate.contextMatches(tggResourceHandler);
+            if (tggRuleNodeEObjectMapOptional.isPresent()) {
+                logger.debug("  SUCCESSS!!!!");
+                contextHasBeenMatchedSuccessfully = true;
+                this.tggRuleNodeEObjectMap = tggRuleNodeEObjectMapOptional.get();
+                // add the matched EObjects to this (TODO check if the name is right...)
+                this.tggRuleNodeEObjectMap.forEach((tggRuleNode, eObject) -> this.put(tggRuleNode.getName(), eObject));
+                return true;
+            } else return false;
+        }
+    }
+
+    public Set<EObject> getEObjectsCreatedByThisMatch() {
+        if (this.contextHasBeenMatchedSuccessfully) {
+            return this.tggRuleNodeEObjectMap.entrySet().stream()
+                    .filter(entry -> entry.getKey().getBindingType().equals(BindingType.CREATE))
+                    .map(Map.Entry::getValue)
+                    .collect(Collectors.toSet());
+        } else throw new IllegalStateException("This match's context has not been matched successfully!");
     }
 
     public ChangeSequenceTemplate getMatchedChangeSequenceTemplate() {

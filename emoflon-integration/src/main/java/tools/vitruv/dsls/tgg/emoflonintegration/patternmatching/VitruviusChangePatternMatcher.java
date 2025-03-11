@@ -41,7 +41,7 @@ public class VitruviusChangePatternMatcher {
      *
      * @return patterns that match against this class's VitruviusChange. Context is NOT checked yet, here!
      */
-    public Set<IMatch> matchPatterns(ChangeSequenceTemplateSet changeSequenceTemplateSet) {
+    public Set<VitruviusBackwardConversionMatch> matchPatterns(ChangeSequenceTemplateSet changeSequenceTemplateSet) {
         logger.debug("\n[VitruviusChangePatternMatcher] matching the following eChanges against " + changeSequenceTemplateSet.getPatternTemplateParents().size() + " pattern templates:");
         vitruviusChange.getEChanges().forEach(eChange -> logger.info("  - " + Util.eChangeToString(eChange)));
         // 1. compute all possible matches

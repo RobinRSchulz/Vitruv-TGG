@@ -6,6 +6,7 @@ import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource;
+import runtime.CorrespondenceNode;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.eobject.EObjectExistenceEChange;
 import tools.vitruv.change.composite.MetamodelDescriptor;
@@ -20,8 +21,9 @@ import tools.vitruv.dsls.tgg.emoflonintegration.ibex.VitruviusBackwardConversion
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 /**
  * Extend this class for each TGG-defined set of consistency preservation rules between two metamodels.
@@ -112,16 +114,22 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
         Resource targetModel = getTargetModel(sourceModel, correspondenceModel);
 
         logger.info("------- Calling ibex -------");
+        Set<CorrespondenceNode> newlyCreatedIbexCorrs;
         try {
-            new VitruviusTGGChangePropagationIbexEntrypoint(new VitruviusTGGChangePropagationRegistrationHelper(sourceMetamodel, targetMetamodel, sourceMetamodelPlatformUri, targetMetamodelPlatformUri,
-                    sourceModel, targetModel, ibexProjectPath,
-                    //TODO remove this switching stuff, it is only for debug!
-                    new VitruviusBackwardConversionTGGEngine(change) // alternative: new VitruviusHiPETGGEngine()
-//                    new VitruviusHiPETGGEngine()
-            )).propagateChanges();
+            newlyCreatedIbexCorrs = new VitruviusTGGChangePropagationIbexEntrypoint(
+                    new VitruviusTGGChangePropagationRegistrationHelper(
+                            sourceMetamodel, targetMetamodel,
+                            sourceMetamodelPlatformUri, targetMetamodelPlatformUri,
+                            sourceModel, targetModel,
+                            ibexProjectPath,
+                            new VitruviusBackwardConversionTGGEngine(change)
+                    )
+            ).propagateChanges();
         } catch (IOException e) {
             throw new RuntimeException("Could not set up eMoflon! " + e);
         }
+        persistNewTargetRootIfNecessary(sourceModel, targetModel, correspondenceModel, resourceAccess);
+        addNewlyCreatedCorrespondencesToCorrespondenceModel(newlyCreatedIbexCorrs, correspondenceModel);
     }
 
     /**
@@ -147,6 +155,16 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
                         () -> resourceOptional.set(Optional.empty())
                 );
         return resourceOptional.get();
+    }
+
+    private void addNewlyCreatedCorrespondencesToCorrespondenceModel(Set<CorrespondenceNode> newlyCreatedIbexCorrs,
+                                                                     EditableCorrespondenceModelView<Correspondence> correspondenceModel) {
+        newlyCreatedIbexCorrs.forEach(correspondenceNode ->
+                correspondenceModel.addCorrespondenceBetween(
+                        (EObject) correspondenceNode.eGet(correspondenceNode.eClass().getEStructuralFeature("source")),
+                        (EObject) correspondenceNode.eGet(correspondenceNode.eClass().getEStructuralFeature("target")),
+                        correspondenceNode.eClass().getName()) // todo just using the name. is that enough?
+        );
     }
 
     /**
@@ -191,5 +209,31 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
                     .orElseThrow(() -> new RuntimeException("Target model found (via correspondence model) but source model has no contents...")).eResource();
         }
         return targetModel;
+    }
+
+    /**
+     * If the target model didn't exist before change propagation, this persists the new mod
+     */
+    private void persistNewTargetRootIfNecessary(Resource sourceModel,
+                                                 Resource targetModel,
+                                                 EditableCorrespondenceModelView<Correspondence> correspondenceModel,
+                                                 ResourceAccess resourceAccess) {
+        if (!modelHasCorrespondencesToTarget(sourceModel, targetModel, correspondenceModel)) {
+            Set<EObject> potentialRoots = targetModel.getContents().stream().filter(eChange -> eChange.eClass().equals(this.targetRootEclass)).collect(Collectors.toSet());
+            if (potentialRoots.isEmpty()) {
+                logger.info("No changes to the target model.");
+            } else if (potentialRoots.size() == 1) {
+                EObject targetRoot = potentialRoots.iterator().next();
+                logger.info("Found newly created root node " + Util.eObjectToString(targetRoot) + ". Persisting it...");
+                resourceAccess.persistAsRoot(targetRoot, this.targetRootURI);
+            } else throw new IllegalStateException("Multiple target roots! Don't know which to persist as root!");
+        }
+    }
+    private boolean modelHasCorrespondencesToTarget(Resource sourceModelResource, Resource targetModelResource, EditableCorrespondenceModelView<Correspondence> correspondenceModel) {
+        if (correspondenceModel.hasCorrespondences(sourceModelResource.getContents())) {
+            // check whether any of the direct contents of the target model resource has a correspondence to a source model element
+            Set<EObject> corrs = correspondenceModel.getCorrespondingEObjects(sourceModelResource.getContents()).stream().flatMap(Collection::stream).collect(Collectors.toSet());
+            return targetModelResource.getContents().stream().anyMatch(corrs::contains);
+        } else return false;
     }
 }

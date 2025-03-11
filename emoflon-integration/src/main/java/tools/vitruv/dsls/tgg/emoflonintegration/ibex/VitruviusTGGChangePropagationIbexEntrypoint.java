@@ -6,8 +6,11 @@ import org.emoflon.ibex.tgg.compiler.defaults.IRegistrationHelper;
 import org.emoflon.ibex.tgg.operational.IBlackInterpreter;
 import org.emoflon.ibex.tgg.operational.benchmark.FullBenchmarkLogger;
 import org.emoflon.ibex.tgg.operational.strategies.sync.SYNC;
+import runtime.CorrespondenceNode;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * This is the entrypoint for the propagation of Vitruvius Changes with TGG rules.
@@ -40,8 +43,10 @@ public class VitruviusTGGChangePropagationIbexEntrypoint extends SYNC {
      * Propagate changes in the source model to the target model.
      * <br/>
      * Changes are expected to be recorded by the caller. See {@link tools.vitruv.change.propagation.impl.ChangePropagator}
+     *
+     * @return a map of correspondences that are newly created!
      */
-    public void propagateChanges() throws IOException {
+    public Set<CorrespondenceNode> propagateChanges() throws IOException {
         //TODO is this necessary?
         this.getOptions().tgg.tgg().setCorr(this.getOptions().tgg.flattenedTGG().getCorr());
 
@@ -49,12 +54,7 @@ public class VitruviusTGGChangePropagationIbexEntrypoint extends SYNC {
         this.options.debug.benchmarkLogger(new FullBenchmarkLogger());
         long tic = System.currentTimeMillis();
         //TODO needs to be backward, depending on the direction the rules were specified and what currently is source and target! The ChangePropagationSpecification's source and target change, the ibex's don't...
-//        try {
-//            this.forward();
-//        } catch (Exception e) {
-//            logger.error("Problem while propagating changes: " + e.getMessage());
-//            logger.warn("DELETE THIS ASAP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-//        }
+
         this.forward();
         this.getResourceHandler().getCorrCaching();
 
@@ -66,7 +66,9 @@ public class VitruviusTGGChangePropagationIbexEntrypoint extends SYNC {
         // TODO resourceHandler.saveRelevantModels probably needs to be overridden!
         this.saveModels();
         this.terminate();
-        printTGG();
+        if (this.getOptions().blackInterpreter() instanceof VitruviusBackwardConversionTGGEngine vitruviusBackwardConversionTGGEngine) {
+            return vitruviusBackwardConversionTGGEngine.getNewlyAddedCorrespondences();
+        } else return new HashSet<>();
     }
 
     /**

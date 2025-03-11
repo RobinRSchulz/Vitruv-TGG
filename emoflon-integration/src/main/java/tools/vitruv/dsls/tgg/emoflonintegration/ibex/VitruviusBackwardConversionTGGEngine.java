@@ -31,6 +31,7 @@ import org.emoflon.ibex.tgg.operational.patterns.IGreenPatternFactory;
 import org.emoflon.ibex.tgg.operational.strategies.OperationalStrategy;
 import org.emoflon.ibex.tgg.operational.strategies.modules.IbexExecutable;
 import org.emoflon.smartemf.persistence.SmartEMFResourceFactoryImpl;
+import runtime.CorrespondenceNode;
 import tools.vitruv.change.composite.description.VitruviusChange;
 import tools.vitruv.dsls.tgg.emoflonintegration.Util;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.IbexPatternToChangeSequenceTemplateConverter;
@@ -80,8 +81,9 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     private Resource ibexPatternsResource;
     private IBeXModel ibexModel;
     private IbexExecutable ibexExecutable;
-    private Set<IMatch> matchesFound;
+    private Set<VitruviusBackwardConversionMatch> matchesFound;
     private final Set<IMatch> matchesThatHaveBeenApplied;
+//    private final Map<EObject, Set<Correspondence>> correspondencesBeforeMatching;
     private OperationalStrategy observedOperationalStrategy;
 
     private ChangeSequenceTemplateSet changeSequenceTemplateSet;
@@ -97,7 +99,9 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
         this.times = new Times();
         this.baseURI = URI.createPlatformResourceURI("/", true);
         this.matchesThatHaveBeenApplied = new HashSet<>();
+//        this.correspondencesBeforeMatching = new HashMap<>();
     }
+
     @Override
     public void initialise(IbexExecutable ibexExecutable, IbexOptions ibexOptions, EPackage.Registry registry, IMatchObserver iMatchObserver) {
         //TODO maybe need todo the same as below!
@@ -112,45 +116,6 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
 
         this.initPatterns(ibexModel.getPatternSet());
     }
-
-//    public void initialise(IbexExecutable executable, IbexOptions options, EPackage.Registry registry, IMatchObserver matchObserver) {
-//        //TODO work this stuff into the above (?)
-//        super.initialise(registry, matchObserver);
-//        this.options = options;
-//        this.executable = executable;
-//        String cp = "";
-//        String path = executable.getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
-//        if (!path.contains("bin/")) {
-//            path = path + "bin/";
-//        }
-//
-//        path = path + this.generateHiPEClassName().replace(".", "/").replace("HiPEEngine", "ibex-patterns.xmi");
-//        File file = new File(path);
-//
-//        try {
-//            cp = file.getCanonicalPath();
-//            cp = cp.replace("%20", " ");
-//        } catch (IOException e1) {
-//            e1.printStackTrace();
-//        }
-//
-//        Resource r = null;
-//
-//        try {
-//            r = this.loadResource("file://" + cp);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//
-//        IBeXModel ibexModel = (IBeXModel)r.getContents().get(0);
-//        this.ibexPatterns = ibexModel.getPatternSet();
-//
-//        for(IBeXContext context : this.ibexPatterns.getContextPatterns()) {
-//            PatternUtil.registerPattern(context.getName(), PatternSuffixes.extractType(context.getName()));
-//        }
-//
-//        this.initPatterns(this.ibexPatterns);
-//    }
 
     @Override
     public void initPatterns(IBeXPatternSet iBeXPatternSet) {
@@ -198,24 +163,23 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
 
     @Override
     public void updateMatches() {
-        Timer.setEnabled(true);
-        Timer.start();
 
-        // new forward matches. TODO currently only creating forward matches ONCE since we match against the whole change sequence...
+        // new forward matches. currently only creating forward matches ONCE since we match against the whole change sequence...
         createMatchesIfNotAlreadyPresent();
-        Set<IMatch> remainingMatches = getMatchesThatHaventBeenApplied();
+        Set<VitruviusBackwardConversionMatch> remainingMatches = getMatchesThatHaventBeenApplied();
 
-        long stop = Timer.stop();
-        logger.info("Pattern Matching took " + (stop / 1000000d) + " ms");
-        this.iMatchObserver.addMatches(remainingMatches);
-        // broken matches
+        // we do not give ALL matches to SYNC but only those that CURRENTLY match context. As matches are applied by SYNC, new matches from this engine may become possible again!
+        this.iMatchObserver.addMatches(remainingMatches.stream()
+                .filter(match -> match.contextMatches(this.observedOperationalStrategy.getResourceHandler()))
+                .collect(Collectors.toSet()));
+
+        // broken matches TODO implement that!
         this.iMatchObserver.removeMatches(getBrokenMatches());
-//        throw new RuntimeException("TODO implement!");
     }
 
     @Override
     public void terminate() {
-        throw new RuntimeException("TODO implement!");
+        logger.info("Terminating VitruviusBackwardConversionTGGEngine. TODO maybe do sth here?");
     }
 
     @Override
@@ -253,7 +217,14 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
 
     private void createMatchesIfNotAlreadyPresent() {
         if (this.matchesFound == null) {
+
+            Timer.setEnabled(true);
+            Timer.start();
+
             this.matchesFound = new VitruviusChangePatternMatcher(vitruviusChange).matchPatterns(changeSequenceTemplateSet);
+
+            long stop = Timer.stop();
+            logger.info("Pattern Matching took " + (stop / 1000000d) + " ms");
 
             // TODO remove debug
             logger.debug("ALL MATCHES FOUND");
@@ -297,13 +268,17 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
                 greenPattern.getCorrNodes().forEach(node -> logger.debug("    - " + node.getName()));
 
             }
+            logger.debug("\n\n\n-----------------------------Model resources in source before matching---------------------------");
+            logger.debug("Resource: " + this.observedOperationalStrategy.getResourceHandler().getSourceResource().getURI());
+            logger.debug(Util.modelResourceToString(this.observedOperationalStrategy.getResourceHandler().getSourceResource()));
+            logger.debug("\n------------------------------Now starting the matching process-----------------------------------\n\n\n");
         }
     }
 
     /**
      *
      */
-    private Set<IMatch> getMatchesThatHaventBeenApplied() {
+    private Set<VitruviusBackwardConversionMatch> getMatchesThatHaventBeenApplied() {
         // we know what matches have been applied by monitoring what our ping-pong opponent does (in ::update()).
         return this.matchesFound.stream().filter(match -> !this.matchesThatHaveBeenApplied.contains(match)).collect(Collectors.toSet());
     }
@@ -340,20 +315,23 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
             logger.info("SYNC has applied a match: " + match);
 
             this.matchesThatHaveBeenApplied.add(match);
-//                IbexObservable var4;
-//                if ((var4 = this.getObservable()) instanceof OperationalStrategy) {
-//                    OperationalStrategy op = (OperationalStrategy)var4;
-//                    this.operationalMatchContainer = op.getMatchContainer();
-//                    this.matchesSize = this.operationalMatchContainer.getMatches().size();
-//                    String patternName = this.operationalMatchContainer.getNext().getRuleName();
-//                    logger.info("Pattern: " + patternName + " hasMatches: " + this.matchesSize);
-//                }
 
             logger.debug("  - updated CORR-CACHING?: ");
             this.observedOperationalStrategy.getResourceHandler().getCorrCaching().forEach((eObject, corrs) ->
                 logger.debug("    - " + Util.eObjectToString(eObject) + " -> " + corrs.stream().map(Util::eObjectToString).collect(Collectors.joining(", ")))
             );
         }
+    }
+
+    public Set<CorrespondenceNode> getNewlyAddedCorrespondences() {
+        return this.matchesThatHaveBeenApplied.stream()
+                .filter(match -> match instanceof VitruviusBackwardConversionMatch)
+                .map(match -> (VitruviusBackwardConversionMatch) match)
+                .flatMap(match -> match.getEObjectsCreatedByThisMatch().stream())
+                .filter(eObject -> this.observedOperationalStrategy.getResourceHandler().getCorrCaching().containsKey(eObject))
+                .flatMap(eObject -> this.observedOperationalStrategy.getResourceHandler().getCorrCaching().get(eObject).stream())
+                .map(correspondenceNodeEObject -> (CorrespondenceNode) correspondenceNodeEObject)
+                .collect(Collectors.toSet());
     }
 
     public void addObservedOperationalStrategy(OperationalStrategy observedOperationalStrategy) {

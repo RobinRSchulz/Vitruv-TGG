@@ -3,7 +3,9 @@ package tools.vitruv.dsls.tgg.emoflonintegration.ibex;
 import org.apache.log4j.Logger;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.emoflon.ibex.tgg.operational.strategies.modules.TGGResourceHandler;
+import tools.vitruv.dsls.tgg.emoflonintegration.Util;
 
 import java.io.IOException;
 
@@ -13,11 +15,14 @@ public class VitruviusTGGResourceHandler extends TGGResourceHandler {
     //duplicates to avoid possible conflicts. Resources should only be present after loadModels was called. So at construction time, we can only store them.
     private final Resource sourceToBeLoaded;
     private final Resource targetToBeLoaded;
+    // remember the former resourceset, as we hand resources over to the ibex' resource set and need to hand it back...
+    private final ResourceSet vitruvResourceSet;
 
     public VitruviusTGGResourceHandler(Resource source, Resource target) throws IOException {
         super();
         this.sourceToBeLoaded = source;
         this.targetToBeLoaded = target;
+        this.vitruvResourceSet = source.getResourceSet();
         // load protocol from file.
     }
 
@@ -28,6 +33,7 @@ public class VitruviusTGGResourceHandler extends TGGResourceHandler {
     public void loadModels() {
         source = sourceToBeLoaded;
         target = targetToBeLoaded;
+        logger.warn("RESOURCE SET of target in loadModels (via targetToBeLoaded): " + Util.resourceSetToString(this.targetToBeLoaded.getResourceSet()));
         this.rs.getResources().add(source);
         this.rs.getResources().add(target);
 
@@ -39,7 +45,15 @@ public class VitruviusTGGResourceHandler extends TGGResourceHandler {
     @Override
     public void saveRelevantModels() throws IOException {
         // TODO do sth special(?)
+        logger.warn("before super.saveRelevantModels");
+        logger.warn("RESOURCE SET in saveRelevantModels (via resourceSet): ");
+        this.rs.getResources().stream()
+                .map(resource -> "  - " + resource.getURI() + ", contained in resource set=" + Util.resourceSetToString(resource.getResourceSet()))
+                .forEach(logger::warn);
         super.saveRelevantModels();
+        this.vitruvResourceSet.getResources().add(source);
+        this.vitruvResourceSet.getResources().add(target);
+        logger.warn("after super.saveRelevantModels");
     }
 
     @Override

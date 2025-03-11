@@ -2,7 +2,9 @@ package tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange;
 
 
 import language.*;
+import org.apache.log4j.Logger;
 import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.ENamedElement;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.emf.ecore.util.EcoreUtil;
@@ -10,6 +12,7 @@ import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXContextPattern;
 import org.emoflon.ibex.tgg.compiler.patterns.PatternSuffixes;
 import org.emoflon.ibex.tgg.compiler.patterns.PatternType;
 import org.emoflon.ibex.tgg.operational.strategies.modules.TGGResourceHandler;
+import runtime.CorrespondenceNode;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.dsls.tgg.emoflonintegration.Util;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.EObjectPlaceholder;
@@ -23,6 +26,7 @@ import java.util.stream.Collectors;
  */
 public class ChangeSequenceTemplate {
 
+    private static final Logger logger = Logger.getLogger(ChangeSequenceTemplate.class);
     private final Collection<EChangeWrapper> eChangeWrappers;
     /**
      * maps an Echange Type to all EChange-Wrappers this pattern contains
@@ -193,14 +197,12 @@ public class ChangeSequenceTemplate {
      * Further, this only returns something meaningful, if changes that create sth in the "target" model that this context match relies on are already applied by the SYNC!
      * @return whether this (matched!) template also has the context that the ${@link TGGRule} this represents requires!
      */
-    public boolean contextMatches(TGGResourceHandler tggResourceHandler) {
+    public Optional<Map<TGGRuleNode, EObject>> contextMatches(TGGResourceHandler tggResourceHandler) {
+        //TODO potential optimization keep the context matcher! We might need to call this method multiple times and that saves us recursion effort.
         ContextMatcher contextMatcher = new ContextMatcher(tggResourceHandler);
-        if (!contextMatcher.contextMatches()) {
-            return false;
-        } else {
-            // keep the results for later. Todo here? must be present in the VitruviusBackwardConversionMatch
-            throw new RuntimeException("not implemented yet");
-        }
+        return (contextMatcher.contextMatches())
+                ? Optional.of(contextMatcher.getTggRuleNode2EObjectMap())
+                : Optional.empty();
     }
     private class ContextMatcher {
 
@@ -278,6 +280,7 @@ public class ChangeSequenceTemplate {
          * @return whether this recursion branch has successfully been matched
          */
         private boolean visitNode(TGGRuleNode tggRuleNode) {
+            logger.debug("Visiting node " + tggRuleNode.getName());
             assert tggRuleNode2EObjectMap.containsKey(tggRuleNode);
 
             if (tggRuleNode.getBindingType() == BindingType.CREATE) {
@@ -301,6 +304,7 @@ public class ChangeSequenceTemplate {
         }
 
         private boolean visitIncomingEdge(TGGRuleEdge incomingEdge) {
+            logger.debug("Visiting incoming edge" + Util.tGGRuleEdgeToString(incomingEdge));
             TGGRuleNode srcTGGRuleNode = incomingEdge.getSrcNode();
             TGGRuleNode trgTGGRuleNode = incomingEdge.getTrgNode();
             if (nodesVisited.contains(srcTGGRuleNode)) { return true; }
@@ -319,27 +323,46 @@ public class ChangeSequenceTemplate {
             if (srcTGGRuleNode.getBindingType().equals(BindingType.CREATE)) {return true;}
 
             if (incomingEdge.getDomainType().equals(trgTGGRuleNode.getDomainType())) {
-                // THIS domain, CONTEXT trg node, CONTEXT or CREATE edge
-                Set<EObject> parentCandidates = EcoreUtil.UsageCrossReferencer.find(trgNodeEObject, trgNodeEObject.eResource()).stream()
-                        .filter(setting -> setting.getEStructuralFeature().equals(incomingEdge.getType()))
-                        .map(EStructuralFeature.Setting::getEObject)
-                        .collect(Collectors.toSet());
-                if (handleMatchingCandidatesFor(parentCandidates, srcTGGRuleNode)) {
-                    return visitNode(srcTGGRuleNode); // recurse
-                } else return false;
+                logger.debug("  THIS domain, Context trg node: " + Util.tGGRuleNodeToString(trgTGGRuleNode));
+                /*
+                 * If our relation is a containment relation, w
+                 */
+                if (incomingEdge.getType().isContainment()) {
+                    logger.debug("    HAVE WE FOUND IT? (container!) " + Util.eObjectToString(trgNodeEObject.eContainer()));
+                    //TODO handle that stuff.
+                    EObject potentialSrcNodeEObject = trgNodeEObject.eContainer();
+                    if (srcTGGRuleNode.getType().equals(potentialSrcNodeEObject.eClass())) {
+                        // dont know if this check is necessary
+                        tggRuleNode2EObjectMap.put(srcTGGRuleNode, potentialSrcNodeEObject);
+                        return visitNode(srcTGGRuleNode);
+                    } else return false;
+                } else {
+                    // THIS domain, CONTEXT trg node, CONTEXT or CREATE edge
+                    Set<EObject> parentCandidates = EcoreUtil.UsageCrossReferencer.find(trgNodeEObject, trgNodeEObject.eResource()).stream()
+                            .filter(setting -> setting.getEStructuralFeature().equals(incomingEdge.getType()))
+                            .map(EStructuralFeature.Setting::getEObject)
+                            .collect(Collectors.toSet());
+                    if (handleMatchingCandidatesFor(parentCandidates, srcTGGRuleNode)) {
+                        return visitNode(srcTGGRuleNode); // recurse
+                    } else return false;
+                }
             } else if (incomingEdge.getDomainType().equals(DomainType.CORR)) {
+                logger.debug("  CORR domain, Context trg node: " + Util.tGGRuleNodeToString(trgTGGRuleNode));
                 if (incomingEdge.getBindingType().equals(BindingType.CREATE)) {
                     // cannot and should not be matched, because no corr exists in the model, yet!
                     return true;
                 }
                 TGGRuleCorr sourceTGGRuleCorrNode = (TGGRuleCorr) srcTGGRuleNode; // this MUST be a TGGRuleCorr node
                 TGGRuleNode correlatedNodeInOTHERDomain = trgTGGRuleNode.getDomainType().equals(DomainType.SRC) ? sourceTGGRuleCorrNode.getTarget() : sourceTGGRuleCorrNode.getSource();
+                logger.debug("  correlated node in other domain:" + Util.tGGRuleNodeToString(correlatedNodeInOTHERDomain));
 
                 if (correlatedNodeInOTHERDomain.getBindingType().equals(BindingType.CONTEXT)) {
                     // we are only interested in matching CONTEXT nodes in the OTHER domain.
                     Optional<EObject> correlatedEObject = getEObjectCorrellatedToAMatchingEObject(trgNodeEObject, sourceTGGRuleCorrNode, correlatedNodeInOTHERDomain);
                     if (correlatedEObject.isPresent()) {
-                        tggRuleNode2EObjectMap.put(sourceTGGRuleCorrNode, correlatedEObject.get());
+                        //TODO we might want to put the sourceTGGRuleCorrNode in the map, too? (but it has no EObject...) what do? --> check if SYNC meckers...
+                        nodesVisited.add(correlatedNodeInOTHERDomain);
+                        tggRuleNode2EObjectMap.put(correlatedNodeInOTHERDomain, correlatedEObject.get());
                         return visitNode(correlatedNodeInOTHERDomain); // recurse in the OTHER domain
                     } else return false;
                 }
@@ -355,6 +378,7 @@ public class ChangeSequenceTemplate {
          * This can be used for CREATE or CONTEXT edges, the source node can be CREATE or CONTEXT.
          */
         private boolean visitOutgoingEdge(TGGRuleEdge outgoingEdge) {
+            logger.debug("Visiting outgoing edge" + Util.tGGRuleEdgeToString(outgoingEdge));
             TGGRuleNode srcTGGRuleNode = outgoingEdge.getSrcNode();
             TGGRuleNode trgTGGRuleNode = outgoingEdge.getTrgNode();
             if (nodesVisited.contains(trgTGGRuleNode)) { return true; }
@@ -395,6 +419,8 @@ public class ChangeSequenceTemplate {
          * @return whether there is exactly one EObject in the eObjectCandidates set that matches the tggRuleNodes.
          */
         private boolean handleMatchingCandidatesFor(Set<EObject> eObjectCandidates, TGGRuleNode tggRuleNode) {
+            logger.debug("      handleMatchingCandidatesFor rule node " + Util.tGGRuleNodeToString(tggRuleNode) + "with candidates: "
+                    + eObjectCandidates.stream().map(Util::eObjectToString).collect(Collectors.joining(", ")));
             // this can possibly be more than one. But we need the one that satisfies our match, if there is one. For now, we assume that there is only one...
             if (eObjectCandidates.size() > 1) {
                 throw new IllegalStateException("Checking for more than one parent currently not supported. Maybe this should just fail the check instead of throwing...");
@@ -440,18 +466,26 @@ public class ChangeSequenceTemplate {
 //                        ++this.numOfCreatedCorrNodes;
 //                        return corr;
 //                    }
-
+            logger.debug("    trying to find Eobject corrleated to " + Util.eObjectToString(eObject)
+                    + "by corr=" + Util.tGGRuleNodeToString(tggRuleCorrFromRule) + ". COrrelated EObject must be " + Util.tGGRuleNodeToString(ruleNodeInOtherDomain));
+            logger.debug("      containskey? " + tggResourceHandler.getCorrCaching().containsKey(eObject));
             // find all Corrs for eObject that match the given tggRuleCorrFromRule.
-            Set<TGGRuleCorr> matchingInstantiatedTGGRuleCorrs = tggResourceHandler.getCorrCaching().get(eObject).stream()
-                    .filter(corrEObject -> corrEObject instanceof TGGRuleCorr) // in case there are others...
-                    .map(corrEObject -> (TGGRuleCorr) corrEObject)
-                    .filter(corrEObject -> tggRuleCorrFromRule.getName().equals(corrEObject.getName())) // we want correlations that match the one from the rule...
+            if (!tggResourceHandler.getCorrCaching().containsKey(eObject)) return Optional.empty();
+            logger.debug("      cachedCorr=" + Util.eSomethingToString(tggResourceHandler.getCorrCaching().get(eObject)));
+            EObject deleteMe = tggResourceHandler.getCorrCaching().get(eObject).stream().findAny().get();
+            logger.debug("      source=" + Util.eSomethingToString(deleteMe.eGet(deleteMe.eClass().getEStructuralFeature("source"))));
+            logger.debug("      target=" + Util.eSomethingToString(deleteMe.eGet(deleteMe.eClass().getEStructuralFeature("target"))));
+            //todo eGet(source) ausprobierne
+            Set<CorrespondenceNode> matchingCorrespondenceNodes = tggResourceHandler.getCorrCaching().get(eObject).stream()
+                    .filter(corrEObject -> corrEObject instanceof CorrespondenceNode) // in case there are others...
+                    .map(corrEObject -> (CorrespondenceNode) corrEObject)
+                    .filter(correspondenceNode -> tggRuleCorrFromRule.getType().equals(correspondenceNode.eClass())) // we want correspondence nodes that match the one from the rule...
                     .collect(Collectors.toSet());
-            if (matchingInstantiatedTGGRuleCorrs.size() > 1) {
+            if (matchingCorrespondenceNodes.size() > 1) {
                 throw new IllegalStateException("More than one correlation names " + tggRuleCorrFromRule.getName()
                         + " for eObject " + Util.eObjectToString(eObject) + " found.");
-            } else if (matchingInstantiatedTGGRuleCorrs.size() == 1) {
-                TGGRuleCorr matchingInstantiatedTGGRuleCorr = matchingInstantiatedTGGRuleCorrs.stream().findAny().get();
+            } else if (matchingCorrespondenceNodes.size() == 1) {
+                CorrespondenceNode matchingInstantiatedTGGRuleCorr = matchingCorrespondenceNodes.stream().findAny().get();
                 // ensure to always return the eobject from the OTHER Domain
                 EObject matchingInstantiatedNodeInOtherDomain = (EObject) matchingInstantiatedTGGRuleCorr.eGet(matchingInstantiatedTGGRuleCorr.eClass().getEStructuralFeature(
                         ruleNodeInOtherDomain.getDomainType().equals(DomainType.SRC) ? "source" : "target"

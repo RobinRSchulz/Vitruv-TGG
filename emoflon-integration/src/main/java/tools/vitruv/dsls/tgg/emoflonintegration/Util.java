@@ -1,8 +1,13 @@
 package tools.vitruv.dsls.tgg.emoflonintegration;
 
 import language.*;
+import org.apache.log4j.Logger;
+import org.eclipse.emf.common.util.TreeIterator;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.resource.ResourceSet;
+import org.eclipse.emf.ecore.util.EObjectContainmentEList;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.eobject.CreateEObject;
 import tools.vitruv.change.atomic.eobject.DeleteEObject;
@@ -17,8 +22,11 @@ import tools.vitruv.change.atomic.root.InsertRootEObject;
 import tools.vitruv.change.atomic.root.RemoveRootEObject;
 
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 public class Util {
+
+    private static final Logger log = Logger.getLogger(Util.class);
 
     private Util() { }
 
@@ -60,9 +68,46 @@ public class Util {
         };
     }
 
+    public static String modelResourceToString(Resource resource) {
+        String str = "";
+        for (TreeIterator<EObject> it = resource.getAllContents(); it.hasNext(); ) {
+            EObject eObject = it.next();
+
+            str += "  - [" + eObjectToString(eObject) + "] contents: " + eObject.eClass().getEAllReferences().stream().map(eObject::eGet)
+                    .map(Util::eSomethingToString)
+                    .collect(Collectors.joining(", ")) + ",\n";
+        }
+        return str;
+    }
+
+    public static String resourceSetToString(ResourceSet resourceSet) {
+        return "ResourceSet:" + resourceSet.hashCode();
+    }
+
+    public static String eSomethingToString(Object object) {
+        return switch (object) {
+            case EObject eObject -> eObjectToString(eObject);
+            case EObjectContainmentEList eObjectContainmentEList -> eObjectContainmentEList.getEStructuralFeature().getName() + ":["
+                    + eObjectContainmentEList.stream().map(Util::eSomethingToString).collect(Collectors.joining(", "))+ "]";
+            case null -> "null";
+            default -> object.toString();
+        };
+    }
+
     public static String eObjectToString(Object object) {
         EObject eObject = (EObject) object;
         return eObject.eClass().getName() + ":" + eObject.hashCode();
+    }
+
+    public static String tGGRuleNodeToString(TGGRuleNode tggRuleNode) {
+        return "TGGRuleNode[" + tggRuleNode.getClass().getSimpleName() + "]: " + tggRuleNode.getName() + ", type="
+                + tggRuleNode.getType().getName() + ", bind=" + tggRuleNode.getBindingType() + ", dom=" + tggRuleNode.getDomainType();
+    }
+
+    public static String tGGRuleEdgeToString(TGGRuleEdge tggRuleEdge) {
+        return "TGGRuleEdge[" + tggRuleEdge.getSrcNode().getName() + "-->" + tggRuleEdge.getTrgNode().getName() + "]: "
+                + tggRuleEdge.getName() + ", type=" + tggRuleEdge.getType().getName() + ", bind=" + tggRuleEdge.getBindingType() + ", dom=" + tggRuleEdge.getDomainType();
+
     }
 
     public static boolean isManyValued(EReference eReference) {
