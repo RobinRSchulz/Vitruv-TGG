@@ -19,8 +19,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class VitruviusBackwardConversionMatch extends SimpleTGGMatch implements ITGGMatch {
-
-    protected static final Logger logger = Logger.getRootLogger();
+    protected static final Logger logger = Logger.getLogger(VitruviusBackwardConversionMatch.class);
     private final ChangeSequenceTemplate matchedChangeSequenceTemplate;
     private boolean contextHasBeenMatchedSuccessfully;
 
@@ -41,7 +40,7 @@ public class VitruviusBackwardConversionMatch extends SimpleTGGMatch implements 
     }
 
     public boolean contextMatches(TGGResourceHandler tggResourceHandler) {
-        logger.debug("------------- contextMatches called for VitruviusBackwardConversionMatch: " + this.getMatchedChangeSequenceTemplate().getTggRule().getName());
+        logger.debug("VitruviusBackwardConversionMatch::contextMatches called for: " + this.getMatchedChangeSequenceTemplate().getTggRule().getName());
         if (contextHasBeenMatchedSuccessfully) {
             return true;
         } else {
@@ -86,7 +85,7 @@ public class VitruviusBackwardConversionMatch extends SimpleTGGMatch implements 
         for (String n : this.getParameterNames()) {
             copy.put(n, this.get(n));
         }
-        logger.debug("VitruvBackConvMatch::copy : \n  -" + copy.getParameterNames().stream()
+        logger.trace("VitruvBackConvMatch::copy : \n  -" + copy.getParameterNames().stream()
                 .map(paramName -> paramName + ": " + Util.eObjectToString(copy.get(paramName)))
                 .collect(Collectors.joining("\n  -")));
         return copy;

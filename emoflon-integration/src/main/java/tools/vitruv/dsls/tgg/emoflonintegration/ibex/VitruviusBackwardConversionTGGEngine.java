@@ -71,8 +71,8 @@ import java.util.stream.Collectors;
  *
  */
 public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, TimeMeasurable, IContextPatternInterpreter, IbexObserver {
+    protected static final Logger logger = Logger.getLogger(VitruviusBackwardConversionTGGEngine.class);
 
-    protected static final Logger logger = Logger.getRootLogger();
     private EPackage.Registry registry;
     private IMatchObserver iMatchObserver;
     private final URI baseURI;
@@ -112,7 +112,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
                 + ibexOptions.project.path() + "/bin/" + ibexOptions.project.path() + "/"
                 + "sync/hipe/engine/ibex-patterns.xmi"));
         this.ibexModel = ((IBeXModel) ibexPatternsResource.getContents().getFirst());
-        logger.info("Now initializing patterns: ");
+        logger.debug("Now initializing patterns: ");
 
         this.initPatterns(ibexModel.getPatternSet());
     }
@@ -155,10 +155,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
 
     @Override
     public void monitor(Collection<Resource> collection) {
-        logger.warn("[VitruviusBackwardConversionTGGEngine::monitor(Collection<Resource> collection) NOT IMPLEMENTED YET!");
-        logger.info(collection.stream().map(Resource::getURI).map(URI::toString).collect(Collectors.joining(", ")));
-        //TODO here we get corr, protocol, model1 and model2
-//        throw new RuntimeException("TODO implement!");
+        logger.debug("::monitor called. We do not use this.");
     }
 
     @Override
@@ -179,7 +176,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
 
     @Override
     public void terminate() {
-        logger.info("Terminating VitruviusBackwardConversionTGGEngine. TODO maybe do sth here?");
+        logger.info("VitruviusBackwardConversionTGGEngine::terminate called. We do not use this.");
     }
 
     @Override
@@ -224,54 +221,54 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
             this.matchesFound = new VitruviusChangePatternMatcher(vitruviusChange).matchPatterns(changeSequenceTemplateSet);
 
             long stop = Timer.stop();
-            logger.info("Pattern Matching took " + (stop / 1000000d) + " ms");
+            logger.debug("Pattern Matching took " + (stop / 1000000d) + " ms");
 
             // TODO remove debug
-            logger.debug("ALL MATCHES FOUND");
+            logger.trace("ALL MATCHES FOUND");
             for (IMatch iMatch : matchesFound) {
                 ITGGMatch itggMatch = (ITGGMatch) iMatch;
                 VitruviusBackwardConversionMatch vitruviusBackwardConversionMatch = (VitruviusBackwardConversionMatch) itggMatch;
-                logger.debug("- Match: " + vitruviusBackwardConversionMatch.getMatchedChangeSequenceTemplate().getTggRule().getName());
-                logger.debug(iMatch.toString());
+                logger.trace("- Match: " + vitruviusBackwardConversionMatch.getMatchedChangeSequenceTemplate().getTggRule().getName());
+                logger.trace(iMatch.toString());
                 IGreenPatternFactory factory = this.observedOperationalStrategy.getGreenFactories().get(itggMatch.getRuleName());
                 IGreenPattern greenPattern = factory.create(itggMatch.getType());
                 ITGGMatch comatch = itggMatch.copy();
 
-                logger.debug("  - greenPattern.getSrcEdges");
+                logger.trace("  - greenPattern.getSrcEdges");
                 for (TGGRuleEdge tggRuleEdge : greenPattern.getSrcEdges()) {
                     EObject src = (EObject) comatch.get(tggRuleEdge.getSrcNode().getName());
                     String comatchGetSrc = src != null ? Util.eObjectToString(src) : "null";
-                    logger.debug("    - " + tggRuleEdge.getName() + ", srcnodeName=" + tggRuleEdge.getSrcNode().getName() + " -> comatch-get: " + comatchGetSrc);
+                    logger.trace("    - " + tggRuleEdge.getName() + ", srcnodeName=" + tggRuleEdge.getSrcNode().getName() + " -> comatch-get: " + comatchGetSrc);
                 }
 //                vitruviusBackwardConversionMatch.getMatchedChangeSequenceTemplate().getTggRule().getEdges()
 
-                logger.debug("  - greenPattern.getTrgEdges");
+                logger.trace("  - greenPattern.getTrgEdges");
                 for (TGGRuleEdge tggRuleEdge : greenPattern.getTrgEdges()) {
                     EObject src = (EObject) comatch.get(tggRuleEdge.getSrcNode().getName());
                     String comatchGetSrc = src != null ? Util.eObjectToString(src) : "null";
-                    logger.debug("    - " + tggRuleEdge.getName() + ", srcnodeName=" + tggRuleEdge.getSrcNode().getName() + " -> comatch-get: " + comatchGetSrc);
+                    logger.trace("    - " + tggRuleEdge.getName() + ", srcnodeName=" + tggRuleEdge.getSrcNode().getName() + " -> comatch-get: " + comatchGetSrc);
                 }
 
 
-                logger.debug("  - greenPattern.getCorrEdges");
+                logger.trace("  - greenPattern.getCorrEdges");
                 for (TGGRuleEdge edge : greenPattern.getCorrEdges()) {
                     EObject src = (EObject) comatch.get(edge.getSrcNode().getName());
                     String comatchGetSrc = src != null ? Util.eObjectToString(src) : "null";
                     logger.debug("    - " + edge.getName() + ", srcnodeName=" + edge.getSrcNode().getName() + " -> comatch-get: " + comatchGetSrc);
                 }
 
-                logger.debug("  - greenPattern.getTrgNodes");
+                logger.trace("  - greenPattern.getTrgNodes");
                 greenPattern.getTrgNodes().forEach(node -> logger.debug("    - " + node.getName()));
-                logger.debug("  - greenPattern.getSrcNodes");
+                logger.trace("  - greenPattern.getSrcNodes");
                 greenPattern.getSrcNodes().forEach(node -> logger.debug("    - " + node.getName()));
-                logger.debug("  - greenPattern.getCorrNodes");
+                logger.trace("  - greenPattern.getCorrNodes");
                 greenPattern.getCorrNodes().forEach(node -> logger.debug("    - " + node.getName()));
 
             }
-            logger.debug("\n\n\n-----------------------------Model resources in source before matching---------------------------");
-            logger.debug("Resource: " + this.observedOperationalStrategy.getResourceHandler().getSourceResource().getURI());
-            logger.debug(Util.modelResourceToString(this.observedOperationalStrategy.getResourceHandler().getSourceResource()));
-            logger.debug("\n------------------------------Now starting the matching process-----------------------------------\n\n\n");
+            logger.trace("\n\n\n-----------------------------Model resources in source before matching---------------------------");
+            logger.trace("Resource: " + this.observedOperationalStrategy.getResourceHandler().getSourceResource().getURI());
+            logger.trace(Util.modelResourceToString(this.observedOperationalStrategy.getResourceHandler().getSourceResource()));
+            logger.trace("\n------------------------------Now starting the matching process-----------------------------------\n\n\n");
         }
     }
 
@@ -312,13 +309,13 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
             if (!(objects[0] instanceof ITGGMatch match)) {
                 throw new IllegalStateException("MATCHAPPLIED events must be of type IMatch");
             }
-            logger.info("SYNC has applied a match: " + match);
+            logger.trace("SYNC has applied a match: " + match);
 
             this.matchesThatHaveBeenApplied.add(match);
 
-            logger.debug("  - updated CORR-CACHING?: ");
+            logger.trace("  - updated CORR-CACHING?: ");
             this.observedOperationalStrategy.getResourceHandler().getCorrCaching().forEach((eObject, corrs) ->
-                logger.debug("    - " + Util.eObjectToString(eObject) + " -> " + corrs.stream().map(Util::eObjectToString).collect(Collectors.joining(", ")))
+                logger.trace("    - " + Util.eObjectToString(eObject) + " -> " + corrs.stream().map(Util::eObjectToString).collect(Collectors.joining(", ")))
             );
         }
     }

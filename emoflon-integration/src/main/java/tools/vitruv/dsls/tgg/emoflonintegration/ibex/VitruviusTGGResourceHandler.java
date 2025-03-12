@@ -10,7 +10,7 @@ import tools.vitruv.dsls.tgg.emoflonintegration.Util;
 import java.io.IOException;
 
 public class VitruviusTGGResourceHandler extends TGGResourceHandler {
-    protected static final Logger logger = Logger.getRootLogger();
+    protected static final Logger logger = Logger.getLogger(VitruviusTGGResourceHandler.class);
 
     //duplicates to avoid possible conflicts. Resources should only be present after loadModels was called. So at construction time, we can only store them.
     private final Resource sourceToBeLoaded;
@@ -31,9 +31,10 @@ public class VitruviusTGGResourceHandler extends TGGResourceHandler {
      */
     @Override
     public void loadModels() {
+        logger.debug("Loading models");
         source = sourceToBeLoaded;
         target = targetToBeLoaded;
-        logger.warn("RESOURCE SET of target in loadModels (via targetToBeLoaded): " + Util.resourceSetToString(this.targetToBeLoaded.getResourceSet()));
+        logger.debug("  moving source and target resources to iBeX' resource set");
         this.rs.getResources().add(source);
         this.rs.getResources().add(target);
 
@@ -44,16 +45,11 @@ public class VitruviusTGGResourceHandler extends TGGResourceHandler {
 
     @Override
     public void saveRelevantModels() throws IOException {
-        // TODO do sth special(?)
-        logger.warn("before super.saveRelevantModels");
-        logger.warn("RESOURCE SET in saveRelevantModels (via resourceSet): ");
-        this.rs.getResources().stream()
-                .map(resource -> "  - " + resource.getURI() + ", contained in resource set=" + Util.resourceSetToString(resource.getResourceSet()))
-                .forEach(logger::warn);
+        logger.debug("Saving relevant models");
         super.saveRelevantModels();
+        logger.debug("  switching source and target resources back to vitruvius resource set");
         this.vitruvResourceSet.getResources().add(source);
         this.vitruvResourceSet.getResources().add(target);
-        logger.warn("after super.saveRelevantModels");
     }
 
     @Override
@@ -66,8 +62,6 @@ public class VitruviusTGGResourceHandler extends TGGResourceHandler {
             Result: In an ununderstandable manner, the conversion Schema.tgg -> ecore file is done by the Eclipse Editor on save.
             If there is need or want for getting rid of eclipse: do it here, so the methodologist does not have to click "save" in the eclipse editor.
          */
-        EPackage corrMetamodel = super.loadAndRegisterCorrMetamodel();
-        logger.debug("loaded corr metamodel: " + corrMetamodel);
-        return corrMetamodel;
+        return super.loadAndRegisterCorrMetamodel();
     }
 }

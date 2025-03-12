@@ -1,6 +1,7 @@
 package tools.vitruv.dsls.tgg.emoflonintegration.ibex;
 
 import language.TGGRule;
+import org.apache.log4j.Logger;
 import org.eclipse.emf.ecore.EPackage;
 import org.emoflon.ibex.tgg.compiler.defaults.IRegistrationHelper;
 import org.emoflon.ibex.tgg.operational.IBlackInterpreter;
@@ -17,8 +18,7 @@ import java.util.Set;
  * The Pattern matcher and other configuration (metamodel and model information) is provided in the constructor
  */
 public class VitruviusTGGChangePropagationIbexEntrypoint extends SYNC {
-
-    private final IRegistrationHelper registrationHelper;
+    protected static final Logger logger = Logger.getLogger(VitruviusTGGChangePropagationIbexEntrypoint.class);
 
     /**
      *
@@ -28,7 +28,6 @@ public class VitruviusTGGChangePropagationIbexEntrypoint extends SYNC {
      */
     public VitruviusTGGChangePropagationIbexEntrypoint(VitruviusTGGChangePropagationRegistrationHelper registrationHelper) throws IOException {
         super(registrationHelper.createIbexOptions());
-        this.registrationHelper = registrationHelper;
         IBlackInterpreter patternMatcher = this.getOptions().blackInterpreter();
         if (patternMatcher instanceof VitruviusBackwardConversionTGGEngine vitruviusBackwardConversionTGGEngine) {
             // we need feedback about matches created...
@@ -70,30 +69,4 @@ public class VitruviusTGGChangePropagationIbexEntrypoint extends SYNC {
             return vitruviusBackwardConversionTGGEngine.getNewlyAddedCorrespondences();
         } else return new HashSet<>();
     }
-
-    /**
-     * [DEBUG helper]
-     */
-    private void printTGG() {
-        logger.info("Printing TGG[" + this.getTGG().getName() + "]");
-        logger.info("  - src: List[EPackage, size=" + this.getTGG().getSrc().size() + "]");
-
-        for (EPackage ePackage : this.getTGG().getSrc()) {
-            logger.info("    - EPackage[" + ePackage + "]");
-        }
-        logger.info("  - trg: ");
-        for (EPackage ePackage : this.getTGG().getTrg()) {
-            logger.info("    - EPackage[" + ePackage + "]");
-        }
-        logger.info("  - corr: " +  this.getTGG().getCorr());
-        logger.debug("  - corr from ibexOptions: " + this.getOptions().tgg.corrMetamodel());
-        logger.debug("  - corr from flattenedTGG: " + this.getOptions().tgg.flattenedTGG().getCorr());
-
-        this.getTGG();
-        logger.info("  - rules: ");
-        for (TGGRule pkg : this.getTGG().getRules()) {
-            logger.info("    - EPackage[" + pkg + "]");
-        }
-    }
-
 }

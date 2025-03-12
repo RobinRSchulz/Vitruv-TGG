@@ -112,10 +112,8 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
         // get source and target models
         Resource sourceModel = findModel(vitruviusChange).orElseThrow(() -> new IllegalArgumentException("Change not related to a source model: " + vitruviusChange));
         logger.debug("In propagateNonAtomicChange: Found source model " + sourceModel);
-//        Resource targetModel = getTargetModel(sourceModel, targetMetamodel, correspondenceModel);
 
         logger.info("------- Calling ibex -------");
-
         propagateChangesHandlingTargetModelRetrieval(sourceModel, targetMetamodel, correspondenceModel, resourceAccess,
                 new VitruviusTGGChangePropagationRegistrationHelper().withSourceMetamodelPackage(sourceMetamodel)
                         .withTargetMetamodelPackage(targetMetamodel)
@@ -141,14 +139,14 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
      * @param targetModel
      */
     private void handleDanglingEObjects(Resource sourceModel, Resource targetModel) {
-        logger.info("+++handleDanglingEObjects+++");
-        logger.info("  - sourceModel: " + sourceModel.getURI());
+        logger.trace("+++handleDanglingEObjects+++");
+        logger.trace("  - sourceModel: " + sourceModel.getURI());
         sourceModel.getAllContents().forEachRemaining(eObject -> {
-            logger.info("    - " + Util.eObjectToString(eObject) + ",eResource=" + eObject.eResource().getURI());
+            logger.trace("    - " + Util.eObjectToString(eObject) + ",eResource=" + eObject.eResource().getURI());
         });
-        logger.info("  - targetModel: " + targetModel.getURI());
+        logger.trace("  - targetModel: " + targetModel.getURI());
         targetModel.getAllContents().forEachRemaining(eObject -> {
-            logger.info("    - " + Util.eObjectToString(eObject) + ",eResource=" + eObject.eResource().getURI());
+            logger.trace("    - " + Util.eObjectToString(eObject) + ",eResource=" + eObject.eResource().getURI());
         });
     }
     /**
@@ -194,7 +192,7 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
 
                 persistNewTargetRoot(targetModel, correspondenceModel, resourceAccess);
             } else {
-                logger.info("Found target model via correspondence model");
+                logger.debug("Found target model via correspondence model");
                 Resource targetModel = correspondenceModel.getCorrespondingEObjects(sourceModel.getContents().getFirst()).stream()
                         .filter(correspondingEObject -> correspondingEObject.eClass().getEPackage().equals(targetMetamodel)) // we only want to look at corrs to the target metamodel
                         .findFirst()
@@ -215,7 +213,7 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
 
     private void addNewlyCreatedCorrespondencesToCorrespondenceModel(Set<CorrespondenceNode> newlyCreatedIbexCorrs,
                                                                      EditableCorrespondenceModelView<Correspondence> correspondenceModel) {
-        logger.debug(newlyCreatedIbexCorrs.isEmpty() ? "--- No correspondences added." : "-- Added the following corrs: ");
+        logger.info(newlyCreatedIbexCorrs.isEmpty() ? "--- No correspondences added." : "-- Added the following corrs: ");
         newlyCreatedIbexCorrs.forEach(correspondenceNode -> {
                 logger.info("  - " + Util.correspondenceNodeToString(correspondenceNode));
                 correspondenceModel.addCorrespondenceBetween(
@@ -252,23 +250,6 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
      * </li>
      * </ul>
      */
-    private Resource getTargetModel(Resource sourceModel,
-                                    EPackage targetMetamodelPackage,
-                                    EditableCorrespondenceModelView<Correspondence> correspondenceModel) {
-        Resource targetModel;
-        /*  If no target model exists yet, we need to create one. There are different possible approaches. Currently, the third is in place.
-         */
-        if (!modelHasCorrespondencesToResourceOfTargetMetamodel(sourceModel, targetMetamodelPackage, correspondenceModel)) {
-            logger.info("Source Model has no respective target model yet. Creating one.");
-            // [Third approach]
-            targetModel = sourceModel.getResourceSet().createResource(this.targetRootURI);
-        } else {
-            logger.info("Found target model via correspondence model");
-            targetModel = correspondenceModel.getCorrespondingEObjects(sourceModel.getContents().getFirst()).stream().findFirst()
-                    .orElseThrow(() -> new RuntimeException("Target model found (via correspondence model) but source model has no contents...")).eResource();
-        }
-        return targetModel;
-    }
 
     /**
      * this persists the new mod
@@ -286,13 +267,7 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
             resourceAccess.persistAsRoot(targetRoot, this.targetRootURI);
         } else throw new IllegalStateException("Multiple target roots! Don't know which to persist as root!");
     }
-    private boolean modelHasCorrespondencesToTargetResource(Resource sourceModelResource, Resource targetModelResource, EditableCorrespondenceModelView<Correspondence> correspondenceModel) {
-        if (correspondenceModel.hasCorrespondences(sourceModelResource.getContents())) {
-            // check whether any of the direct contents of the target model resource has a correspondence to a source model element
-            Set<EObject> corrs = correspondenceModel.getCorrespondingEObjects(sourceModelResource.getContents()).stream().flatMap(Collection::stream).collect(Collectors.toSet());
-            return targetModelResource.getContents().stream().anyMatch(corrs::contains);
-        } else return false;
-    }
+
     private boolean modelHasCorrespondencesToResourceOfTargetMetamodel(Resource sourceModelResource, EPackage targetMetamodelPackage, EditableCorrespondenceModelView<Correspondence> correspondenceModel) {
         Set<EObject> corrs = correspondenceModel.getCorrespondingEObjects(sourceModelResource.getContents()).stream().flatMap(Collection::stream).collect(Collectors.toSet());
         return corrs.stream().anyMatch(correspondingEObject -> correspondingEObject.eClass().getEPackage().equals(targetMetamodelPackage));

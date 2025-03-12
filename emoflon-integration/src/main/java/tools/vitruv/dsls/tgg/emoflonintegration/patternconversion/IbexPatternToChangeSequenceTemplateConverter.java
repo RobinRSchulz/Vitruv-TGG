@@ -15,8 +15,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class IbexPatternToChangeSequenceTemplateConverter {
-
-    protected static final Logger logger = Logger.getRootLogger();
+    protected static final Logger logger = Logger.getLogger(IbexPatternToChangeSequenceTemplateConverter.class);
 
     private final IBeXModel iBeXModel;
     private final TGG tgg;
@@ -43,7 +42,7 @@ public class IbexPatternToChangeSequenceTemplateConverter {
     }
 
     public ChangeSequenceTemplateSet convert() {
-        printDebugInfo();
+        printRulesDebugInfo();
 
         Collection<ChangeSequenceTemplate> patternTemplates = this.tgg.getRules().stream().map(this::parseRule).collect(Collectors.toList());
         patternTemplates.forEach(logger::debug);
@@ -187,24 +186,7 @@ public class IbexPatternToChangeSequenceTemplateConverter {
      * Map a ${@link TGGRule} to its related ${@link IBeXContextPattern}.
      */
     private Collection<IBeXContextPattern> getRelatedPatterns(TGGRule rule) {
-
-
-        //TODO remove debug!
-        logger.debug("+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~");
-        logger.debug("PATTERNS FOR RULE: " + rule.getName());
-        this.iBeXModel.getPatternSet().getContextPatterns().stream()
-                .filter(IBeXContextPattern.class::isInstance)
-                .map(IBeXContextPattern.class::cast)
-                .filter(ibexContextPattern -> ibexContextPattern.getName().startsWith(rule.getName()))
-                .forEach(iBeXContextPattern -> logger.debug("  - [" + iBeXContextPattern.getName() + "] patternType=" + PatternSuffixes.extractType(iBeXContextPattern.getName())));
-        logger.debug(" ANY ALTERNATIVES???");
-        this.iBeXModel.getPatternSet().getContextPatterns().stream()
-                .filter(pattern -> !(pattern instanceof IBeXContextPattern))
-                .forEach(pattern -> logger.debug("  - [" + pattern.getName() + "] patternType=" + PatternSuffixes.extractType(pattern.getName())));
-        logger.debug("+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~");
-
-
-
+        printPatternsForRuleDebugInfo(rule);
 
         return this.iBeXModel.getPatternSet().getContextPatterns().stream()
                 .filter(IBeXContextPattern.class::isInstance)
@@ -213,52 +195,42 @@ public class IbexPatternToChangeSequenceTemplateConverter {
                 .toList();
     }
 
+    private void printPatternsForRuleDebugInfo(TGGRule rule) {
+        logger.trace("+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~");
+        logger.trace("PATTERNS FOR RULE: " + rule.getName());
+        this.iBeXModel.getPatternSet().getContextPatterns().stream()
+                .filter(IBeXContextPattern.class::isInstance)
+                .map(IBeXContextPattern.class::cast)
+                .filter(ibexContextPattern -> ibexContextPattern.getName().startsWith(rule.getName()))
+                .forEach(iBeXContextPattern -> logger.trace("  - [" + iBeXContextPattern.getName() + "] patternType=" + PatternSuffixes.extractType(iBeXContextPattern.getName())));
+        logger.trace(" ANY ALTERNATIVES???");
+        this.iBeXModel.getPatternSet().getContextPatterns().stream()
+                .filter(pattern -> !(pattern instanceof IBeXContextPattern))
+                .forEach(pattern -> logger.trace("  - [" + pattern.getName() + "] patternType=" + PatternSuffixes.extractType(pattern.getName())));
+        logger.trace("+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~");
 
+    }
 
 
     /**
      * debug...
      */
-    private void printDebugInfo() {
-        logger.debug("*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~");
+    private void printRulesDebugInfo() {
         logger.debug("*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~");
         logger.debug("Rules: ");
-        logger.debug("*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~");
         logger.debug("*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~");
         for (TGGRule rule : this.tgg.getRules()) {
             logger.debug("  - TGGRule(" + rule.getName() + "): ");
             rule.getNodes().forEach(tggRuleNode -> {
                 logger.debug("    - " + nodeToString(tggRuleNode));
-                logger.debug("      - incoming edges: ");
-                tggRuleNode.getIncomingEdges().forEach(edge -> logger.debug("        - " + edgeToString(edge)));
-                logger.debug("      - outgoing edges: ");
-                tggRuleNode.getOutgoingEdges().forEach(edge -> logger.debug("        - " + edgeToString(edge)));
-                logger.debug("      - incomingCorrsSource edges: ");
-                tggRuleNode.getIncomingCorrsSource().forEach(node -> logger.debug("        - " + nodeToString(node)));
+                logger.trace("      - incoming edges: ");
+                tggRuleNode.getIncomingEdges().forEach(edge -> logger.trace("        - " + edgeToString(edge)));
+                logger.trace("      - outgoing edges: ");
+                tggRuleNode.getOutgoingEdges().forEach(edge -> logger.trace("        - " + edgeToString(edge)));
+                logger.trace("      - incomingCorrsSource edges: ");
+                tggRuleNode.getIncomingCorrsSource().forEach(node -> logger.trace("        - " + nodeToString(node)));
             });
-
-//            rule.getNodes().forEach(tggRuleNode -> logger.info("    - [" +tggRuleNode.getType() + "]: " + tggRuleNode.getName()));
-
-//            filterEdges(rule, BindingType.CONTEXT, DomainType.SRC).forEach( edge -> logger.info("    - Context_src_edge: " + edgeToString(edge)));
-//            Util.filterEdges(rule, BindingType.CREATE, DomainType.SRC).forEach(edge -> logger.info("    - Create_src_edge: " + edgeToString(edge)));
-//            filterEdges(rule, BindingType.CONTEXT, DomainType.TRG).forEach( edge -> logger.info("    - Context_trg_edge: " + edge));
-//            filterEdges(rule, BindingType.CREATE, DomainType.TRG).forEach( edge -> logger.info("    - Create_trg_edge: " + edge));
-//            filterEdges(rule, BindingType.CONTEXT, DomainType.CORR).forEach( edge -> logger.info("    - Context_corr_edge: " + edgeToString(edge)));
-//            filterEdges(rule, BindingType.CREATE, DomainType.CORR).forEach( edge -> logger.info("    - Create_corr_edge: " + edgeToString(edge)));
-
-//            filterNodes(rule, BindingType.CONTEXT, DomainType.SRC).forEach( node -> logger.info("    - Context_src_node: " + node));
-//            filterNodes(rule, BindingType.CREATE, DomainType.SRC).forEach( node -> logger.info("    - Create_src_node: " + node));
-//            filterNodes(rule, BindingType.CREATE, DomainType.TRG).forEach( node -> logger.info("    - Create_trg_node: " + node));
-//            filterNodes(rule, BindingType.CONTEXT, DomainType.TRG).forEach( node -> logger.info("    - Context_trg_node: " + node));
-//            filterNodes(rule, BindingType.CONTEXT, DomainType.CORR).forEach( node -> logger.info("    - Context_corr_node: " + node));
-//            filterNodes(rule, BindingType.CREATE, DomainType.CORR).forEach( node -> logger.info("    - Create_corr_node: " + node));
         }
-
-//        this.iBeXModel.getPatternSet().getContextPatterns().forEach(contextPattern -> {
-//            logger.info("ContextPattern: " + contextPattern.getName());
-//            parseIBeXContext(contextPattern);
-//        });
-
     }
 
     /**

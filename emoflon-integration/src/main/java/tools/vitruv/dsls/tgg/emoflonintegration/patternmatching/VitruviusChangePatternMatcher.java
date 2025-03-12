@@ -6,6 +6,7 @@ import org.eclipse.emf.ecore.EObject;
 import org.emoflon.ibex.common.operational.IMatch;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.composite.description.VitruviusChange;
+import tools.vitruv.dsls.tgg.emoflonintegration.TGGChangePropagationSpecification;
 import tools.vitruv.dsls.tgg.emoflonintegration.Util;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange.EChangeWrapper;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange.ChangeSequenceTemplate;
@@ -19,8 +20,7 @@ import java.util.stream.Collectors;
  *
  */
 public class VitruviusChangePatternMatcher {
-
-    protected static final Logger logger = Logger.getRootLogger();
+    static Logger logger = Logger.getLogger(VitruviusChangePatternMatcher.class);
 
     private final VitruviusChange<EObject> vitruviusChange;
     private Map<EClass, Set<EChange<EObject>>> eChangesByEChangeType;
@@ -43,7 +43,7 @@ public class VitruviusChangePatternMatcher {
      */
     public Set<VitruviusBackwardConversionMatch> matchPatterns(ChangeSequenceTemplateSet changeSequenceTemplateSet) {
         logger.debug("\n[VitruviusChangePatternMatcher] matching the following eChanges against " + changeSequenceTemplateSet.getPatternTemplateParents().size() + " pattern templates:");
-        vitruviusChange.getEChanges().forEach(eChange -> logger.info("  - " + Util.eChangeToString(eChange)));
+        vitruviusChange.getEChanges().forEach(eChange -> logger.debug("  - " + Util.eChangeToString(eChange)));
         // 1. compute all possible matches
         // TODO optimization: not compute all matches but mark EChanges (at the possible cost of missing sth?)
         Set<ChangeSequenceTemplate> allInvokedPatternTemplates = new HashSet<>();
@@ -56,20 +56,20 @@ public class VitruviusChangePatternMatcher {
             rememberWrappersInvokedWithEChange(eChange, patternTemplates);
             allInvokedPatternTemplates.addAll(patternTemplates);
 
-            logger.debug("[VitruviusChangePatternMatcher] Matching the following eChange against " + patternTemplates.size() + " suitable pattern templates: \n" + Util.eChangeToString(eChange));
-            logger.debug("[VitruviusChangePatternMatcher] The suitable pattern templates: ");
-            patternTemplates.forEach(patternTemplate -> logger.debug("\n- " + patternTemplate));
-            logger.debug("[VitruviusChangePatternMatcher] Trying to match the uninitialized wrappers, too...");
+            logger.trace("[VitruviusChangePatternMatcher] Matching the following eChange against " + patternTemplates.size() + " suitable pattern templates: \n" + Util.eChangeToString(eChange));
+            logger.trace("[VitruviusChangePatternMatcher] The suitable pattern templates: ");
+            patternTemplates.forEach(patternTemplate -> logger.trace("\n- " + patternTemplate));
+            logger.trace("[VitruviusChangePatternMatcher] Trying to match the uninitialized wrappers, too...");
 
             for (ChangeSequenceTemplate patternTemplate : patternTemplates) {
                 for (EChangeWrapper eChangeWrapper : patternTemplate.getUninitializedEChangeWrappers()) {
-                    logger.debug("[VitruviusChangePatternMatcher] Trying to match " + eChangeWrapper);
+                    logger.trace("[VitruviusChangePatternMatcher] Trying to match " + eChangeWrapper);
                     boolean eChangeWrapperInitialized = false;
                     // find a match for the echangewrapper in the VitruviusChange.
                     for (EChange<EObject> eChangeCandidate : eChangesByEChangeType.getOrDefault(eChangeWrapper.getEChangeType(), Collections.emptySet())) {
-                        logger.debug("[VitruviusChangePatternMatcher] Trying to match it against " + Util.eChangeToString(eChangeCandidate));
+                        logger.trace("[VitruviusChangePatternMatcher] Trying to match it against " + Util.eChangeToString(eChangeCandidate));
                         if (eChangeWrapper.matches(eChangeCandidate)) {
-                            logger.debug("[VitruviusChangePatternMatcher] SUCCESS!");
+                            logger.trace("[VitruviusChangePatternMatcher] SUCCESS!");
                             eChangeWrapper.initialize(eChangeCandidate);
                             eChangeWrapperInitialized = true;
                             // to avoid duplicates, remember which pattern types are already invoked for the current eChange.
@@ -86,7 +86,7 @@ public class VitruviusChangePatternMatcher {
                 }
             }
         }
-        logger.debug("\n[VitruviusChangePatternMatcher] +++ Computed the following matches +++\n");
+        logger.debug("[VitruviusChangePatternMatcher] Computed the following matches \n");
         allInvokedPatternTemplates.forEach(logger::debug);
         visualizeCoverage(allInvokedPatternTemplates);
 
@@ -101,7 +101,7 @@ public class VitruviusChangePatternMatcher {
     }
 
     private void visualizeCoverage(Set<ChangeSequenceTemplate> coverage) {
-        logger.info(
+        logger.debug(
                 "[VitruviusChangePatternMatcher] Pattern Coverage of the given Vitruvius change:\n" +
                 "| # Patterns covering | EChange                                    |\n" +
                 "|---------------------|--------------------------------------------|\n" +

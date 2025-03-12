@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
  *
  */
 public class ChangeSequenceTemplate {
-
     private static final Logger logger = Logger.getLogger(ChangeSequenceTemplate.class);
     private final Collection<EChangeWrapper> eChangeWrappers;
     /**
@@ -280,7 +279,7 @@ public class ChangeSequenceTemplate {
          * @return whether this recursion branch has successfully been matched
          */
         private boolean visitNode(TGGRuleNode tggRuleNode) {
-            logger.debug("Visiting node " + tggRuleNode.getName());
+            logger.trace("Visiting node " + tggRuleNode.getName());
             assert tggRuleNode2EObjectMap.containsKey(tggRuleNode);
 
             if (tggRuleNode.getBindingType() == BindingType.CREATE) {
@@ -304,7 +303,7 @@ public class ChangeSequenceTemplate {
         }
 
         private boolean visitIncomingEdge(TGGRuleEdge incomingEdge) {
-            logger.debug("Visiting incoming edge" + Util.tGGRuleEdgeToString(incomingEdge));
+            logger.trace("Visiting incoming edge" + Util.tGGRuleEdgeToString(incomingEdge));
             TGGRuleNode srcTGGRuleNode = incomingEdge.getSrcNode();
             TGGRuleNode trgTGGRuleNode = incomingEdge.getTrgNode();
             if (nodesVisited.contains(srcTGGRuleNode)) { return true; }
@@ -323,12 +322,12 @@ public class ChangeSequenceTemplate {
             if (srcTGGRuleNode.getBindingType().equals(BindingType.CREATE)) {return true;}
 
             if (incomingEdge.getDomainType().equals(trgTGGRuleNode.getDomainType())) {
-                logger.debug("  THIS domain, Context trg node: " + Util.tGGRuleNodeToString(trgTGGRuleNode));
+                logger.trace("  THIS domain, Context trg node: " + Util.tGGRuleNodeToString(trgTGGRuleNode));
                 /*
                  * If our relation is a containment relation, w
                  */
                 if (incomingEdge.getType().isContainment()) {
-                    logger.debug("    HAVE WE FOUND IT? (container!) " + Util.eObjectToString(trgNodeEObject.eContainer()));
+                    logger.trace("    HAVE WE FOUND IT? (container!) " + Util.eObjectToString(trgNodeEObject.eContainer()));
                     //TODO handle that stuff.
                     EObject potentialSrcNodeEObject = trgNodeEObject.eContainer();
                     if (srcTGGRuleNode.getType().equals(potentialSrcNodeEObject.eClass())) {
@@ -347,14 +346,14 @@ public class ChangeSequenceTemplate {
                     } else return false;
                 }
             } else if (incomingEdge.getDomainType().equals(DomainType.CORR)) {
-                logger.debug("  CORR domain, Context trg node: " + Util.tGGRuleNodeToString(trgTGGRuleNode));
+                logger.trace("  CORR domain, Context trg node: " + Util.tGGRuleNodeToString(trgTGGRuleNode));
                 if (incomingEdge.getBindingType().equals(BindingType.CREATE)) {
                     // cannot and should not be matched, because no corr exists in the model, yet!
                     return true;
                 }
                 TGGRuleCorr sourceTGGRuleCorrNode = (TGGRuleCorr) srcTGGRuleNode; // this MUST be a TGGRuleCorr node
                 TGGRuleNode correlatedNodeInOTHERDomain = trgTGGRuleNode.getDomainType().equals(DomainType.SRC) ? sourceTGGRuleCorrNode.getTarget() : sourceTGGRuleCorrNode.getSource();
-                logger.debug("  correlated node in other domain:" + Util.tGGRuleNodeToString(correlatedNodeInOTHERDomain));
+                logger.trace("  correlated node in other domain:" + Util.tGGRuleNodeToString(correlatedNodeInOTHERDomain));
 
                 if (correlatedNodeInOTHERDomain.getBindingType().equals(BindingType.CONTEXT)) {
                     // we are only interested in matching CONTEXT nodes in the OTHER domain.
@@ -378,7 +377,7 @@ public class ChangeSequenceTemplate {
          * This can be used for CREATE or CONTEXT edges, the source node can be CREATE or CONTEXT.
          */
         private boolean visitOutgoingEdge(TGGRuleEdge outgoingEdge) {
-            logger.debug("Visiting outgoing edge" + Util.tGGRuleEdgeToString(outgoingEdge));
+            logger.trace("Visiting outgoing edge" + Util.tGGRuleEdgeToString(outgoingEdge));
             TGGRuleNode srcTGGRuleNode = outgoingEdge.getSrcNode();
             TGGRuleNode trgTGGRuleNode = outgoingEdge.getTrgNode();
             if (nodesVisited.contains(trgTGGRuleNode)) { return true; }
@@ -419,7 +418,7 @@ public class ChangeSequenceTemplate {
          * @return whether there is exactly one EObject in the eObjectCandidates set that matches the tggRuleNodes.
          */
         private boolean handleMatchingCandidatesFor(Set<EObject> eObjectCandidates, TGGRuleNode tggRuleNode) {
-            logger.debug("      handleMatchingCandidatesFor rule node " + Util.tGGRuleNodeToString(tggRuleNode) + "with candidates: "
+            logger.trace("      handleMatchingCandidatesFor rule node " + Util.tGGRuleNodeToString(tggRuleNode) + "with candidates: "
                     + eObjectCandidates.stream().map(Util::eObjectToString).collect(Collectors.joining(", ")));
             // this can possibly be more than one. But we need the one that satisfies our match, if there is one. For now, we assume that there is only one...
             if (eObjectCandidates.size() > 1) {
@@ -466,15 +465,15 @@ public class ChangeSequenceTemplate {
 //                        ++this.numOfCreatedCorrNodes;
 //                        return corr;
 //                    }
-            logger.debug("    trying to find Eobject corrleated to " + Util.eObjectToString(eObject)
+            logger.trace("    trying to find Eobject corrleated to " + Util.eObjectToString(eObject)
                     + "by corr=" + Util.tGGRuleNodeToString(tggRuleCorrFromRule) + ". COrrelated EObject must be " + Util.tGGRuleNodeToString(ruleNodeInOtherDomain));
-            logger.debug("      containskey? " + tggResourceHandler.getCorrCaching().containsKey(eObject));
+            logger.trace("      containskey? " + tggResourceHandler.getCorrCaching().containsKey(eObject));
             // find all Corrs for eObject that match the given tggRuleCorrFromRule.
             if (!tggResourceHandler.getCorrCaching().containsKey(eObject)) return Optional.empty();
-            logger.debug("      cachedCorr=" + Util.eSomethingToString(tggResourceHandler.getCorrCaching().get(eObject)));
+            logger.trace("      cachedCorr=" + Util.eSomethingToString(tggResourceHandler.getCorrCaching().get(eObject)));
             EObject deleteMe = tggResourceHandler.getCorrCaching().get(eObject).stream().findAny().get();
-            logger.debug("      source=" + Util.eSomethingToString(deleteMe.eGet(deleteMe.eClass().getEStructuralFeature("source"))));
-            logger.debug("      target=" + Util.eSomethingToString(deleteMe.eGet(deleteMe.eClass().getEStructuralFeature("target"))));
+            logger.trace("      source=" + Util.eSomethingToString(deleteMe.eGet(deleteMe.eClass().getEStructuralFeature("source"))));
+            logger.trace("      target=" + Util.eSomethingToString(deleteMe.eGet(deleteMe.eClass().getEStructuralFeature("target"))));
             //todo eGet(source) ausprobierne
             Set<CorrespondenceNode> matchingCorrespondenceNodes = tggResourceHandler.getCorrCaching().get(eObject).stream()
                     .filter(corrEObject -> corrEObject instanceof CorrespondenceNode) // in case there are others...

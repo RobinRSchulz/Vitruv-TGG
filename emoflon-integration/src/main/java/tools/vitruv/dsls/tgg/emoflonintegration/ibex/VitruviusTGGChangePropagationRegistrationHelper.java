@@ -13,7 +13,7 @@ import java.io.File;
 import java.io.IOException;
 
 public class VitruviusTGGChangePropagationRegistrationHelper implements IRegistrationHelper {
-    protected static final Logger logger = Logger.getRootLogger();
+    protected static final Logger logger = Logger.getLogger(VitruviusTGGChangePropagationRegistrationHelper.class);
 
     private Resource source;
     private Resource target;
@@ -31,8 +31,8 @@ public class VitruviusTGGChangePropagationRegistrationHelper implements IRegistr
     @Override
     public void registerMetamodels(ResourceSet resourceSet, IbexExecutable ibexExecutable) throws IOException {
         //the democles way
-        logger.debug("Called registerMetamodels with " );
-        resourceSet.getAllContents().forEachRemaining(content -> logger.debug("    - " + content));
+        logger.trace("Called registerMetamodels with " );
+        resourceSet.getAllContents().forEachRemaining(content -> logger.trace("    - " + content));
         resourceSet.getPackageRegistry().put(sourceMetamodelPackage.getNsURI() + ".ecore", sourceMetamodelPackage);
         resourceSet.getPackageRegistry().put(targetMetamodelPackage.getNsURI() + ".ecore", targetMetamodelPackage);
 
@@ -40,7 +40,7 @@ public class VitruviusTGGChangePropagationRegistrationHelper implements IRegistr
         resourceSet.getPackageRegistry().put(targetMetamodelPlatformUri, targetMetamodelPackage);
         ibexExecutable.getResourceHandler().loadAndRegisterMetamodel(sourceMetamodelPlatformUri);
         ibexExecutable.getResourceHandler().loadAndRegisterMetamodel(targetMetamodelPlatformUri);
-        logger.debug("After registerMetamodels");
+        logger.trace("After registerMetamodels");
     }
 
     @Override
