@@ -221,7 +221,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
             this.matchesFound = new VitruviusChangePatternMatcher(vitruviusChange).matchPatterns(changeSequenceTemplateSet);
 
             long stop = Timer.stop();
-            logger.debug("Pattern Matching took " + (stop / 1000000d) + " ms");
+            logger.info("Pattern Matching took " + (stop / 1000000d) + " ms");
 
             // TODO remove debug
             logger.trace("ALL MATCHES FOUND");
