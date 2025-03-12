@@ -83,16 +83,16 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
     }
 
     /**
-     * Propagate change sequences to the target model by using the tgg emoflon integration, with BackwardConversionPatternMatching.
+     * Propagate vitruviusChange sequences to the target model by using the tgg emoflon integration, with BackwardConversionPatternMatching.
      *
-     * @param change the change sequence which is to be propagated to this CPS's target model
+     * @param vitruviusChange the vitruviusChange sequence which is to be propagated to this CPS's target model
      */
     @Override
-    public void propagateNonAtomicChange(VitruviusChange<EObject> change,
+    public void propagateNonAtomicChange(VitruviusChange<EObject> vitruviusChange,
                                          EditableCorrespondenceModelView<Correspondence> correspondenceModel,
                                          ResourceAccess resourceAccess) {
         logger.debug("In propagateNonAtomicChange: Gotten the following EChanges: ");
-        change.getEChanges().forEach(eChange -> logger.debug("  - " + Util.eChangeToString(eChange)));
+        vitruviusChange.getEChanges().forEach(eChange -> logger.debug("  - " + Util.eChangeToString(eChange)));
         logger.debug(String.format("Propagate changes from %s to %s", this.getSourceMetamodelDescriptor(), this.getTargetMetamodelDescriptor()));
 
         // get metamodel resources
@@ -110,28 +110,29 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
         );
 
         // get source and target models
-        Resource sourceModel = findModel(change).orElseThrow(() -> new IllegalArgumentException("Change not related to a source model: " + change));
+        Resource sourceModel = findModel(vitruviusChange).orElseThrow(() -> new IllegalArgumentException("Change not related to a source model: " + vitruviusChange));
         logger.debug("In propagateNonAtomicChange: Found source model " + sourceModel);
-        Resource targetModel = getTargetModel(sourceModel, correspondenceModel);
+//        Resource targetModel = getTargetModel(sourceModel, targetMetamodel, correspondenceModel);
 
         logger.info("------- Calling ibex -------");
-        Set<CorrespondenceNode> newlyCreatedIbexCorrs;
-        try {
-            newlyCreatedIbexCorrs = new VitruviusTGGChangePropagationIbexEntrypoint(
-                    new VitruviusTGGChangePropagationRegistrationHelper(
-                            sourceMetamodel, targetMetamodel,
-                            sourceMetamodelPlatformUri, targetMetamodelPlatformUri,
-                            sourceModel, targetModel,
-                            ibexProjectPath,
-                            new VitruviusBackwardConversionTGGEngine(change)
-                    )
-            ).propagateChanges();
-        } catch (IOException e) {
-            throw new RuntimeException("Could not set up eMoflon! " + e);
-        }
-        persistNewTargetRootIfNecessary(sourceModel, targetModel, correspondenceModel, resourceAccess);
-        addNewlyCreatedCorrespondencesToCorrespondenceModel(newlyCreatedIbexCorrs, correspondenceModel);
-//        handleDanglingEObjects(sourceModel, targetModel);
+
+        propagateChangesHandlingTargetModelRetrieval(sourceModel, targetMetamodel, correspondenceModel, resourceAccess,
+                new VitruviusTGGChangePropagationRegistrationHelper().withSourceMetamodelPackage(sourceMetamodel)
+                        .withTargetMetamodelPackage(targetMetamodel)
+                        .withSourceMetamodelPlatformUri(sourceMetamodelPlatformUri)
+                        .withTargetMetamodelPlatformUri(targetMetamodelPlatformUri)
+                        .withIbexProjectPath(ibexProjectPath)
+                        .withSourceModel(sourceModel)
+                        .withPatternMatcher(new VitruviusBackwardConversionTGGEngine(vitruviusChange)),
+                vitruviusEntrypoint -> {
+                    try {
+                        return vitruviusEntrypoint.propagateChanges();
+                    } catch (IOException e) {
+                        throw new RuntimeException("Could not propagate changes via eMoflon! " + e);
+                    }
+                }
+        );
+
     }
 
     /**
@@ -175,32 +176,41 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
         return resourceOptional.get();
     }
 
-    private Set<CorrespondenceNode> propagateChanges(Resource sourceModel,
-                                                     EditableCorrespondenceModelView<Correspondence> correspondenceModel,
-                                                     ResourceAccess resourceAccess,
-                                                     VitruviusTGGChangePropagationIbexEntrypoint ibexEntrypoint,
-                                                     Function<VitruviusTGGChangePropagationIbexEntrypoint, Set<CorrespondenceNode>> changePropgationFunction) {
-        // find model
-        Resource targetModel;
+    private void propagateChangesHandlingTargetModelRetrieval(Resource sourceModel,
+                                                              EPackage targetMetamodel,
+                                                              EditableCorrespondenceModelView<Correspondence> correspondenceModel,
+                                                              ResourceAccess resourceAccess,
+                                                              VitruviusTGGChangePropagationRegistrationHelper ibexRegistrationHelper,
+                                                              Function<VitruviusTGGChangePropagationIbexEntrypoint, Set<CorrespondenceNode>> changePropgationFunction) {
+        Set<CorrespondenceNode> newlyCreatedIbexCorrs;
         //  If no target model exists yet, we need to create one. There are different possible approaches. Currently, the third is in place.
-        if (!correspondenceModel.hasCorrespondences(sourceModel.getContents())) {
-            logger.info("Source Model has no respective target model yet. Creating one.");
-            targetModel = sourceModel.getResourceSet().createResource(this.targetRootURI);
-        } else {
-            logger.info("Found target model via correspondence model");
-            targetModel = correspondenceModel.getCorrespondingEObjects(sourceModel.getContents().getFirst()).stream().findFirst()
-                    .orElseThrow(() -> new IllegalStateException("Target model found (via correspondence model) but source model has no contents..."))
-                    .eResource();
+        try {
+            if (!modelHasCorrespondencesToResourceOfTargetMetamodel(sourceModel, targetMetamodel, correspondenceModel)) {
+                logger.info("Source Model has no respective target model yet. Creating one.");
+                Resource targetModel = sourceModel.getResourceSet().createResource(this.targetRootURI); // in this case, this has to be filled later!
+
+                // do the SYNC calling
+                    newlyCreatedIbexCorrs = changePropgationFunction.apply(new VitruviusTGGChangePropagationIbexEntrypoint(ibexRegistrationHelper.withTargetModel(targetModel)));
+
+                persistNewTargetRoot(targetModel, correspondenceModel, resourceAccess);
+            } else {
+                logger.info("Found target model via correspondence model");
+                Resource targetModel = correspondenceModel.getCorrespondingEObjects(sourceModel.getContents().getFirst()).stream()
+                        .filter(correspondingEObject -> correspondingEObject.eClass().getEPackage().equals(targetMetamodel)) // we only want to look at corrs to the target metamodel
+                        .findFirst()
+                        .orElseThrow(() -> new IllegalStateException("Target model found (via correspondence model) but source model has no contents..."))
+                        .eResource();
+                // do the SYNC calling
+                newlyCreatedIbexCorrs = changePropgationFunction.apply(new VitruviusTGGChangePropagationIbexEntrypoint(ibexRegistrationHelper.withTargetModel(targetModel)));
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Could not set up eMoflon! " + e);
         }
 
-        // do the SYNC calling
-        Set<CorrespondenceNode> newlyCreatedIbexCorrs = changePropgationFunction.apply(ibexEntrypoint);
-
-        // handle  target model stuff
-
-        persistNewTargetRootIfNecessary(sourceModel, targetModel, correspondenceModel, resourceAccess);
-
-
+        // apply the changes
+        addNewlyCreatedCorrespondencesToCorrespondenceModel(newlyCreatedIbexCorrs, correspondenceModel);
+        //TODO Add generating a change sequence out of the factually applied matches. This currently relies on change derivation!
+//        handleDanglingEObjects(sourceModel, targetModel);
     }
 
     private void addNewlyCreatedCorrespondencesToCorrespondenceModel(Set<CorrespondenceNode> newlyCreatedIbexCorrs,
@@ -261,22 +271,20 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
     }
 
     /**
-     * If the target model didn't exist before change propagation, this persists the new mod
+     * this persists the new mod
      */
-    private void persistNewTargetRootIfNecessary(Resource sourceModel,
-                                                 Resource targetModel,
-                                                 EditableCorrespondenceModelView<Correspondence> correspondenceModel,
-                                                 ResourceAccess resourceAccess) {
-        if (!modelHasCorrespondencesToTargetResource(sourceModel, targetModel, correspondenceModel)) {
-            Set<EObject> potentialRoots = targetModel.getContents().stream().filter(eChange -> eChange.eClass().equals(this.targetRootEclass)).collect(Collectors.toSet());
-            if (potentialRoots.isEmpty()) {
-                logger.info("No changes to the target model.");
-            } else if (potentialRoots.size() == 1) {
-                EObject targetRoot = potentialRoots.iterator().next();
-                logger.info("Found newly created root node " + Util.eObjectToString(targetRoot) + ". Persisting it...");
-                resourceAccess.persistAsRoot(targetRoot, this.targetRootURI);
-            } else throw new IllegalStateException("Multiple target roots! Don't know which to persist as root!");
-        }
+    private void persistNewTargetRoot(Resource targetModel,
+                                      EditableCorrespondenceModelView<Correspondence> correspondenceModel,
+                                      ResourceAccess resourceAccess) {
+
+        Set<EObject> potentialRoots = targetModel.getContents().stream().filter(eChange -> eChange.eClass().equals(this.targetRootEclass)).collect(Collectors.toSet());
+        if (potentialRoots.isEmpty()) {
+            logger.debug("No changes to the target model.");
+        } else if (potentialRoots.size() == 1) {
+            EObject targetRoot = potentialRoots.iterator().next();
+            logger.debug("Found newly created root node " + Util.eObjectToString(targetRoot) + ". Persisting it...");
+            resourceAccess.persistAsRoot(targetRoot, this.targetRootURI);
+        } else throw new IllegalStateException("Multiple target roots! Don't know which to persist as root!");
     }
     private boolean modelHasCorrespondencesToTargetResource(Resource sourceModelResource, Resource targetModelResource, EditableCorrespondenceModelView<Correspondence> correspondenceModel) {
         if (correspondenceModel.hasCorrespondences(sourceModelResource.getContents())) {

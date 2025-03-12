@@ -15,41 +15,19 @@ import java.io.IOException;
 public class VitruviusTGGChangePropagationRegistrationHelper implements IRegistrationHelper {
     protected static final Logger logger = Logger.getRootLogger();
 
-    private final Resource source;
-    private final Resource target;
+    private Resource source;
+    private Resource target;
 
-    private final EPackage sourceMetamodelPackage;
-    private final EPackage targetMetamodelPackage;
+    private EPackage sourceMetamodelPackage;
+    private EPackage targetMetamodelPackage;
 
-    private final String sourceMetamodelPlatformUri;
-    private final String targetMetamodelPlatformUri;
+    private String sourceMetamodelPlatformUri;
+    private String targetMetamodelPlatformUri;
 
-    private final File ibexProjectPath;
+    private File ibexProjectPath;
 
-    private final IBlackInterpreter patternMatcher;
+    private IBlackInterpreter patternMatcher;
 
-    /**
-     *
-     * @param sourceMetamodelPlatformUri eclipse/ ibex need that. Look in your ibex project to find it...
-     * @param targetMetamodelPlatformUri eclipse/ ibex need that. Look in your ibex project to find it...
-     * @param source source model where the changes occur
-     * @param target target model where the source changes are to be propagated to.
-     * @param ibexProjectPath path to the eclipse ibex project where the TGG rules have been defined and compiled(!) (see README).
-     * @param patternMatcher the pattern matcher which should be used to find forward and broken matches of TGG rules.
-     */
-    public VitruviusTGGChangePropagationRegistrationHelper(EPackage sourceMetamodelPackage, EPackage targetMetamodelPackage,
-                                                           String sourceMetamodelPlatformUri, String targetMetamodelPlatformUri,
-                                                           Resource source, Resource target,
-                                                           File ibexProjectPath, IBlackInterpreter patternMatcher) {
-        this.sourceMetamodelPackage = sourceMetamodelPackage;
-        this.targetMetamodelPackage = targetMetamodelPackage;
-        this.sourceMetamodelPlatformUri = sourceMetamodelPlatformUri;
-        this.targetMetamodelPlatformUri = targetMetamodelPlatformUri;
-        this.source = source;
-        this.target = target;
-        this.ibexProjectPath = ibexProjectPath;
-        this.patternMatcher = patternMatcher;
-    }
     @Override
     public void registerMetamodels(ResourceSet resourceSet, IbexExecutable ibexExecutable) throws IOException {
         //the democles way
@@ -81,5 +59,38 @@ public class VitruviusTGGChangePropagationRegistrationHelper implements IRegistr
                 .debug.ibexDebug(true)
                 .registrationHelper(this);
         return ibexOptions;
+    }
+
+    public VitruviusTGGChangePropagationRegistrationHelper withTargetModel(Resource targetModel) {
+        this.target = targetModel;
+        return this;
+    }
+    public VitruviusTGGChangePropagationRegistrationHelper withSourceModel(Resource sourceModel) {
+        this.source = sourceModel;
+        return this;
+    }
+    public VitruviusTGGChangePropagationRegistrationHelper withIbexProjectPath(File ibexProjectPath) {
+        this.ibexProjectPath = ibexProjectPath;
+        return this;
+    }
+    public VitruviusTGGChangePropagationRegistrationHelper withSourceMetamodelPackage(EPackage sourceMetamodelPackage) {
+        this.sourceMetamodelPackage = sourceMetamodelPackage;
+        return this;
+    }
+    public VitruviusTGGChangePropagationRegistrationHelper withTargetMetamodelPackage(EPackage targetMetamodelPackage) {
+        this.targetMetamodelPackage = targetMetamodelPackage;
+        return this;
+    }
+    public VitruviusTGGChangePropagationRegistrationHelper withSourceMetamodelPlatformUri(String sourceMetamodelPlatformUri) {
+        this.sourceMetamodelPlatformUri = sourceMetamodelPlatformUri;
+        return this;
+    }
+    public VitruviusTGGChangePropagationRegistrationHelper withTargetMetamodelPlatformUri(String targetMetamodelPlatformUri) {
+        this.targetMetamodelPlatformUri = targetMetamodelPlatformUri;
+        return this;
+    }
+    public VitruviusTGGChangePropagationRegistrationHelper withPatternMatcher(IBlackInterpreter patternMatcher) {
+        this.patternMatcher = patternMatcher;
+        return this;
     }
 }
