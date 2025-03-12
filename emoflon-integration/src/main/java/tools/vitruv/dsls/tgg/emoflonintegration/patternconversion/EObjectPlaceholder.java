@@ -2,6 +2,7 @@ package tools.vitruv.dsls.tgg.emoflonintegration.patternconversion;
 
 import language.TGGRuleNode;
 import org.eclipse.emf.ecore.EObject;
+import tools.vitruv.dsls.tgg.emoflonintegration.Util;
 
 /**
  * A placeholder for an ${@link EObject} for initializing after creating the ${@link tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange.EChangeWrapper}.
@@ -59,10 +60,6 @@ public class EObjectPlaceholder {
 
     @Override
     public String toString() {
-        return "[Placeholder:" + this.hashCode() + "]" + (this.isInitialized() ? (": " + eObjectToString(affectedEObject)) : "");
-    }
-
-    private String eObjectToString(EObject eObject) {
-        return eObject.eClass().getName() + ":" + eObject.hashCode();
+        return "[Placeholder:" + Integer.toHexString(this.hashCode()) + "]" + (this.isInitialized() ? (": " + Util.eObjectToString(affectedEObject)) : "");
     }
 }

@@ -8,6 +8,7 @@ import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.util.EObjectContainmentEList;
+import runtime.CorrespondenceNode;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.eobject.CreateEObject;
 import tools.vitruv.change.atomic.eobject.DeleteEObject;
@@ -81,7 +82,12 @@ public class Util {
     }
 
     public static String resourceSetToString(ResourceSet resourceSet) {
-        return "ResourceSet:" + resourceSet.hashCode();
+        return "ResourceSet:" + Integer.toHexString(resourceSet.hashCode());
+    }
+
+    public static String correspondenceNodeToString(CorrespondenceNode correspondenceNode) {
+        return "[CorrespondenceNode " + correspondenceNode.eClass().getName() +  "] SRC=" + Util.eSomethingToString(correspondenceNode.eGet(correspondenceNode.eClass().getEStructuralFeature("source")))
+                + ", TRG=" + Util.eSomethingToString(correspondenceNode.eGet(correspondenceNode.eClass().getEStructuralFeature("target")));
     }
 
     public static String eSomethingToString(Object object) {
@@ -96,7 +102,7 @@ public class Util {
 
     public static String eObjectToString(Object object) {
         EObject eObject = (EObject) object;
-        return eObject.eClass().getName() + ":" + eObject.hashCode();
+        return eObject.eClass().getName() + ":" + Integer.toHexString(eObject.hashCode());
     }
 
     public static String tGGRuleNodeToString(TGGRuleNode tggRuleNode) {

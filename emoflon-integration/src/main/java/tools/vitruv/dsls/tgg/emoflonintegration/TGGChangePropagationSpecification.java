@@ -130,8 +130,25 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
         }
         persistNewTargetRootIfNecessary(sourceModel, targetModel, correspondenceModel, resourceAccess);
         addNewlyCreatedCorrespondencesToCorrespondenceModel(newlyCreatedIbexCorrs, correspondenceModel);
+        handleDanglingEObjects(sourceModel, targetModel);
     }
 
+    /**
+     *  todo keep for a while until more tests...
+     * @param sourceModel
+     * @param targetModel
+     */
+    private void handleDanglingEObjects(Resource sourceModel, Resource targetModel) {
+        logger.info("+++handleDanglingEObjects+++");
+        logger.info("  - sourceModel: " + sourceModel.getURI());
+        sourceModel.getAllContents().forEachRemaining(eObject -> {
+            logger.info("    - " + Util.eObjectToString(eObject) + ",eResource=" + eObject.eResource().getURI());
+        });
+        logger.info("  - targetModel: " + targetModel.getURI());
+        targetModel.getAllContents().forEachRemaining(eObject -> {
+            logger.info("    - " + Util.eObjectToString(eObject) + ",eResource=" + eObject.eResource().getURI());
+        });
+    }
     /**
      *
      * Tries to find a model ${@link Resource} related to a ${@link VitruviusChange}.
@@ -159,12 +176,14 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
 
     private void addNewlyCreatedCorrespondencesToCorrespondenceModel(Set<CorrespondenceNode> newlyCreatedIbexCorrs,
                                                                      EditableCorrespondenceModelView<Correspondence> correspondenceModel) {
-        newlyCreatedIbexCorrs.forEach(correspondenceNode ->
+        logger.info("-- Added the following corrs: ");
+        newlyCreatedIbexCorrs.forEach(correspondenceNode -> {
+                logger.info("  - " + Util.correspondenceNodeToString(correspondenceNode));
                 correspondenceModel.addCorrespondenceBetween(
                         (EObject) correspondenceNode.eGet(correspondenceNode.eClass().getEStructuralFeature("source")),
                         (EObject) correspondenceNode.eGet(correspondenceNode.eClass().getEStructuralFeature("target")),
-                        correspondenceNode.eClass().getName()) // todo just using the name. is that enough?
-        );
+                        correspondenceNode.eClass().getName()); // todo just using the name. is that enough?
+    });
     }
 
     /**
