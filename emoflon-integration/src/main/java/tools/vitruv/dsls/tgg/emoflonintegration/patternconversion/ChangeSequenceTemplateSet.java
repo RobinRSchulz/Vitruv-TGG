@@ -1,8 +1,10 @@
 package tools.vitruv.dsls.tgg.emoflonintegration.patternconversion;
 
+import org.apache.log4j.Logger;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import tools.vitruv.change.atomic.EChange;
+import tools.vitruv.dsls.tgg.emoflonintegration.Util;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange.ChangeSequenceTemplate;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange.EChangeWrapper;
 
@@ -14,6 +16,7 @@ import java.util.*;
  * Further, this set provides a method to partly invoke a ${@link ChangeSequenceTemplate} based on one ${@link EChange}.
  */
 public class ChangeSequenceTemplateSet {
+    static Logger logger = Logger.getLogger(ChangeSequenceTemplateSet.class);
 
     private final Collection<ChangeSequenceTemplate> patternTemplateParents;
     /**
@@ -48,6 +51,10 @@ public class ChangeSequenceTemplateSet {
      */
     public Set<ChangeSequenceTemplate> getAndInitRelevantIbexPatternTemplatesByEChange(EChange<EObject> eChange) {
         Set<ChangeSequenceTemplate> partlyInitializedTemplates = new HashSet<>();
+        if (!ibexPatternTemplatesByEChangeType.containsKey(eChange.getClass())) {
+            logger.warn("No rule defined to cover the following change's type: " + Util.eChangeToString(eChange));
+            return Collections.emptySet();
+        }
         for (ChangeSequenceTemplate ibexPatternTemplate : ibexPatternTemplatesByEChangeType.get(eChange.eClass())) {
             ibexPatternTemplate.getEChangeWrappers().stream()
                     .filter(eChangeWrapper -> eChangeWrapper.matches(eChange))
