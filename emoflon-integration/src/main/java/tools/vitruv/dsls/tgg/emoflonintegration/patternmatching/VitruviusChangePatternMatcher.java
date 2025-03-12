@@ -66,7 +66,7 @@ public class VitruviusChangePatternMatcher {
                     logger.debug("[VitruviusChangePatternMatcher] Trying to match " + eChangeWrapper);
                     boolean eChangeWrapperInitialized = false;
                     // find a match for the echangewrapper in the VitruviusChange.
-                    for (EChange<EObject> eChangeCandidate : eChangesByEChangeType.get(eChangeWrapper.getEChangeType())) {
+                    for (EChange<EObject> eChangeCandidate : eChangesByEChangeType.getOrDefault(eChangeWrapper.getEChangeType(), Collections.emptySet())) {
                         logger.debug("[VitruviusChangePatternMatcher] Trying to match it against " + Util.eChangeToString(eChangeCandidate));
                         if (eChangeWrapper.matches(eChangeCandidate)) {
                             logger.debug("[VitruviusChangePatternMatcher] SUCCESS!");
