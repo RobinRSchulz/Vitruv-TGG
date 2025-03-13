@@ -3,10 +3,11 @@ package tools.vitruv.dsls.tgg.emoflonintegration.patternmatching;
 import org.apache.log4j.Logger;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
-import org.emoflon.ibex.common.operational.IMatch;
+import org.emoflon.ibex.tgg.operational.strategies.modules.TGGResourceHandler;
+import runtime.Protocol;
+import runtime.TGGRuleApplication;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.composite.description.VitruviusChange;
-import tools.vitruv.dsls.tgg.emoflonintegration.TGGChangePropagationSpecification;
 import tools.vitruv.dsls.tgg.emoflonintegration.Util;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange.EChangeWrapper;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange.ChangeSequenceTemplate;
@@ -23,6 +24,7 @@ public class VitruviusChangePatternMatcher {
     static Logger logger = Logger.getLogger(VitruviusChangePatternMatcher.class);
 
     private final VitruviusChange<EObject> vitruviusChange;
+    private ChangeSequenceTemplateSet changeSequenceTemplateSet;
     private Map<EClass, Set<EChange<EObject>>> eChangesByEChangeType;
 
     /**
@@ -31,8 +33,9 @@ public class VitruviusChangePatternMatcher {
      */
     private Map<EChange<EObject>, Set<EChangeWrapper>> alreadyInvokedEChangeWrappers;
 
-    public VitruviusChangePatternMatcher(VitruviusChange<EObject> vitruviusChange) {
+    public VitruviusChangePatternMatcher(VitruviusChange<EObject> vitruviusChange, ChangeSequenceTemplateSet changeSequenceTemplateSet) {
         this.vitruviusChange = vitruviusChange;
+        this.changeSequenceTemplateSet = changeSequenceTemplateSet;
         initialize();
     }
 
@@ -41,7 +44,7 @@ public class VitruviusChangePatternMatcher {
      *
      * @return patterns that match against this class's VitruviusChange. Context is NOT checked yet, here!
      */
-    public Set<VitruviusBackwardConversionMatch> matchPatterns(ChangeSequenceTemplateSet changeSequenceTemplateSet) {
+    public Set<VitruviusBackwardConversionMatch> getForwardMatches() {
         logger.debug("\n[VitruviusChangePatternMatcher] matching the following eChanges against " + changeSequenceTemplateSet.getPatternTemplateParents().size() + " pattern templates:");
         vitruviusChange.getEChanges().forEach(eChange -> logger.debug("  - " + Util.eChangeToString(eChange)));
         // 1. compute all possible matches
@@ -98,6 +101,44 @@ public class VitruviusChangePatternMatcher {
         // 2. Check if the context of the patterns matches maybe by leveraging existing ibex functionality??
         // 3. choose patterns to form a Coverage where each change belongs to exactly one pattern (todo maybe less than exactly one since not everything is consistency-relevant)
         return allInvokedPatternTemplates.stream().map(VitruviusBackwardConversionMatch::new).collect(Collectors.toSet());
+    }
+
+    public void getBrokenMatches(TGGResourceHandler resourceHandler) {
+        // we need
+        /*
+            1. Protocol     todo look at ibex repo how that is handled
+            2. to look at all EChanges that translate to broken matches
+            3. to correlate them with protocol
+            3. to filter out the matches that ::getForwardMatches gets!
+         */
+        logger.warn("*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~");
+        logger.warn("*~*~*~*~*~*~*~*~*~*~*~* GET BROKEN MÄTCHES! *~*~*~*~*~*~*~*~*~*~");
+        logger.warn("*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~");
+        // 1. get protocol
+        resourceHandler.getProtocolResource().getContents().forEach(protocolEObject -> {
+            logger.info("protocolEObject " + Util.eObjectToString(protocolEObject) +
+                    ", instanceof runtime.TGGRuleApplication? " + (protocolEObject instanceof TGGRuleApplication) +
+                    ", javaclass=" + protocolEObject.getClass().getName());
+        });
+        Optional<TGGRuleApplication> anyTGGRuleApplicationOptional = resourceHandler.getProtocolResource().getContents().stream()
+                .map(protocolEObject -> (TGGRuleApplication) protocolEObject)
+                .findAny();
+        if (anyTGGRuleApplicationOptional.isEmpty()) { return; }
+        Protocol protocol = anyTGGRuleApplicationOptional.get().getProtocol();
+
+
+        // 2. iterate breaking changes
+        vitruviusChange.getEChanges().stream()
+                .filter(eChange -> !Util.isCreatingOrAdditiveEChange(eChange)).forEach(breakingEChange -> {
+                    /* todo
+                        1. find out which EObjects are introduced by which marker (from the protocol)   --> Map<EObject, Marker<?>
+                        2. find out which eObject(s) this breakingEChange deletes.                      --> Set<EObject> eObjectsBrokenByThisEChange
+                        2.5 flatmap                                                                     --> Set<EObject> eObjectsBroken
+                        3. look up all EObjects in the former map, getting a                            --> Set<Marker> brokenMarkers
+                        3. wurschtel that into a match somehow (maybe that can be gotten easily from the marker!)
+                     */
+                });
+//        throw new RuntimeException("TODO implement broken match stuff");
     }
 
     private void visualizeCoverage(Set<ChangeSequenceTemplate> coverage) {

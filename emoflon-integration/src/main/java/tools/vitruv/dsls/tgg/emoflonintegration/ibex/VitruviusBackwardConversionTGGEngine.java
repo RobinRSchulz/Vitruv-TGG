@@ -83,9 +83,9 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     private IbexExecutable ibexExecutable;
     private Set<VitruviusBackwardConversionMatch> matchesFound;
     private final Set<IMatch> matchesThatHaveBeenApplied;
-//    private final Map<EObject, Set<Correspondence>> correspondencesBeforeMatching;
     private OperationalStrategy observedOperationalStrategy;
 
+    private VitruviusChangePatternMatcher vitruviusChangePatternMatcher;
     private ChangeSequenceTemplateSet changeSequenceTemplateSet;
     private final VitruviusChange<EObject> vitruviusChange;
     private final Times times;
@@ -123,6 +123,8 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
         Timer.start();
 
         this.changeSequenceTemplateSet = new IbexPatternToChangeSequenceTemplateConverter(this.ibexModel, this.ibexOptions.tgg.flattenedTGG()).convert();
+        this.vitruviusChangePatternMatcher = new VitruviusChangePatternMatcher(vitruviusChange, changeSequenceTemplateSet);
+
         long stop = Timer.stop();
 
         logger.info("Pattern Conversion took " + (stop / 1000000d) + " ms");
@@ -162,7 +164,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     public void updateMatches() {
 
         // new forward matches. currently only creating forward matches ONCE since we match against the whole change sequence...
-        createMatchesIfNotAlreadyPresent();
+        createForwardMatchesIfNotAlreadyPresent();
         Set<VitruviusBackwardConversionMatch> remainingMatches = getMatchesThatHaventBeenApplied();
 
         // we do not give ALL matches to SYNC but only those that CURRENTLY match context. As matches are applied by SYNC, new matches from this engine may become possible again!
@@ -209,16 +211,17 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
              *      daraus matches basteln
          */
 //        throw new RuntimeException("TODO implement");
+        vitruviusChangePatternMatcher.getBrokenMatches(this.observedOperationalStrategy.getResourceHandler());
         return new LinkedList<>();
     }
 
-    private void createMatchesIfNotAlreadyPresent() {
+    private void createForwardMatchesIfNotAlreadyPresent() {
         if (this.matchesFound == null) {
 
             Timer.setEnabled(true);
             Timer.start();
 
-            this.matchesFound = new VitruviusChangePatternMatcher(vitruviusChange).matchPatterns(changeSequenceTemplateSet);
+            this.matchesFound = vitruviusChangePatternMatcher.getForwardMatches();
 
             long stop = Timer.stop();
             logger.info("Pattern Matching took " + (stop / 1000000d) + " ms");

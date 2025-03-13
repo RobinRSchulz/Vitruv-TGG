@@ -454,17 +454,6 @@ public class ChangeSequenceTemplate {
          * @return
          */
         private Optional<EObject> getEObjectCorrellatedToAMatchingEObject(EObject eObject, TGGRuleCorr tggRuleCorrFromRule, TGGRuleNode ruleNodeInOtherDomain) {
-
-            //Todo remove this code from IbexGreenInterpreter
-//                    this.createCorrs(comatch, greenPattern.getCorrNodes(), this.resourceHandler.getCorrResource());
-//                        --calls-->
-//                    private EObject createCorr(ITGGMatch comatch, TGGRuleNode node, Object src, Object trg) { // src & trg sind die Namen der Regel-Knoten
-//                        EObject corr = this.createNode(comatch, node);
-//                        corr.eSet(corr.eClass().getEStructuralFeature("source"), src);
-//                        corr.eSet(corr.eClass().getEStructuralFeature("target"), trg);
-//                        ++this.numOfCreatedCorrNodes;
-//                        return corr;
-//                    }
             logger.trace("    trying to find Eobject corrleated to " + Util.eObjectToString(eObject)
                     + "by corr=" + Util.tGGRuleNodeToString(tggRuleCorrFromRule) + ". COrrelated EObject must be " + Util.tGGRuleNodeToString(ruleNodeInOtherDomain));
             logger.trace("      containskey? " + tggResourceHandler.getCorrCaching().containsKey(eObject));

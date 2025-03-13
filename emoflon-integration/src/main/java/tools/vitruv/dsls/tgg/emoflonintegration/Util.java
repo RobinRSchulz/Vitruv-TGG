@@ -9,7 +9,9 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.util.EObjectContainmentEList;
 import runtime.CorrespondenceNode;
+import tools.vitruv.change.atomic.AdditiveEChange;
 import tools.vitruv.change.atomic.EChange;
+import tools.vitruv.change.atomic.SubtractiveEChange;
 import tools.vitruv.change.atomic.eobject.CreateEObject;
 import tools.vitruv.change.atomic.eobject.DeleteEObject;
 import tools.vitruv.change.atomic.feature.UnsetFeature;
@@ -67,6 +69,20 @@ public class Util {
             case ReplaceSingleValuedEReference<EObject> replaceSingleValuedEReference -> "[ReplaceSingleValuedEReference] AE=" + eObjectToString(replaceSingleValuedEReference.getAffectedElement());
             case EChange<EObject> eChange1 -> "[EChange] " + eChange1;
         };
+    }
+
+    public static boolean isCreatingOrAdditiveEChange(EChange<EObject> eChange) {
+        return switch (eChange) {
+            case CreateEObject<EObject> createEObject -> true;
+            case DeleteEObject<EObject> deleteEObject -> false;
+            case ReplaceSingleValuedEAttribute<EObject, ?> replaceSingleValuedEAttribute -> throw new IllegalStateException("ReplaceSingleValuedEAttribute not covered!"); //TODO ist sowohl additiv als auch subtraktiv! wie behandeln??
+            case ReplaceSingleValuedEReference<EObject> replaceSingleValuedEReference -> throw new IllegalStateException("ReplaceSingleValuedEAttribute not covered!");    //TODO ist sowohl additiv als auch subtraktiv! wie behandeln??
+            case AdditiveEChange<EObject, ?> additiveEChange-> true;
+            case SubtractiveEChange<EObject, ?> subtractiveEChange -> false;
+            case UnsetFeature<EObject, ?> unsetFeature -> false;
+            case EChange<EObject> eChange1 -> throw new IllegalStateException("Inconcrete eChange: " + eChange1);
+        };
+
     }
 
     public static String modelResourceToString(Resource resource) {
