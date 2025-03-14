@@ -4,10 +4,21 @@ import org.apache.log4j.Logger;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
+import org.emoflon.ibex.common.emf.EMFSaveUtils;
 import org.emoflon.ibex.tgg.operational.strategies.modules.TGGResourceHandler;
-import tools.vitruv.dsls.tgg.emoflonintegration.Util;
+import org.emoflon.smartemf.persistence.JDOMXmiParser;
+import org.emoflon.smartemf.persistence.XmiParserUtil;
+import org.moflon.core.utilities.MoflonUtil;
 
-import java.io.IOException;
+import java.io.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.net.URI;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Map;
 
 public class VitruviusTGGResourceHandler extends TGGResourceHandler {
     protected static final Logger logger = Logger.getLogger(VitruviusTGGResourceHandler.class);
@@ -39,8 +50,49 @@ public class VitruviusTGGResourceHandler extends TGGResourceHandler {
         this.rs.getResources().add(target);
 
         // corr and protocol come from the ibex project (like it is done in the superclass)
-        corr = this.createResource(this.options.project.path() + "/instances/corr.xmi");
-        protocol = createResource(options.project.path() + "/instances/protocol.xmi");
+
+        try {
+            corr = loadResource(options.project.path() + "/instances/corr.xmi");
+            protocol = loadResource(options.project.path() + "/instances/protocol.xmi");
+        } catch (IOException e) {
+            e.printStackTrace();
+            Throwable t = e.getCause();
+
+            logger.info("---- CAUSE ? " + t); // this doesnt work as there is a Bug in SmartEMFResource:142 (as a cause they take e.getCause() instead of just e...)
+            while (t != null) {
+                logger.info("---- CAUSE ----");
+                t.printStackTrace();
+                t = t.getCause();
+            }
+            throw new RuntimeException(e.getMessage() + " -- stacktrace above");
+        }
+//        corr = createResource(this.options.project.path() + "/instances/corr.xmi");
+//        protocol = createResource(options.project.path() + "/instances/protocol.xmi");
+    }
+
+
+    /**
+     * TODO remove this override!
+     * TODO problem likely was that corr and protocol are vorhanden but models not --> inconsistent state!
+     */
+    @Override
+    public Resource loadResource(String workspaceRelativePath) throws IOException {
+        Resource res = this.createResource(workspaceRelativePath);
+        String absolutePath = options.project.workspacePath() + "/" + workspaceRelativePath;
+        if (!Files.exists(Path.of(absolutePath))) {
+            logger.info("Resource not found. Not loading. Path=" + absolutePath);
+            return res;
+        }
+        logger.info("Resource found. Now trying to load resource " + res.getURI() + " which is located at " + absolutePath);
+        try {
+//            DebugUtil.smartEMFResourceLoadDEBUG(res);
+            res.load((Map)null);
+        } catch (FileNotFoundException e) {
+            throw new TGGFileNotFoundException(e, res.getURI());
+        }
+
+        EMFSaveUtils.resolveAll(res);
+        return res;
     }
 
     @Override
@@ -62,6 +114,20 @@ public class VitruviusTGGResourceHandler extends TGGResourceHandler {
             Result: In an ununderstandable manner, the conversion Schema.tgg -> ecore file is done by the Eclipse Editor on save.
             If there is need or want for getting rid of eclipse: do it here, so the methodologist does not have to click "save" in the eclipse editor.
          */
-        return super.loadAndRegisterCorrMetamodel();
+
+        String relativePath = MoflonUtil.lastCapitalizedSegmentOf(options.project.name()) + "/model/"
+                + MoflonUtil.lastCapitalizedSegmentOf(options.project.name()) + ".ecore";
+
+        EPackage pack = loadAndRegisterMetamodel("platform:/resource/" + relativePath);
+        //also register under platform:/plugin
+        String pluginNSUri = "platform:/plugin/" + relativePath;
+        logger.warn("TODO debug code registering metamodel under " + pluginNSUri);
+        this.specificationRS.getPackageRegistry().put(pluginNSUri, pack);
+        logger.warn("Package not registered??:      EPackage.Registry.INSTANCE.getEPackage(pluginNSUri)=" + EPackage.Registry.INSTANCE.getEPackage(pluginNSUri));
+        EPackage.Registry.INSTANCE.put(pluginNSUri, pack);
+        logger.warn("Package STILLnot registered??: EPackage.Registry.INSTANCE.getEPackage(pluginNSUri)=" + EPackage.Registry.INSTANCE.getEPackage(pluginNSUri));
+
+        options.tgg.corrMetamodel(pack);
+        return pack;
     }
 }
