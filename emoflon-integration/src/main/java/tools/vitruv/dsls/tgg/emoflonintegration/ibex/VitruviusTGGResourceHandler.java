@@ -50,7 +50,6 @@ public class VitruviusTGGResourceHandler extends TGGResourceHandler {
         this.rs.getResources().add(target);
 
         // corr and protocol come from the ibex project (like it is done in the superclass)
-
         try {
             corr = loadResource(options.project.path() + "/instances/corr.xmi");
             protocol = loadResource(options.project.path() + "/instances/protocol.xmi");
@@ -72,8 +71,8 @@ public class VitruviusTGGResourceHandler extends TGGResourceHandler {
 
 
     /**
-     * TODO remove this override!
-     * TODO problem likely was that corr and protocol are vorhanden but models not --> inconsistent state!
+     * Only load the resource from file if it is present.
+     * Else, behave like {@link VitruviusTGGResourceHandler#createResource(String)}
      */
     @Override
     public Resource loadResource(String workspaceRelativePath) throws IOException {
@@ -104,30 +103,30 @@ public class VitruviusTGGResourceHandler extends TGGResourceHandler {
         this.vitruvResourceSet.getResources().add(target);
     }
 
+    /**
+        Correspondence Metamodel in eMoflon. This cannot be generated from Vitruvius, because it means a different thing.
+        Here, the correspondence metamodel is defined by the Schema.tgg in the IbeX eclipse project.
+        This file has to be defined by the methodologist.
+
+        Result: In an ununderstandable manner, the conversion Schema.tgg -> ecore file is done by the Eclipse Editor on save.
+        If there is need or want for getting rid of eclipse: do it here, so the methodologist does not have to click "save" in the eclipse editor.
+     */
     @Override
     public EPackage loadAndRegisterCorrMetamodel() throws IOException {
-        /*
-            Correspondence Metamodel in eMoflon. This cannot be generated from Vitruvius, because it means a different thing.
-            Here, the correspondence metamodel is defined by the Schema.tgg in the IbeX eclipse project.
-            This file has to be defined by the methodologist.
-
-            Result: In an ununderstandable manner, the conversion Schema.tgg -> ecore file is done by the Eclipse Editor on save.
-            If there is need or want for getting rid of eclipse: do it here, so the methodologist does not have to click "save" in the eclipse editor.
-         */
 
         String relativePath = MoflonUtil.lastCapitalizedSegmentOf(options.project.name()) + "/model/"
                 + MoflonUtil.lastCapitalizedSegmentOf(options.project.name()) + ".ecore";
+        EPackage corrMetamodelEPackage = loadAndRegisterMetamodel("platform:/resource/" + relativePath);
 
-        EPackage pack = loadAndRegisterMetamodel("platform:/resource/" + relativePath);
         //also register under platform:/plugin
-        String pluginNSUri = "platform:/plugin/" + relativePath;
-        logger.warn("TODO debug code registering metamodel under " + pluginNSUri);
-        this.specificationRS.getPackageRegistry().put(pluginNSUri, pack);
-        logger.warn("Package not registered??:      EPackage.Registry.INSTANCE.getEPackage(pluginNSUri)=" + EPackage.Registry.INSTANCE.getEPackage(pluginNSUri));
-        EPackage.Registry.INSTANCE.put(pluginNSUri, pack);
-        logger.warn("Package STILLnot registered??: EPackage.Registry.INSTANCE.getEPackage(pluginNSUri)=" + EPackage.Registry.INSTANCE.getEPackage(pluginNSUri));
+        String corrMetamodelPluginNSUri = "platform:/plugin/" + relativePath;
+        logger.trace("Try registering metamodel under " + corrMetamodelPluginNSUri);
+        this.specificationRS.getPackageRegistry().put(corrMetamodelPluginNSUri, corrMetamodelEPackage);
+        logger.trace("Package not registered??:      EPackage.Registry.INSTANCE.getEPackage(pluginNSUri)=" + EPackage.Registry.INSTANCE.getEPackage(corrMetamodelPluginNSUri));
+        EPackage.Registry.INSTANCE.put(corrMetamodelPluginNSUri, corrMetamodelEPackage);
+        logger.trace("Package STILLnot registered??: EPackage.Registry.INSTANCE.getEPackage(pluginNSUri)=" + EPackage.Registry.INSTANCE.getEPackage(corrMetamodelPluginNSUri));
 
-        options.tgg.corrMetamodel(pack);
-        return pack;
+        options.tgg.corrMetamodel(corrMetamodelEPackage);
+        return corrMetamodelEPackage;
     }
 }
