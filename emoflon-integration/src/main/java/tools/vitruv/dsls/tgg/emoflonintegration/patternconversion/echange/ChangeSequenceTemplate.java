@@ -410,8 +410,6 @@ public class ChangeSequenceTemplate {
                         .flatMap(eObjectSet -> eObjectSet.stream())
                         .filter(trgEObjectCandidate -> trgEObjectCandidate.eClass().equals(trgTGGRuleNode.getType()))
                         .collect(Collectors.toSet());
-                logger.warn("DEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEBUG");
-                matchingEObjects.forEach(matchingEObject -> logger.warn("  - " + Util.eObjectToString(matchingEObject)));
                 if (handleMatchingCandidatesFor(matchingEObjects, trgTGGRuleNode)) {
                     return visitNode(trgTGGRuleNode);
                 } else return false;
