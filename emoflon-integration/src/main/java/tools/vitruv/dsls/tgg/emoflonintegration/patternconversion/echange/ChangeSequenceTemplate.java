@@ -3,10 +3,8 @@ package tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange;
 
 import language.*;
 import org.apache.log4j.Logger;
-import org.eclipse.emf.ecore.EClass;
-import org.eclipse.emf.ecore.ENamedElement;
-import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.EStructuralFeature;
+import org.eclipse.emf.common.util.EList;
+import org.eclipse.emf.ecore.*;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXContextPattern;
 import org.emoflon.ibex.tgg.compiler.patterns.PatternSuffixes;
@@ -19,6 +17,7 @@ import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.EObjectPlaceho
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * This class represents a pattern in the form of Vitruvius EChanges.
@@ -398,8 +397,21 @@ public class ChangeSequenceTemplate {
                 // here, we don't need the cross-referencing stuff!
                 Set<EObject> matchingEObjects = srcNodeEObject.eClass().getEAllReferences().stream()
                         .filter(eReference -> outgoingEdge.getType().equals(eReference)) //
-                        .map(eReference -> (EObject) trgTGGRuleNode.eGet(eReference))
+                        .map(eReference -> srcNodeEObject.eGet(eReference))
+                        .map(objectValue -> {
+                            Set<EObject> set = new HashSet<>();
+                            if (objectValue instanceof EObject) {
+                                set.add((EObject) objectValue);
+                            } else if (objectValue instanceof EList<?>) {
+                                set.addAll((EList<EObject>) objectValue);
+                            }
+                            return set;
+                        })
+                        .flatMap(eObjectSet -> eObjectSet.stream())
+                        .filter(trgEObjectCandidate -> trgEObjectCandidate.eClass().equals(trgTGGRuleNode.getType()))
                         .collect(Collectors.toSet());
+                logger.warn("DEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEBUG");
+                matchingEObjects.forEach(matchingEObject -> logger.warn("  - " + Util.eObjectToString(matchingEObject)));
                 if (handleMatchingCandidatesFor(matchingEObjects, trgTGGRuleNode)) {
                     return visitNode(trgTGGRuleNode);
                 } else return false;
@@ -413,6 +425,12 @@ public class ChangeSequenceTemplate {
          *     <li> If more than one, we throw.
          *     <li> If zero return false.
          * </ul>
+         * Todo: handling only one candidate most likely is incomplete! A complete search would spawn a context matching "sub-DFS" for EACH candidate
+         * Todo This might throw in evaluation and it might require being handled!
+         * Implementation Idea:
+         * FOR EACH matching eObjectCandidate:
+         * 1. Copy this ContextMatcher, marking the candidate THERE, not here.
+         * 2. finish the DFS there. It should suffice to just call {@link ContextMatcher#contextMatches()} on that.
          *
          * @param eObjectCandidates possible candidates for matching the given {@link TGGRuleNode}.
          * @return whether there is exactly one EObject in the eObjectCandidates set that matches the tggRuleNodes.

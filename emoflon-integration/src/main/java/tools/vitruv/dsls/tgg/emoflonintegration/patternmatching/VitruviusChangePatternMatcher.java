@@ -1,12 +1,20 @@
 package tools.vitruv.dsls.tgg.emoflonintegration.patternmatching;
 
 import org.apache.log4j.Logger;
+import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.EDataType;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.impl.EDataTypeImpl;
 import org.emoflon.ibex.tgg.operational.strategies.modules.TGGResourceHandler;
 import runtime.Protocol;
 import runtime.TGGRuleApplication;
 import tools.vitruv.change.atomic.EChange;
+import tools.vitruv.change.atomic.eobject.DeleteEObject;
+import tools.vitruv.change.atomic.feature.attribute.RemoveEAttributeValue;
+import tools.vitruv.change.atomic.feature.reference.RemoveEReference;
+import tools.vitruv.change.atomic.feature.single.ReplaceSingleValuedFeatureEChange;
+import tools.vitruv.change.atomic.root.RemoveRootEObject;
 import tools.vitruv.change.composite.description.VitruviusChange;
 import tools.vitruv.dsls.tgg.emoflonintegration.Util;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange.EChangeWrapper;
@@ -103,6 +111,22 @@ public class VitruviusChangePatternMatcher {
         return allInvokedPatternTemplates.stream().map(VitruviusBackwardConversionMatch::new).collect(Collectors.toSet());
     }
 
+    /**
+     * We currently do not cover all cases.
+     * If we report broken matches that "free" (in terms of eMoflon "unmark") EObjects from being covered by a pattern application,
+     * and that is not handled by the application of short-cut rules in the SYNC algorithm, we cannot cover this (yet).
+     * It would be solveable like this:
+     * <ol>
+     *    <li>detect the subgraph of EObjects + interrelations that are unmarked</li>
+     *    <li>generate EChanges for that subgraph</li>
+     *    <li>generate new forward matches with {@link VitruviusChangePatternMatcher#getForwardMatches()}</li>
+     *    <li>reiterate...</li>
+     * </ol>
+     *
+     * TODO we currently ignore
+     *
+     * @param resourceHandler provides access to the protocol resource.
+     */
     public void getBrokenMatches(TGGResourceHandler resourceHandler) {
         // we need
         /*
@@ -111,25 +135,31 @@ public class VitruviusChangePatternMatcher {
             3. to correlate them with protocol
             3. to filter out the matches that ::getForwardMatches gets!
          */
-        logger.warn("*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~");
-        logger.warn("*~*~*~*~*~*~*~*~*~*~*~* GET BROKEN MÄTCHES! *~*~*~*~*~*~*~*~*~*~");
-        logger.warn("*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~");
-        // 1. get protocol
-        resourceHandler.getProtocolResource().getContents().forEach(protocolEObject -> {
-            logger.info("protocolEObject " + Util.eObjectToString(protocolEObject) +
-                    ", instanceof runtime.TGGRuleApplication? " + (protocolEObject instanceof TGGRuleApplication) +
-                    ", javaclass=" + protocolEObject.getClass().getName());
-        });
-        Optional<TGGRuleApplication> anyTGGRuleApplicationOptional = resourceHandler.getProtocolResource().getContents().stream()
-                .map(protocolEObject -> (TGGRuleApplication) protocolEObject)
-                .findAny();
-        if (anyTGGRuleApplicationOptional.isEmpty()) { return; }
-        Protocol protocol = anyTGGRuleApplicationOptional.get().getProtocol();
+        logger.warn("*~*~*~*~*~*~*~*~*~*~*~* GET BROKEN MaTCHES! *~*~*~*~*~*~*~*~*~*~");
+        Optional<Protocol> protocolOptional = Util.getProtocol(resourceHandler);
+        if (protocolOptional.isEmpty()) { return; }
+        Protocol protocol = protocolOptional.get();
+        protocol.getSteps().forEach(tggRuleApplicationStep -> logger.info("protocolEObject " + Util.eObjectToString(tggRuleApplicationStep)));
 
 
         // 2. iterate breaking changes
         vitruviusChange.getEChanges().stream()
-                .filter(eChange -> !Util.isCreatingOrAdditiveEChange(eChange)).forEach(breakingEChange -> {
+                .filter(eChange -> !Util.isCreatingOrAdditiveEChange(eChange))
+                .filter(breakingEChange -> {
+                    if (breakingEChange instanceof ReplaceSingleValuedFeatureEChange<EObject, ?, ?> ) {
+                        // covers: ReplaceSingleValuedEAttribute, ReplaceSingleValuedEReference
+                        //TODO ist sowohl additiv als auch subtraktiv! wie behandeln??
+                        // müsste man ggf in delete + create aufsplitten --> TODO issue schreiben
+                        logger.warn("ReplaceSingleValuedEAttribute not covered! Ignoring the following eChange: " + Util.eChangeToString(breakingEChange));
+                        return false;
+                    } else return true;
+                }).forEach(breakingChange -> {
+                    // todo map change to eObjects that are being deleted by it
+                    if (breakingChange instanceof RemoveEReference<EObject> removeEReference) {
+                        // AE is
+                        removeEReference.getAffectedFeature().getEKeys();
+                    }
+                });
                     /* todo
                         1. find out which EObjects are introduced by which marker (from the protocol)   --> Map<EObject, Marker<?>
                         2. find out which eObject(s) this breakingEChange deletes.                      --> Set<EObject> eObjectsBrokenByThisEChange
@@ -137,9 +167,10 @@ public class VitruviusChangePatternMatcher {
                         3. look up all EObjects in the former map, getting a                            --> Set<Marker> brokenMarkers
                         3. wurschtel that into a match somehow (maybe that can be gotten easily from the marker!)
                      */
-                });
+
 //        throw new RuntimeException("TODO implement broken match stuff");
     }
+
 
     private void visualizeCoverage(Set<ChangeSequenceTemplate> coverage) {
         logger.debug(

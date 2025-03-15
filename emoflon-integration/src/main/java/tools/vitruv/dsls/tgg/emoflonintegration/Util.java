@@ -8,7 +8,10 @@ import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.util.EObjectContainmentEList;
+import org.emoflon.ibex.tgg.operational.strategies.modules.TGGResourceHandler;
 import runtime.CorrespondenceNode;
+import runtime.Protocol;
+import runtime.TGGRuleApplication;
 import tools.vitruv.change.atomic.AdditiveEChange;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.SubtractiveEChange;
@@ -21,10 +24,12 @@ import tools.vitruv.change.atomic.feature.attribute.ReplaceSingleValuedEAttribut
 import tools.vitruv.change.atomic.feature.reference.InsertEReference;
 import tools.vitruv.change.atomic.feature.reference.RemoveEReference;
 import tools.vitruv.change.atomic.feature.reference.ReplaceSingleValuedEReference;
+import tools.vitruv.change.atomic.feature.single.ReplaceSingleValuedFeatureEChange;
 import tools.vitruv.change.atomic.root.InsertRootEObject;
 import tools.vitruv.change.atomic.root.RemoveRootEObject;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class Util {
@@ -75,14 +80,12 @@ public class Util {
         return switch (eChange) {
             case CreateEObject<EObject> createEObject -> true;
             case DeleteEObject<EObject> deleteEObject -> false;
-            case ReplaceSingleValuedEAttribute<EObject, ?> replaceSingleValuedEAttribute -> throw new IllegalStateException("ReplaceSingleValuedEAttribute not covered!"); //TODO ist sowohl additiv als auch subtraktiv! wie behandeln??
-            case ReplaceSingleValuedEReference<EObject> replaceSingleValuedEReference -> throw new IllegalStateException("ReplaceSingleValuedEAttribute not covered!");    //TODO ist sowohl additiv als auch subtraktiv! wie behandeln??
+            case ReplaceSingleValuedFeatureEChange<EObject, ?, ?> replaceSingleValuedFeatureEChange -> false;
             case AdditiveEChange<EObject, ?> additiveEChange-> true;
             case SubtractiveEChange<EObject, ?> subtractiveEChange -> false;
             case UnsetFeature<EObject, ?> unsetFeature -> false;
             case EChange<EObject> eChange1 -> throw new IllegalStateException("Inconcrete eChange: " + eChange1);
         };
-
     }
 
     public static String modelResourceToString(Resource resource) {
@@ -132,12 +135,20 @@ public class Util {
 
     }
 
+    public static Optional<Protocol> getProtocol(TGGResourceHandler resourceHandler) {
+        Optional<TGGRuleApplication> anyTGGRuleApplicationOptional = resourceHandler.getProtocolResource().getContents().stream()
+                .map(protocolEObject -> (TGGRuleApplication) protocolEObject)
+                .findAny();
+        return anyTGGRuleApplicationOptional.map(TGGRuleApplication::getProtocol);
+    }
+
     public static boolean isManyValued(EReference eReference) {
         return eReference.getUpperBound() == -1;
     }
     public static  Collection<TGGRuleEdge> filterEdges(TGGRule tggRule, BindingType bindingType, DomainType domainType) {
         return tggRule.getEdges().stream().filter(tggRuleEdge -> tggRuleEdge.getBindingType().equals(bindingType) && tggRuleEdge.getDomainType().equals(domainType)).toList();
     }
+
     public static  Collection<TGGRuleNode> filterNodes(TGGRule tggRule, BindingType bindingType, DomainType domainType) {
         return tggRule.getNodes().stream().filter(tggRuleNode -> tggRuleNode.getBindingType().equals(bindingType) && tggRuleNode.getDomainType().equals(domainType)).toList();
     }
