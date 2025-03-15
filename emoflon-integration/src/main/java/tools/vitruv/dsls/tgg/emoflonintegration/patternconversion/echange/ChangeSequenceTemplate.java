@@ -1,6 +1,7 @@
 package tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange;
 
 
+import edu.kit.ipd.sdq.commons.util.java.Pair;
 import language.*;
 import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.EList;
@@ -17,7 +18,6 @@ import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.EObjectPlaceho
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * This class represents a pattern in the form of Vitruvius EChanges.
@@ -356,11 +356,12 @@ public class ChangeSequenceTemplate {
 
                 if (correlatedNodeInOTHERDomain.getBindingType().equals(BindingType.CONTEXT)) {
                     // we are only interested in matching CONTEXT nodes in the OTHER domain.
-                    Optional<EObject> correlatedEObject = getEObjectCorrellatedToAMatchingEObject(trgNodeEObject, sourceTGGRuleCorrNode, correlatedNodeInOTHERDomain);
-                    if (correlatedEObject.isPresent()) {
+                    Optional<Pair<CorrespondenceNode,EObject>> instantiatedCorrNodeAndCorrelatedEObject = getInstantiatedCorrNodeAndOthersidedEObjectCorrelatedToAMatchingEObject(trgNodeEObject, sourceTGGRuleCorrNode, correlatedNodeInOTHERDomain);
+                    if (instantiatedCorrNodeAndCorrelatedEObject.isPresent()) {
                         //TODO we might want to put the sourceTGGRuleCorrNode in the map, too? (but it has no EObject...) what do? --> check if SYNC meckers...
                         nodesVisited.add(correlatedNodeInOTHERDomain);
-                        tggRuleNode2EObjectMap.put(correlatedNodeInOTHERDomain, correlatedEObject.get());
+                        tggRuleNode2EObjectMap.put(sourceTGGRuleCorrNode, instantiatedCorrNodeAndCorrelatedEObject.get().getFirst());
+                        tggRuleNode2EObjectMap.put(correlatedNodeInOTHERDomain, instantiatedCorrNodeAndCorrelatedEObject.get().getSecond());
                         return visitNode(correlatedNodeInOTHERDomain); // recurse in the OTHER domain
                     } else return false;
                 }
@@ -469,7 +470,8 @@ public class ChangeSequenceTemplate {
          * @param ruleNodeInOtherDomain
          * @return
          */
-        private Optional<EObject> getEObjectCorrellatedToAMatchingEObject(EObject eObject, TGGRuleCorr tggRuleCorrFromRule, TGGRuleNode ruleNodeInOtherDomain) {
+        private Optional<Pair<CorrespondenceNode,EObject>> getInstantiatedCorrNodeAndOthersidedEObjectCorrelatedToAMatchingEObject(
+                EObject eObject, TGGRuleCorr tggRuleCorrFromRule, TGGRuleNode ruleNodeInOtherDomain) {
             logger.trace("    trying to find Eobject corrleated to " + Util.eObjectToString(eObject)
                     + "by corr=" + Util.tGGRuleNodeToString(tggRuleCorrFromRule) + ". COrrelated EObject must be " + Util.tGGRuleNodeToString(ruleNodeInOtherDomain));
             logger.trace("      containskey? " + tggResourceHandler.getCorrCaching().containsKey(eObject));
@@ -496,7 +498,7 @@ public class ChangeSequenceTemplate {
                 ));
                 // only return the EObject if it matches the rule node (which should be guaranteed via the corr node but who knows...)
                 return ruleNodeInOtherDomain.getType().equals(matchingInstantiatedNodeInOtherDomain.eClass())
-                        ? Optional.of(matchingInstantiatedNodeInOtherDomain)
+                        ? Optional.of(new Pair<>(matchingInstantiatedTGGRuleCorr, matchingInstantiatedNodeInOtherDomain))
                         : Optional.empty();
             } else return Optional.empty();
         }

@@ -37,6 +37,7 @@ import tools.vitruv.dsls.tgg.emoflonintegration.Util;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.IbexPatternToChangeSequenceTemplateConverter;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.ChangeSequenceTemplateSet;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternmatching.VitruviusBackwardConversionMatch;
+import tools.vitruv.dsls.tgg.emoflonintegration.patternmatching.VitruviusChangeBrokenMatchMatcher;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternmatching.VitruviusChangePatternMatcher;
 
 import java.io.File;
@@ -86,6 +87,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     private OperationalStrategy observedOperationalStrategy;
 
     private VitruviusChangePatternMatcher vitruviusChangePatternMatcher;
+    private VitruviusChangeBrokenMatchMatcher vitruviusChangeBrokenMatchMatcher;
     private ChangeSequenceTemplateSet changeSequenceTemplateSet;
     private final VitruviusChange<EObject> vitruviusChange;
     private final Times times;
@@ -124,6 +126,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
 
         this.changeSequenceTemplateSet = new IbexPatternToChangeSequenceTemplateConverter(this.ibexModel, this.ibexOptions.tgg.flattenedTGG()).convert();
         this.vitruviusChangePatternMatcher = new VitruviusChangePatternMatcher(vitruviusChange, changeSequenceTemplateSet);
+        this.vitruviusChangeBrokenMatchMatcher = new VitruviusChangeBrokenMatchMatcher(vitruviusChange, this.ibexOptions.tgg.tgg().getRules());
 
         long stop = Timer.stop();
 
@@ -211,8 +214,8 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
              *      daraus matches basteln
          */
 //        throw new RuntimeException("TODO implement");
-        vitruviusChangePatternMatcher.getBrokenMatches(this.observedOperationalStrategy.getResourceHandler());
-        return new LinkedList<>();
+//        vitruviusChangeBrokenMatchMatcher.getBrokenMatches(this.observedOperationalStrategy.getResourceHandler());
+        return vitruviusChangeBrokenMatchMatcher.getBrokenMatchesSimple(this.observedOperationalStrategy.getResourceHandler());
     }
 
     private void createForwardMatchesIfNotAlreadyPresent() {

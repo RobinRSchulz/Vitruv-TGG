@@ -30,11 +30,12 @@ import tools.vitruv.change.atomic.root.RemoveRootEObject;
 
 import java.util.Collection;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class Util {
 
-    private static final Logger log = Logger.getLogger(Util.class);
+    private static final Logger logger = Logger.getLogger(Util.class);
 
     private Util() { }
 
@@ -88,6 +89,10 @@ public class Util {
         };
     }
 
+    public static String getMarkerStyleName(TGGRuleNode tggRuleNode) {
+        return tggRuleNode.getBindingType().getName() + "__" + tggRuleNode.getDomainType() + "__" + tggRuleNode.getName();
+    }
+
     public static String modelResourceToString(Resource resource) {
         String str = "";
         for (TreeIterator<EObject> it = resource.getAllContents(); it.hasNext(); ) {
@@ -135,11 +140,11 @@ public class Util {
 
     }
 
-    public static Optional<Protocol> getProtocol(TGGResourceHandler resourceHandler) {
-        Optional<TGGRuleApplication> anyTGGRuleApplicationOptional = resourceHandler.getProtocolResource().getContents().stream()
+    public static Optional<Set<TGGRuleApplication>> getProtocolSteps(TGGResourceHandler resourceHandler) {
+        logger.warn("     in getProtocol");
+        return Optional.of(resourceHandler.getProtocolResource().getContents().stream()
                 .map(protocolEObject -> (TGGRuleApplication) protocolEObject)
-                .findAny();
-        return anyTGGRuleApplicationOptional.map(TGGRuleApplication::getProtocol);
+                .collect(Collectors.toSet()));
     }
 
     public static boolean isManyValued(EReference eReference) {
