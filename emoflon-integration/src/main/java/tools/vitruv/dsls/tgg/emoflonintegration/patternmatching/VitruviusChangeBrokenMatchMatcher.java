@@ -39,6 +39,13 @@ public class VitruviusChangeBrokenMatchMatcher {
         this.rules = rules;
     }
 
+    /**
+     * TODO return further broken matches, since only looking at deleted nodes in markers doesn't cut it..
+     * To that end, modify {@link VitruviusChangeBrokenMatchMatcher#getBrokenMatches(TGGResourceHandler)} to not try to match everything
+     * and further implement it.
+     * @param resourceHandler
+     * @return
+     */
     public Set<IMatch> getBrokenMatchesSimple(TGGResourceHandler resourceHandler) {
         logger.warn("*~*~*~*~*~*~*~*~*~*~*~* GET BROKEN MaTCHES simple! *~*~*~*~*~*~*~*~*~*~");
         Optional<Set<TGGRuleApplication>> protocolStepsOptional = Util.getProtocolSteps(resourceHandler);

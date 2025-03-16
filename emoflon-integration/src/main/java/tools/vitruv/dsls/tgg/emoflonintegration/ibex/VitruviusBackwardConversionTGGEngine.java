@@ -37,6 +37,7 @@ import tools.vitruv.dsls.tgg.emoflonintegration.Util;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.IbexPatternToChangeSequenceTemplateConverter;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.ChangeSequenceTemplateSet;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternmatching.VitruviusBackwardConversionMatch;
+import tools.vitruv.dsls.tgg.emoflonintegration.patternmatching.VitruviusBrokenMatch;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternmatching.VitruviusChangeBrokenMatchMatcher;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternmatching.VitruviusChangePatternMatcher;
 
@@ -176,7 +177,11 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
                 .collect(Collectors.toSet()));
 
         // broken matches TODO implement that!
-        this.iMatchObserver.removeMatches(getBrokenMatches());
+        getBrokenMatches().forEach(brokenMatch -> {
+            logger.trace("Trying to revoke broken match: " + ((VitruviusBrokenMatch) brokenMatch).toVerboseString());
+            this.iMatchObserver.removeMatch(brokenMatch);
+        });
+//        this.iMatchObserver.removeMatches(getBrokenMatches());
     }
 
     @Override

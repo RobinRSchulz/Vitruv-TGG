@@ -22,11 +22,11 @@ import java.util.stream.Collectors;
 public class VitruviusBrokenMatch extends SimpleTGGMatch implements ITGGMatch {
     protected static final Logger logger = Logger.getLogger(VitruviusBrokenMatch.class);
 
-    private Map<TGGRuleNode, EObject> tggRuleNodeEObjectMap;
+    private TGGRuleApplication tggRuleApplication;
 
     public VitruviusBrokenMatch(TGGRuleApplication ruleApplication, TGGRule tggRule) {
-        super(tggRule.getName() + "__" + PatternType.FWD.name());
-        // TODO find out when FWD, when BWD and use Directionholder from ibex!
+        super(tggRule.getName() + "__" + PatternType.CONSISTENCY.name());
+        this.tggRuleApplication = ruleApplication;
         init(ruleApplication, tggRule);
     }
 
@@ -35,8 +35,6 @@ public class VitruviusBrokenMatch extends SimpleTGGMatch implements ITGGMatch {
         tggRule.getNodes().stream()
                 .filter(ruleNode ->  // we only want CONTEXT or CREATE nodes in a Match.
                         Set.of(BindingType.CONTEXT, BindingType.CREATE).contains(ruleNode.getBindingType()))
-                .filter(ruleNode ->
-                        ruleNode.getDomainType().equals(BindingType.CONTEXT))
                 .forEach(ruleNode -> {
                     Object objectCanidate = ruleApplication.eGet(ruleApplication.eClass().getEStructuralFeature(Util.getMarkerStyleName(ruleNode)));
                     if (objectCanidate != null) {
@@ -62,7 +60,16 @@ public class VitruviusBrokenMatch extends SimpleTGGMatch implements ITGGMatch {
     }
 
     @Override
+    public TGGRuleApplication getRuleApplicationNode() {
+        return tggRuleApplication;
+    }
+
+    @Override
     public String toString() {
         return "[VitruviusBrokenMatch] patternName=" + this.getPatternName() + ", type=" + getType() + ", ruleName=" + getRuleName();
+    }
+
+    public String toVerboseString() {
+        return Util.iMatchToVerboseString(this);
     }
 }

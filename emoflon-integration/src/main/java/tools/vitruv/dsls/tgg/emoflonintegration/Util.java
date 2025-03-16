@@ -8,6 +8,7 @@ import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.util.EObjectContainmentEList;
+import org.emoflon.ibex.common.operational.IMatch;
 import org.emoflon.ibex.tgg.operational.strategies.modules.TGGResourceHandler;
 import runtime.CorrespondenceNode;
 import runtime.Protocol;
@@ -124,6 +125,12 @@ public class Util {
         };
     }
 
+    public static String iMatchToVerboseString(IMatch iMatch) {
+            return iMatch.toString() + ", params: \n  -" + iMatch.getParameterNames().stream()
+                    .map(paramName -> paramName + ": " + Util.eSomethingToString(iMatch.get(paramName)))
+                    .collect(Collectors.joining("\n  -"));
+    }
+
     public static String eObjectToString(Object object) {
         EObject eObject = (EObject) object;
         return eObject.eClass().getName() + ":" + Integer.toHexString(eObject.hashCode());
@@ -141,7 +148,10 @@ public class Util {
     }
 
     public static Optional<Set<TGGRuleApplication>> getProtocolSteps(TGGResourceHandler resourceHandler) {
-        logger.warn("     in getProtocol");
+        logger.warn("     in Util.getProtocolSteps");
+        logger.warn("       - protocol resource isModified??? " + resourceHandler.getProtocolResource().isModified());
+        logger.warn("       - protocol resource isTrackingModification??? " + resourceHandler.getProtocolResource().isTrackingModification());
+
         return Optional.of(resourceHandler.getProtocolResource().getContents().stream()
                 .map(protocolEObject -> (TGGRuleApplication) protocolEObject)
                 .collect(Collectors.toSet()));
