@@ -220,7 +220,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
          */
 //        throw new RuntimeException("TODO implement");
 //        vitruviusChangeBrokenMatchMatcher.getBrokenMatches(this.observedOperationalStrategy.getResourceHandler());
-        return vitruviusChangeBrokenMatchMatcher.getBrokenMatchesSimple(this.observedOperationalStrategy.getResourceHandler());
+        return vitruviusChangeBrokenMatchMatcher.getBrokenMatches(this.observedOperationalStrategy.getResourceHandler());
     }
 
     private void createForwardMatchesIfNotAlreadyPresent() {
