@@ -146,6 +146,10 @@ public class VitruviusChangeBrokenMatchMatcher {
             case RemoveEReference<EObject> removeEReference -> {
                 logger.error("THIS IS TO BE REPLACED WTH A THROWS, and then an impl...");
                 //TODO impl!
+//                removeEReference.getAffectedElement()
+                /*
+                    1. AE --> V
+                 */
                 return Set.of();
             }
             case UnsetFeature<EObject, ?> unsetFeature -> {
