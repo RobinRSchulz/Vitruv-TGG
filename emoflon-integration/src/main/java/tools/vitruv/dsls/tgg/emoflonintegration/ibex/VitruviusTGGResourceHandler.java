@@ -51,6 +51,15 @@ public class VitruviusTGGResourceHandler extends TGGResourceHandler {
 
         // corr and protocol come from the ibex project (like it is done in the superclass)
         try {
+            if (!source.isLoaded()) {
+                logger.warn("source not loaded, loading...");
+                source.load(null);
+            }
+            if (!target.isLoaded()) {
+                logger.warn("source not loaded, loading...");
+                target.load(null);
+            }
+
             corr = loadResource(options.project.path() + "/instances/corr.xmi");
             protocol = loadResource(options.project.path() + "/instances/protocol.xmi");
         } catch (IOException e) {
@@ -63,7 +72,10 @@ public class VitruviusTGGResourceHandler extends TGGResourceHandler {
                 t.printStackTrace();
                 t = t.getCause();
             }
-            throw new RuntimeException(e.getMessage() + " -- stacktrace above");
+            throw new RuntimeException("Resource could not be loaded: If the following message is an Indexing error, " +
+                    "the problem most likely is that some resource has not been loaded." +
+                    "Use the debugger and set a breakpoint in JDOMXmiParser::indexForeignResource. Original message:" + e.getMessage()
+                    + " -- stacktrace above");
         }
 //        corr = createResource(this.options.project.path() + "/instances/corr.xmi");
 //        protocol = createResource(options.project.path() + "/instances/protocol.xmi");
