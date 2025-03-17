@@ -55,8 +55,10 @@ public class VitruviusTGGResourceHandler extends TGGResourceHandler {
                 logger.warn("source not loaded, loading...");
                 source.load(null);
             }
-            if (!target.isLoaded()) {
-                logger.warn("source not loaded, loading...");
+
+            // if file exists but is not loaded it has been freshly created!
+            if (!target.isLoaded() && Files.exists(Path.of(this.options.project.workspacePath() + "/" + target.getURI()))) {
+                logger.warn("target not loaded, loading...");
                 target.load(null);
             }
 
