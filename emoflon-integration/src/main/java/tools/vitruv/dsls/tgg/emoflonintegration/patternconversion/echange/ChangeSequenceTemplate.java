@@ -13,6 +13,7 @@ import org.emoflon.ibex.tgg.compiler.patterns.PatternType;
 import org.emoflon.ibex.tgg.operational.strategies.modules.TGGResourceHandler;
 import runtime.CorrespondenceNode;
 import tools.vitruv.change.atomic.EChange;
+import tools.vitruv.change.atomic.feature.reference.InsertEReference;
 import tools.vitruv.dsls.tgg.emoflonintegration.Util;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.EObjectPlaceholder;
 
@@ -141,6 +142,37 @@ public class ChangeSequenceTemplate {
 
         if (holdingWrappers.size() > 1) throw new IllegalStateException("More than one EChangeWrapper holds " + Util.eChangeToString(eChange) + "!");
         return holdingWrappers.stream().findAny();
+    }
+
+    /**
+     * 1. Get EChangeWrapper that holds an EChange (of type todto), where<br/>
+     *    * srcTGGRUleNode is EChange.AE,   <br/>
+     *    * eReference     is EChange.F     <br/>
+     *    * objectValue    is EChange.V     <br/>
+     *    if there is exactly one. Otherwise, return nothing
+     */
+    public Optional<InsertEReference<EObject>> getMatchedEChangeConcerning(EObject affectedEObject, EReference eReference, EList<?> values) {
+        Set<InsertEReference<EObject>> echangeCandidates = this.getEChangeWrappers().stream()
+                .filter(EReferenceValueIndexEChangeWrapper.class::isInstance)
+                .map(EReferenceValueIndexEChangeWrapper.class::cast)
+                .map(EChangeWrapper::getEChange)
+                .filter(InsertEReference.class::isInstance)
+                .map(insertEReference -> (InsertEReference<EObject>) insertEReference)
+                .filter(insertEReference -> insertEReference.getAffectedElement().equals(affectedEObject)
+                        && insertEReference.getAffectedFeature().equals(eReference)
+                        && values.contains(insertEReference.getNewValue()))
+                .collect(Collectors.toSet());
+        if (echangeCandidates.size() == 1) {
+            InsertEReference<EObject> insertEReferenceEChange = echangeCandidates.iterator().next();
+//            if (values.stream().filter(value -> value.equals(insertEReferenceEChange.getNewValue())).count() != 1) {
+//                logger.info("Found value twice in EChange! Not matching this branch any further...");
+//                return Optional.empty();
+//            }
+            return Optional.of(echangeCandidates.iterator().next());
+        } else if (echangeCandidates.size() > 1) {
+            logger.info("Found more than one matching EChange! Not matching this branch any further...");
+        }
+        return Optional.empty();
     }
 
     /**
@@ -398,13 +430,32 @@ public class ChangeSequenceTemplate {
                 // here, we don't need the cross-referencing stuff!
                 Set<EObject> matchingEObjects = srcNodeEObject.eClass().getEAllReferences().stream()
                         .filter(eReference -> outgoingEdge.getType().equals(eReference)) //
-                        .map(eReference -> srcNodeEObject.eGet(eReference))
-                        .map(objectValue -> {
+                        .map(eReference -> {
+                            Object objectValue = srcNodeEObject.eGet(eReference);
                             Set<EObject> set = new HashSet<>();
                             if (objectValue instanceof EObject) {
                                 set.add((EObject) objectValue);
-                            } else if (objectValue instanceof EList<?>) {
-                                set.addAll((EList<EObject>) objectValue);
+                            } else if (objectValue instanceof EList<?> objectValueList) {
+
+                                /*
+                                    1. Get EChangeWrapper that holds an EChange (of type todto), where
+                                       * srcTGGRUleNode is EChange.AE,
+                                       * eReference     is EChange.F
+                                       * objectValue    is EChange.V
+                                    2. Use objectValue.get(EChange.Index)
+                                    3. Not have the problem anymore (except when two nodes are added..)
+                                 */
+
+                                // might be this case never occurs --> todo nochmal überlegen!
+                                Optional<InsertEReference<EObject>> eChangeOptional = getMatchedEChangeConcerning(srcNodeEObject, eReference, objectValueList);
+                                if (eChangeOptional.isPresent()) {
+                                    set.add((EObject) objectValueList.get(eChangeOptional.get().getIndex()));
+                                } else {
+                                    // okeee, problem hier ist, dass system -> protocol zwei protocol zur Auswahl hat.
+                                    // Falls man protocol schon kennt (man schaue in der Map nach),
+                                    // kann man das lösen...
+                                    set.addAll((EList<EObject>) objectValue);
+                                }
                             }
                             return set;
                         })
@@ -437,6 +488,14 @@ public class ChangeSequenceTemplate {
         private boolean handleMatchingCandidatesFor(Set<EObject> eObjectCandidates, TGGRuleNode tggRuleNode) {
             logger.trace("      handleMatchingCandidatesFor rule node " + Util.tGGRuleNodeToString(tggRuleNode) + "with candidates: "
                     + eObjectCandidates.stream().map(Util::eObjectToString).collect(Collectors.joining(", ")));
+
+            if (tggRuleNode2EObjectMap.containsKey(tggRuleNode)
+                    && eObjectCandidates.contains(tggRuleNode2EObjectMap.get(tggRuleNode))) {
+                //it might be we have preinitialized our map with the contextnode.
+                // In that case we dont need to go through the whole set, but we still need to recurse further!
+                return true;
+            }
+
             // this can possibly be more than one. But we need the one that satisfies our match, if there is one. For now, we assume that there is only one...
             if (eObjectCandidates.size() > 1) {
                 throw new IllegalStateException("Checking for more than one parent currently not supported. Maybe this should just fail the check instead of throwing...");
