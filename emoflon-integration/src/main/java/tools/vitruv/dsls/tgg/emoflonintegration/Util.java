@@ -29,9 +29,7 @@ import tools.vitruv.change.atomic.feature.single.ReplaceSingleValuedFeatureEChan
 import tools.vitruv.change.atomic.root.InsertRootEObject;
 import tools.vitruv.change.atomic.root.RemoveRootEObject;
 
-import java.util.Collection;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Util {
@@ -145,6 +143,28 @@ public class Util {
         return "TGGRuleEdge[" + tggRuleEdge.getSrcNode().getName() + "-->" + tggRuleEdge.getTrgNode().getName() + "]: "
                 + tggRuleEdge.getName() + ", type=" + tggRuleEdge.getType().getName() + ", bind=" + tggRuleEdge.getBindingType() + ", dom=" + tggRuleEdge.getDomainType();
 
+    }
+
+    public static Map<TGGRuleApplication, TGGRule> getTGGRuleApplicationsWithRules(TGGResourceHandler resourceHandler, Collection<TGGRule> rules) {
+        Optional<Set<TGGRuleApplication>> protocolStepsOptional = Util.getProtocolSteps(resourceHandler);
+        if (protocolStepsOptional.isEmpty()) {
+            return Map.of();
+        }
+        return mapTGGRuleApplicationsToTGGRules(protocolStepsOptional.get(), rules);
+    }
+
+    public static Map<TGGRuleApplication, TGGRule> mapTGGRuleApplicationsToTGGRules(Set<TGGRuleApplication> markers, Collection<TGGRule> rules) {
+        logger.warn("RULES " + rules.stream().map(TGGRule::getName).collect(Collectors.joining(", ")));
+        Map<TGGRuleApplication, TGGRule> map = new HashMap<>();
+        markers.forEach(marker -> {
+            Set<TGGRule> ruleCandidates = rules.stream()
+                    .filter(rule -> marker.eClass().getName().split("__")[0].equals(rule.getName())) //TODO use some emoflon stuff instead..
+                    .collect(Collectors.toSet());
+            logger.warn("Marker: " + Util.eObjectToString(marker) + ", ruleCandidates: " + ruleCandidates.stream().map(TGGRule::getName).collect(Collectors.joining(", ")));
+            if (ruleCandidates.size() != 1) throw new IllegalStateException("Marker could not be mapped to a rule " + Util.eSomethingToString(marker));
+            map.put(marker, ruleCandidates.iterator().next());
+        });
+        return map;
     }
 
     public static Optional<Set<TGGRuleApplication>> getProtocolSteps(TGGResourceHandler resourceHandler) {

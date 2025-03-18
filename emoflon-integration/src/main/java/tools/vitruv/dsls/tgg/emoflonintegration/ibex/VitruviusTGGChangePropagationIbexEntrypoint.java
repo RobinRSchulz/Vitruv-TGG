@@ -55,7 +55,6 @@ public class VitruviusTGGChangePropagationIbexEntrypoint extends SYNC {
         //TODO needs to be backward, depending on the direction the rules were specified and what currently is source and target! The ChangePropagationSpecification's source and target change, the ibex's don't...
 
         this.forward();
-        this.getResourceHandler().getCorrCaching();
 
         long toc = System.currentTimeMillis();
         logger.info("Completed SYNC in: " + (toc - tic) + " ms");

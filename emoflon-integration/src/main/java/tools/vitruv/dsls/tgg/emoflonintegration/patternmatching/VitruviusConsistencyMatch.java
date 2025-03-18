@@ -2,29 +2,26 @@ package tools.vitruv.dsls.tgg.emoflonintegration.patternmatching;
 
 import language.BindingType;
 import language.TGGRule;
-import language.TGGRuleNode;
 import org.apache.log4j.Logger;
-import org.eclipse.emf.ecore.EObject;
 import org.emoflon.ibex.tgg.compiler.patterns.PatternType;
 import org.emoflon.ibex.tgg.compiler.patterns.PatternUtil;
 import org.emoflon.ibex.tgg.operational.matches.ITGGMatch;
 import org.emoflon.ibex.tgg.operational.matches.SimpleTGGMatch;
-import org.emoflon.ibex.tgg.operational.strategies.modules.TGGResourceHandler;
 import runtime.TGGRuleApplication;
 import tools.vitruv.dsls.tgg.emoflonintegration.Util;
-import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange.ChangeSequenceTemplate;
 
-import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class VitruviusBrokenMatch extends SimpleTGGMatch implements ITGGMatch {
-    protected static final Logger logger = Logger.getLogger(VitruviusBrokenMatch.class);
+/**
+ * Used as broken or intact CONSISTENCY match, i.e. a representation of a protocol marker.
+ */
+public class VitruviusConsistencyMatch extends SimpleTGGMatch implements ITGGMatch {
+    protected static final Logger logger = Logger.getLogger(VitruviusConsistencyMatch.class);
 
     private TGGRuleApplication tggRuleApplication;
 
-    public VitruviusBrokenMatch(TGGRuleApplication ruleApplication, TGGRule tggRule) {
+    public VitruviusConsistencyMatch(TGGRuleApplication ruleApplication, TGGRule tggRule) {
         super(tggRule.getName() + "__" + PatternType.CONSISTENCY.name());
         this.tggRuleApplication = ruleApplication;
         init(ruleApplication, tggRule);
@@ -49,7 +46,7 @@ public class VitruviusBrokenMatch extends SimpleTGGMatch implements ITGGMatch {
         for (String n : this.getParameterNames()) {
             copy.put(n, this.get(n));
         }
-        logger.trace("VitruviusBrokenMatch::copy : \n  -" + copy.getParameterNames().stream()
+        logger.trace("VitruviusConsistencyMatch::copy : \n  -" + copy.getParameterNames().stream()
                 .map(paramName -> paramName + ": " + Util.eObjectToString(copy.get(paramName)))
                 .collect(Collectors.joining("\n  -")));
         return copy;
@@ -66,7 +63,7 @@ public class VitruviusBrokenMatch extends SimpleTGGMatch implements ITGGMatch {
 
     @Override
     public String toString() {
-        return "[VitruviusBrokenMatch] patternName=" + this.getPatternName() + ", type=" + getType() + ", ruleName=" + getRuleName();
+        return "[VitruviusConsistencyMatch] patternName=" + this.getPatternName() + ", type=" + getType() + ", ruleName=" + getRuleName();
     }
 
     public String toVerboseString() {

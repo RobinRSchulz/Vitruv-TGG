@@ -1,5 +1,6 @@
 package tools.vitruv.dsls.tgg.emoflonintegration.ibex;
 
+import language.TGGRule;
 import language.TGGRuleEdge;
 import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.URI;
@@ -32,12 +33,13 @@ import org.emoflon.ibex.tgg.operational.strategies.OperationalStrategy;
 import org.emoflon.ibex.tgg.operational.strategies.modules.IbexExecutable;
 import org.emoflon.smartemf.persistence.SmartEMFResourceFactoryImpl;
 import runtime.CorrespondenceNode;
+import runtime.TGGRuleApplication;
 import tools.vitruv.change.composite.description.VitruviusChange;
 import tools.vitruv.dsls.tgg.emoflonintegration.Util;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.IbexPatternToChangeSequenceTemplateConverter;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.ChangeSequenceTemplateSet;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternmatching.VitruviusBackwardConversionMatch;
-import tools.vitruv.dsls.tgg.emoflonintegration.patternmatching.VitruviusBrokenMatch;
+import tools.vitruv.dsls.tgg.emoflonintegration.patternmatching.VitruviusConsistencyMatch;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternmatching.VitruviusChangeBrokenMatchMatcher;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternmatching.VitruviusChangePatternMatcher;
 
@@ -93,6 +95,8 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     private final VitruviusChange<EObject> vitruviusChange;
     private final Times times;
 
+    private boolean preexistingConsistencyMatchesInitialized = false;
+
     /**
      * TODO input here or in init function?
      * VitruviusChange cannot be given in initialize, so here.
@@ -137,6 +141,9 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
         }
     }
 
+    /**
+     * todo remove this as it isn't called...
+     */
     @Override
     public void initialise(EPackage.Registry registry, IMatchObserver iMatchObserver) {
         this.registry = registry;
@@ -164,8 +171,25 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
         logger.debug("::monitor called. We do not use this.");
     }
 
+    /**
+     * eMoflon doesn't seem to do this on its own (at least I cannot find out how and where), so we do it here..
+     */
+    private void initializePreexistingConsistencyMatches() {
+        if (!preexistingConsistencyMatchesInitialized) {
+            Map<TGGRuleApplication, TGGRule> tggRuleApplicationTGGRuleMap = Util.getTGGRuleApplicationsWithRules(this.ibexExecutable.getResourceHandler(), this.ibexOptions.tgg.tgg().getRules());
+            Set<IMatch> consistencyMatches = tggRuleApplicationTGGRuleMap.keySet().stream()
+                    .map(tggRuleApplication -> new VitruviusConsistencyMatch(tggRuleApplication, tggRuleApplicationTGGRuleMap.get(tggRuleApplication)))
+                    .collect(Collectors.toSet());
+            logger.warn("  LOADED MARKERS : \n    - " + consistencyMatches.stream().map(IMatch::toString).collect(Collectors.joining("\n    - ")));
+            this.iMatchObserver.addMatches(consistencyMatches);
+        }
+        this.preexistingConsistencyMatchesInitialized = true;
+    }
+
     @Override
     public void updateMatches() {
+        // otherwise matches from the protocol are ignored and context matching from a previous run ain't possible...
+        initializePreexistingConsistencyMatches();
 
         // new forward matches. currently only creating forward matches ONCE since we match against the whole change sequence...
         createForwardMatchesIfNotAlreadyPresent();
@@ -177,7 +201,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
                 .collect(Collectors.toSet()));
 
         getBrokenMatches().forEach(brokenMatch -> {
-            logger.trace("Trying to revoke broken match: " + ((VitruviusBrokenMatch) brokenMatch).toVerboseString());
+            logger.trace("Trying to revoke broken match: " + ((VitruviusConsistencyMatch) brokenMatch).toVerboseString());
             this.iMatchObserver.removeMatch(brokenMatch);
         });
     }
@@ -209,15 +233,6 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     }
 
     private Set<ITGGMatch> getBrokenMatches() {
-        /*
-        todo was überlegen, das so vorgeht:
-             * Für alle eChanges : VitruviusChange.getEChanges().filter(::isDeletingEChange)
-             *      getRelevantMatches(eChange)
-             *      check if broken (entweder anhand des eChanges oder anhand des graphen)
-             *      daraus matches basteln
-         */
-//        throw new RuntimeException("TODO implement");
-//        vitruviusChangeBrokenMatchMatcher.getBrokenMatches(this.observedOperationalStrategy.getResourceHandler());
         return vitruviusChangeBrokenMatchMatcher.getBrokenMatches(this.observedOperationalStrategy.getResourceHandler());
     }
 

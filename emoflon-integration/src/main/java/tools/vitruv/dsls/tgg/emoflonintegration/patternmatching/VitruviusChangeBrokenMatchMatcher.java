@@ -39,7 +39,7 @@ public class VitruviusChangeBrokenMatchMatcher {
     public Set<ITGGMatch> getBrokenMatches(TGGResourceHandler resourceHandler) {
         //TODO might need to recursively invalidate matches: nodes created by the found broken matches that occur in OTHER, intact, matches invalidate these matches and nodes created by those.
         // might be that this is handled by the RedInterpreter or whatever --> need to check!
-        Map<TGGRuleApplication, TGGRule> tggRuleApplicationTGGRuleMap = getTGGRuleApplicationsWithRules(resourceHandler);
+        Map<TGGRuleApplication, TGGRule> tggRuleApplicationTGGRuleMap = Util.getTGGRuleApplicationsWithRules(resourceHandler, rules);
         Set<ITGGMatch> matches = getNodeMissingBrokenMatches(resourceHandler, tggRuleApplicationTGGRuleMap);
 
         // we only want to find NEW matches. That also ensures those matches being complete, i.e. having all their nodes!
@@ -66,7 +66,7 @@ public class VitruviusChangeBrokenMatchMatcher {
                             .anyMatch(ruleNode ->
                                     tggRuleApplication.eGet(tggRuleApplication.eClass().getEStructuralFeature(Util.getMarkerStyleName(ruleNode))) == null);
                 })
-                .map(tggRuleApplication -> new VitruviusBrokenMatch(tggRuleApplication, tggRuleApplicationTGGRuleMap.get(tggRuleApplication))).collect(Collectors.toSet());
+                .map(tggRuleApplication -> new VitruviusConsistencyMatch(tggRuleApplication, tggRuleApplicationTGGRuleMap.get(tggRuleApplication))).collect(Collectors.toSet());
         logger.warn("  Calculated broken matches: \n    - " + brokenMatches.stream().map(IMatch::toString).collect(Collectors.joining("\n    - ")));
         return brokenMatches;
     }
@@ -88,8 +88,6 @@ public class VitruviusChangeBrokenMatchMatcher {
      * @param resourceHandler provides access to the protocol resource.
      */
     private Set<ITGGMatch> getAdditionalBrokenMatches(TGGResourceHandler resourceHandler, Map<TGGRuleApplication, TGGRule> intactTGGRuleApplicationTGGRuleMap) {
-        logger.warn("*~*~*~*~*~*~*~*~*~*~*~* Get additional broken matches *~*~*~*~*~*~*~*~*~*~");
-
         return vitruviusChange.getEChanges().stream()
                 .filter(eChange -> !Util.isCreatingOrAdditiveEChange(eChange))
                 .filter(eChange -> !(eChange instanceof DeleteEObject<EObject>)) // those are handled by getNodeMissingBrokenMatches already!
@@ -141,7 +139,7 @@ public class VitruviusChangeBrokenMatchMatcher {
             case EChange<EObject> eChange1 -> throw new IllegalStateException("Inconcrete eChange: " + eChange1);
         }
         return calculatedBrokenTGGRuleApplications.stream()
-                .map(tggRuleApplication -> new VitruviusBrokenMatch(tggRuleApplication, intactTGGRuleApplicationTGGRuleMap.get(tggRuleApplication)))
+                .map(tggRuleApplication -> new VitruviusConsistencyMatch(tggRuleApplication, intactTGGRuleApplicationTGGRuleMap.get(tggRuleApplication)))
                 .collect(Collectors.toSet());
 
     }
@@ -218,24 +216,4 @@ public class VitruviusChangeBrokenMatchMatcher {
                 .collect(Collectors.toSet());
     }
 
-    private Map<TGGRuleApplication, TGGRule> getTGGRuleApplicationsWithRules(TGGResourceHandler resourceHandler) {
-        Optional<Set<TGGRuleApplication>> protocolStepsOptional = Util.getProtocolSteps(resourceHandler);
-        if (protocolStepsOptional.isEmpty()) {
-            return Map.of();
-        }
-        return mapTGGRuleApplicationsToTGGRules(protocolStepsOptional.get());
-    }
-
-    private Map<TGGRuleApplication, TGGRule> mapTGGRuleApplicationsToTGGRules(Set<TGGRuleApplication> markers) {
-        Map<TGGRuleApplication, TGGRule> map = new HashMap<>();
-        markers.stream().forEach(marker -> {
-                    Set<TGGRule> ruleCandidates = rules.stream()
-                            .filter(rule -> marker.eClass().getName().startsWith(rule.getName()))
-                            .collect(Collectors.toSet());
-                    logger.debug("Marker: " + Util.eObjectToString(marker) + ", ruleCandidates: " + ruleCandidates);
-                    if (ruleCandidates.size() != 1) throw new IllegalStateException("Markers could not be mapped to a rule!");
-                    map.put(marker, ruleCandidates.iterator().next());
-                });
-        return map;
-    }
 }
