@@ -136,7 +136,7 @@ public class ChangeSequenceTemplate {
      */
     public Optional<EChangeWrapper> getEChangeWrapperHolding(EChange<EObject> eChange) {
         Set<EChangeWrapper> holdingWrappers = this.getRelevantEChangeWrappersByEChangeType(eChange.eClass()).stream()
-                .filter(eChangeWrapper -> eChangeWrapper.getEChange().equals(eChange))
+                .filter(eChangeWrapper -> eChange.equals(eChangeWrapper.getEChange()))
                 .collect(Collectors.toSet());
 
         if (holdingWrappers.size() > 1) throw new IllegalStateException("More than one EChangeWrapper holds " + Util.eChangeToString(eChange) + "!");
@@ -457,7 +457,14 @@ public class ChangeSequenceTemplate {
          */
         private void initTggRuleNode2EObjectMap() {
             for (EObjectPlaceholder eObjectPlaceholder : getAllPlaceholders()) {
-                tggRuleNode2EObjectMap.put(eObjectPlaceholder.getTggRuleNode(), eObjectPlaceholder.getAffectedEObject());
+                /*
+                    in the case of ReplaceSingeValuedEReference (which represents replacement but also the insertion of an value into a single-valued EReference),
+                    we use null as the TGG rule placeholder for the old value, because there is no such thing as an old value in a TGG pattern, meaning we cannot assign a TGGRuleNode!
+                    So here, we have to check for null nodes...
+                 */
+                if (eObjectPlaceholder.getTggRuleNode() != null) {
+                    tggRuleNode2EObjectMap.put(eObjectPlaceholder.getTggRuleNode(), eObjectPlaceholder.getAffectedEObject());
+                }
             }
         }
 

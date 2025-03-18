@@ -148,10 +148,6 @@ public class Util {
     }
 
     public static Optional<Set<TGGRuleApplication>> getProtocolSteps(TGGResourceHandler resourceHandler) {
-        logger.warn("     in Util.getProtocolSteps");
-        logger.warn("       - protocol resource isModified??? " + resourceHandler.getProtocolResource().isModified());
-        logger.warn("       - protocol resource isTrackingModification??? " + resourceHandler.getProtocolResource().isTrackingModification());
-
         return Optional.of(resourceHandler.getProtocolResource().getContents().stream()
                 .map(protocolEObject -> (TGGRuleApplication) protocolEObject)
                 .collect(Collectors.toSet()));

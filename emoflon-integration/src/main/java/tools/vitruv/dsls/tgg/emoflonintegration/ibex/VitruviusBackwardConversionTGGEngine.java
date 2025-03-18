@@ -176,12 +176,10 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
                 .filter(match -> match.contextMatches(this.observedOperationalStrategy.getResourceHandler()))
                 .collect(Collectors.toSet()));
 
-        // broken matches TODO implement that!
         getBrokenMatches().forEach(brokenMatch -> {
             logger.trace("Trying to revoke broken match: " + ((VitruviusBrokenMatch) brokenMatch).toVerboseString());
             this.iMatchObserver.removeMatch(brokenMatch);
         });
-//        this.iMatchObserver.removeMatches(getBrokenMatches());
     }
 
     @Override
@@ -210,7 +208,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
         return this.times;
     }
 
-    private Collection<IMatch> getBrokenMatches() {
+    private Set<ITGGMatch> getBrokenMatches() {
         /*
         todo was überlegen, das so vorgeht:
              * Für alle eChanges : VitruviusChange.getEChanges().filter(::isDeletingEChange)

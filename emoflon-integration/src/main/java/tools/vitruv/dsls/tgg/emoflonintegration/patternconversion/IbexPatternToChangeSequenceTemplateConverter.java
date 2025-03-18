@@ -149,12 +149,16 @@ public class IbexPatternToChangeSequenceTemplateConverter {
             );
         } else {
             eChangeWrappers.add(
+                /*
+                    in the case of ReplaceSingeValuedEReference (which represents replacement (not handled here) but also the insertion of a value into a single-valued EReference),
+                    we use null as the TGG rule placeholder for the old value, because there is no such thing as an old value in a TGG pattern, meaning we cannot assign a TGGRuleNode!
+                 */
                     new EReferenceTwoValueEChangeWrapper(
                             ReferencePackage.eINSTANCE.getReplaceSingleValuedEReference(),
                             ruleEdge.getSrcNode().getType(), // the affected EObject always is the node where this edge comes from
                             getOrCreatePlaceHolder(ruleEdge.getSrcNode()),
                             ruleEdge.getType(),
-                            new EObjectPlaceholder(null), // this isn't mapped by TGGs
+                            new EObjectPlaceholder(null), // this isn't mapped by TGG rules/ patterns
                             getOrCreatePlaceHolder(ruleEdge.getTrgNode()))
             );
         }
