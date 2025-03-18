@@ -169,7 +169,7 @@ public class VitruviusChangeBrokenMatchMatcher {
                     .filter(tggRuleNode -> affectedEObject.equals(marker.eGet(marker.eClass().getEStructuralFeature(Util.getMarkerStyleName(tggRuleNode)))))
                     // check references (type and marker)
                     .anyMatch(ruleNode -> ruleNode.getOutgoingEdges().stream()
-                            .filter(tggRuleEdge -> eReference.equals(tggRuleEdge.getType())) //TODO is name must-have? probably not...
+                            .filter(tggRuleEdge -> eReference.equals(tggRuleEdge.getType()))
                             // check the VALUE on the marker. if the reference is manyvalued, we have to check List and index, otherwise only equality.
                             .anyMatch(tggRuleEdge -> {
                                 Object eGetReturn = marker.eGet(marker.eClass().getEStructuralFeature(Util.getMarkerStyleName(tggRuleEdge.getTrgNode())));
@@ -193,7 +193,7 @@ public class VitruviusChangeBrokenMatchMatcher {
                     .filter(tggRuleNode -> affectedEObject.equals(marker.eGet(marker.eClass().getEStructuralFeature(Util.getMarkerStyleName(tggRuleNode)))))
                     // check references (type and marker)
                     .anyMatch(ruleNode -> ruleNode.getOutgoingEdges().stream()
-                            .anyMatch(tggRuleEdge -> feature.eClass().equals(tggRuleEdge.getType()) && tggRuleEdge.getName().equals(feature.getName())) //TODO is name must-have? probably not...
+                            .anyMatch(tggRuleEdge -> feature.equals(tggRuleEdge.getType()))
                             );
         }, intactTGGRuleApplicationTGGRuleMap);
     }
@@ -208,10 +208,8 @@ public class VitruviusChangeBrokenMatchMatcher {
             return marker2TGGRule.getValue().getNodes().stream()
                     .filter(tggRuleNode -> bindingTypes.contains(tggRuleNode.getBindingType()))
                     .filter(tggRuleNode -> eObject.eClass().equals(tggRuleNode.getType())) // not necessary
-                    .anyMatch(tggRuleNode -> {
-                        return eObject.equals( // can the eObject be found anywhere in the marker?
-                                marker.eGet(marker.eClass().getEStructuralFeature(Util.getMarkerStyleName(tggRuleNode))));
-                    });
+                    .anyMatch(tggRuleNode -> eObject.equals( // can the eObject be found anywhere in the marker?
+                            marker.eGet(marker.eClass().getEStructuralFeature(Util.getMarkerStyleName(tggRuleNode)))));
         }, tggRuleApplications2TGGRulesMap);
     }
 
