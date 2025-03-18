@@ -150,6 +150,14 @@ public class VitruviusChangeBrokenMatchMatcher {
         3. --> Get all Markers containing AE
      */
     private Set<TGGRuleApplication> getMarkersWhereAEReferencesValuePossiblyIndexed(EObject affectedEObject, EReference eReference, EObject value, int index, Map<TGGRuleApplication, TGGRule> intactTGGRuleApplicationTGGRuleMap) {
+        //We cannot check the index. We CAN check whether the value occurs twice in the list and ignore if that is the case
+        if (eReference.isMany()) {
+            EList<EObject> eList = (EList<EObject>) affectedEObject.eGet(eReference);
+            if (eList != null && eList.contains(value)) {
+                throw new IllegalStateException("We do not support lists where elements occur twice. TODO make this a warning?");
+            }
+        }
+
         Set<BindingType> bindingTypes = Set.of(BindingType.CONTEXT, BindingType.CREATE);
         return getMatchingMarkers(marker2TGGRule -> {
             TGGRuleApplication marker = marker2TGGRule.getKey();
@@ -161,16 +169,14 @@ public class VitruviusChangeBrokenMatchMatcher {
                     .filter(tggRuleNode -> affectedEObject.equals(marker.eGet(marker.eClass().getEStructuralFeature(Util.getMarkerStyleName(tggRuleNode)))))
                     // check references (type and marker)
                     .anyMatch(ruleNode -> ruleNode.getOutgoingEdges().stream()
-                            .filter(tggRuleEdge -> eReference.eClass().equals(tggRuleEdge.getType()) && tggRuleEdge.getName().equals(eReference.getName())) //TODO is name must-have? probably not...
+                            .filter(tggRuleEdge -> eReference.equals(tggRuleEdge.getType())) //TODO is name must-have? probably not...
                             // check the VALUE on the marker. if the reference is manyvalued, we have to check List and index, otherwise only equality.
                             .anyMatch(tggRuleEdge -> {
                                 Object eGetReturn = marker.eGet(marker.eClass().getEStructuralFeature(Util.getMarkerStyleName(tggRuleEdge.getTrgNode())));
-                                if (eReference.isMany()) {
-                                    EList<EObject> eList = (EList<EObject>) eGetReturn;
-                                    return (eList.size() > index) ? value.equals(eList.get(index)) : false;
-                                } else {
-                                    return value.equals(eGetReturn);
-                                }
+                                // the following cannot be handled!
+//                                if (eReference.isMany()) {
+//                                }
+                                return value.equals(eGetReturn);
                             }));
         }, intactTGGRuleApplicationTGGRuleMap);
     }
