@@ -145,37 +145,6 @@ public class ChangeSequenceTemplate {
     }
 
     /**
-     * 1. Get EChangeWrapper that holds an EChange (of type todto), where<br/>
-     *    * srcTGGRUleNode is EChange.AE,   <br/>
-     *    * eReference     is EChange.F     <br/>
-     *    * objectValue    is EChange.V     <br/>
-     *    if there is exactly one. Otherwise, return nothing
-     */
-    public Optional<InsertEReference<EObject>> getMatchedEChangeConcerning(EObject affectedEObject, EReference eReference, EList<?> values) {
-        Set<InsertEReference<EObject>> echangeCandidates = this.getEChangeWrappers().stream()
-                .filter(EReferenceValueIndexEChangeWrapper.class::isInstance)
-                .map(EReferenceValueIndexEChangeWrapper.class::cast)
-                .map(EChangeWrapper::getEChange)
-                .filter(InsertEReference.class::isInstance)
-                .map(insertEReference -> (InsertEReference<EObject>) insertEReference)
-                .filter(insertEReference -> insertEReference.getAffectedElement().equals(affectedEObject)
-                        && insertEReference.getAffectedFeature().equals(eReference)
-                        && values.contains(insertEReference.getNewValue()))
-                .collect(Collectors.toSet());
-        if (echangeCandidates.size() == 1) {
-            InsertEReference<EObject> insertEReferenceEChange = echangeCandidates.iterator().next();
-//            if (values.stream().filter(value -> value.equals(insertEReferenceEChange.getNewValue())).count() != 1) {
-//                logger.info("Found value twice in EChange! Not matching this branch any further...");
-//                return Optional.empty();
-//            }
-            return Optional.of(echangeCandidates.iterator().next());
-        } else if (echangeCandidates.size() > 1) {
-            logger.info("Found more than one matching EChange! Not matching this branch any further...");
-        }
-        return Optional.empty();
-    }
-
-    /**
      *
      * @return the tgg rule this pattern template is based on.
      */
@@ -386,7 +355,6 @@ public class ChangeSequenceTemplate {
                  */
                 if (incomingEdge.getType().isContainment()) {
                     logger.trace("    HAVE WE FOUND IT? (container!) " + Util.eObjectToString(trgNodeEObject.eContainer()));
-                    //TODO handle that stuff.
                     EObject potentialSrcNodeEObject = trgNodeEObject.eContainer();
                     if (srcTGGRuleNode.getType().equals(potentialSrcNodeEObject.eClass())) {
                         // dont know if this check is necessary
@@ -418,7 +386,6 @@ public class ChangeSequenceTemplate {
                     // we are only interested in matching CONTEXT nodes in the OTHER domain.
                     Optional<Pair<CorrespondenceNode,EObject>> instantiatedCorrNodeAndCorrelatedEObject = getInstantiatedCorrNodeAndOthersidedEObjectCorrelatedToAMatchingEObject(trgNodeEObject, sourceTGGRuleCorrNode, correlatedNodeInOTHERDomain);
                     if (instantiatedCorrNodeAndCorrelatedEObject.isPresent()) {
-                        //TODO we might want to put the sourceTGGRuleCorrNode in the map, too? (but it has no EObject...) what do? --> check if SYNC meckers...
                         nodesVisited.add(correlatedNodeInOTHERDomain);
                         tggRuleNode2EObjectMapStack.putPush(sourceTGGRuleCorrNode, instantiatedCorrNodeAndCorrelatedEObject.get().getFirst());
                         tggRuleNode2EObjectMapStack.putPush(correlatedNodeInOTHERDomain, instantiatedCorrNodeAndCorrelatedEObject.get().getSecond());
@@ -464,36 +431,14 @@ public class ChangeSequenceTemplate {
                             if (objectValue instanceof EObject) {
                                 set.add((EObject) objectValue);
                             } else if (objectValue instanceof EList<?> objectValueList) {
-
-                                /*
-                                    1. Get EChangeWrapper that holds an EChange (of type todto), where
-                                       * srcTGGRUleNode is EChange.AE,
-                                       * eReference     is EChange.F
-                                       * objectValue    is EChange.V
-                                    2. Use objectValue.get(EChange.Index)
-                                    3. Not have the problem anymore (except when two nodes are added..)
-                                 */
-
-                                // might be this case never occurs --> todo nochmal überlegen!
-                                Optional<InsertEReference<EObject>> eChangeOptional = getMatchedEChangeConcerning(srcNodeEObject, eReference, objectValueList);
-                                if (eChangeOptional.isPresent()) {
-                                    set.add((EObject) objectValueList.get(eChangeOptional.get().getIndex()));
-                                } else {
-                                    // okeee, problem hier ist, dass system -> protocol zwei protocol zur Auswahl hat.
-                                    // Falls man protocol schon kennt (man schaue in der Map nach),
-                                    // kann man das lösen...
-                                    set.addAll((EList<EObject>) objectValue);
-                                }
+                                set.addAll((EList<EObject>) objectValueList);
                             }
                             return set;
                         })
-                        .flatMap(eObjectSet -> eObjectSet.stream())
+                        .flatMap(Collection::stream)
                         .filter(trgEObjectCandidate -> trgEObjectCandidate.eClass().equals(trgTGGRuleNode.getType()))
                         .collect(Collectors.toSet());
                 return recurseAndTryAllMatchingCandidatesFor(matchingEObjects, trgTGGRuleNode);
-//                if (handleMatchingCandidatesFor(matchingEObjects, trgTGGRuleNode)) {
-//                    return visitNode(trgTGGRuleNode);
-//                } else return false;
             } else return true; // not look at CREATE nodes...
         }
 
@@ -513,12 +458,9 @@ public class ChangeSequenceTemplate {
          * <br/><br/>
          */
         private boolean recurseAndTryAllMatchingCandidatesFor(Set<EObject> eObjectCandidates, TGGRuleNode tggRuleNode) {
-            logger.trace("      recurseAllMatchingCandidatesFor rule node " + Util.tGGRuleNodeToString(tggRuleNode) + "with candidates: "
-                    + eObjectCandidates.stream().map(Util::eObjectToString).collect(Collectors.joining(", ")));
-
             if (tggRuleNode2EObjectMapStack.containsKey(tggRuleNode)
                     && eObjectCandidates.contains(tggRuleNode2EObjectMapStack.get(tggRuleNode))) {
-                //it might be we have preinitialized our map with the contextnode.
+                // It might be we have preinitialized our map with the contextnode.
                 // In that case we dont need to go through the whole set, but we still need to recurse further!
                 return visitNode(tggRuleNode);
             }
@@ -564,16 +506,9 @@ public class ChangeSequenceTemplate {
          */
         private Optional<Pair<CorrespondenceNode,EObject>> getInstantiatedCorrNodeAndOthersidedEObjectCorrelatedToAMatchingEObject(
                 EObject eObject, TGGRuleCorr tggRuleCorrFromRule, TGGRuleNode ruleNodeInOtherDomain) {
-            logger.trace("    trying to find Eobject corrleated to " + Util.eObjectToString(eObject)
-                    + "by corr=" + Util.tGGRuleNodeToString(tggRuleCorrFromRule) + ". COrrelated EObject must be " + Util.tGGRuleNodeToString(ruleNodeInOtherDomain));
-            logger.trace("      containskey? " + tggResourceHandler.getCorrCaching().containsKey(eObject));
             // find all Corrs for eObject that match the given tggRuleCorrFromRule.
             if (!tggResourceHandler.getCorrCaching().containsKey(eObject)) return Optional.empty();
-            logger.trace("      cachedCorr=" + Util.eSomethingToString(tggResourceHandler.getCorrCaching().get(eObject)));
-            EObject deleteMe = tggResourceHandler.getCorrCaching().get(eObject).stream().findAny().get();
-            logger.trace("      source=" + Util.eSomethingToString(deleteMe.eGet(deleteMe.eClass().getEStructuralFeature("source"))));
-            logger.trace("      target=" + Util.eSomethingToString(deleteMe.eGet(deleteMe.eClass().getEStructuralFeature("target"))));
-            //todo eGet(source) ausprobierne
+
             Set<CorrespondenceNode> matchingCorrespondenceNodes = tggResourceHandler.getCorrCaching().get(eObject).stream()
                     .filter(corrEObject -> corrEObject instanceof CorrespondenceNode) // in case there are others...
                     .map(corrEObject -> (CorrespondenceNode) corrEObject)
