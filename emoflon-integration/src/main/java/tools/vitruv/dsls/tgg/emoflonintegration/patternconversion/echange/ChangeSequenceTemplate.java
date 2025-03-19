@@ -234,30 +234,57 @@ public class ChangeSequenceTemplate {
                 ? Optional.of(contextMatcher.getTggRuleNode2EObjectMap())
                 : Optional.empty();
     }
+
+    /**
+     * Precondition: This ChangeSequenceTemplate has been mapped to a subset of the <i>closed neighborhood</i> (abgeschlossene Nachbarschaft)
+     * of the {@link BindingType#CREATE} nodes of the {@link TGGRule} this represents. This subset at least contains all {@link BindingType#CREATE} nodes.
+     * <br/><br/>
+     * In general that matched subset does not cover the whole {@link TGGRule}!
+     * <br/>For instance, the SRC side of a rule might look like that:<br/>
+     * (CONTEXT node1) ----> (CONTEXT node2) --(+)--> (CREATE node3)<br/>
+     * Then our subset consists of node2 and node3, but not of node1!
+     * <br/><br/>
+     *
+     * To check if our match really is a match, we need to also match nodes like node1.
+     * This is what the {@link ContextMatcher} does.
+     * <br/><br/>
+     * Usage: As new nodes are created in the process of pattern matching, the matchability status of this initialized {@link ChangeSequenceTemplate}
+     * might change after another pattern has been applied. That needs to be kept in mind.
+     *
+     */
     private class ContextMatcher {
 
         /**
          * initially only contains CREATE nodes.
          */
-        private final Map<TGGRuleNode, EObject> tggRuleNode2EObjectMap;
+        private final MapStack<TGGRuleNode, EObject> tggRuleNode2EObjectMapStack;
         private final Set<TGGRuleNode> nodesVisited;
         private boolean matchingFailed;
 
         private final TGGResourceHandler tggResourceHandler;
 
-        /**
-            PROBLEM: if we check the "Target side" before a change that possibly creates the relevant correlation and target context is applied, this match is wrongfully labelled as invalid
-            SOLUTION options: not checking the context immediately after matching, but EACH time that SYNC wants new matches!
-            GOOD SIDE: This way, this is always called by the Vitruvius...TGGEngine (IBlackInterpreter), which means that we have access to the corr map!!!
-        */
         public ContextMatcher(TGGResourceHandler tggResourceHandler) {
-            this.tggRuleNode2EObjectMap = new HashMap<>();
+            this.tggRuleNode2EObjectMapStack = new MapStack<>();
             this.nodesVisited = new HashSet<>();
             this.matchingFailed = true; // initial assumption.
             this.tggResourceHandler = tggResourceHandler;
 
             initTggRuleNode2EObjectMap();
         }
+
+        /*
+         * Constructor for forking the DFS if we have multiple EObject candidates for mapping a context node against.
+         * We check each candidate by copying(!) the ContextMatcher-State +the candidate added to the map
+         * and let it continue with that choice.
+         * --> would need to remember the call stack...
+         * --> aufwändig...
+         *
+         * Optimization/ alternative idea:
+         * Let the situation where multiple candidates (EList situation) are present be called a CHOICE:
+         * 1. Keep the mappings in a Map AND a Stack -> new DataStructure "MapStack"
+         * 1. before a CHOICE a stack for the mappings is created,
+         * 2.
+         */
 
         /**
          * Only call this after successfully having called ::contextMatches. Otherwise, we throw.
@@ -266,7 +293,7 @@ public class ChangeSequenceTemplate {
          */
         public Map<TGGRuleNode, EObject> getTggRuleNode2EObjectMap() {
             if (matchingFailed) throw new IllegalStateException("Matching either failed or not called yet! No Context nodes mapped! You should not be calling this.");
-            return tggRuleNode2EObjectMap;
+            return tggRuleNode2EObjectMapStack.getMap();
         }
 
         /**
@@ -311,7 +338,7 @@ public class ChangeSequenceTemplate {
          */
         private boolean visitNode(TGGRuleNode tggRuleNode) {
             logger.trace("Visiting node " + tggRuleNode.getName());
-            assert tggRuleNode2EObjectMap.containsKey(tggRuleNode);
+            assert tggRuleNode2EObjectMapStack.containsKey(tggRuleNode);
 
             if (tggRuleNode.getBindingType() == BindingType.CREATE) {
                 /*
@@ -338,7 +365,7 @@ public class ChangeSequenceTemplate {
             TGGRuleNode srcTGGRuleNode = incomingEdge.getSrcNode();
             TGGRuleNode trgTGGRuleNode = incomingEdge.getTrgNode();
             if (nodesVisited.contains(srcTGGRuleNode)) { return true; }
-            EObject trgNodeEObject = tggRuleNode2EObjectMap.get(trgTGGRuleNode);
+            EObject trgNodeEObject = tggRuleNode2EObjectMapStack.get(trgTGGRuleNode);
             /*
              * Let trgTGGRuleNode.getDomainType be THIS and the other be OTHER
              * Incoming edges can be:
@@ -363,7 +390,7 @@ public class ChangeSequenceTemplate {
                     EObject potentialSrcNodeEObject = trgNodeEObject.eContainer();
                     if (srcTGGRuleNode.getType().equals(potentialSrcNodeEObject.eClass())) {
                         // dont know if this check is necessary
-                        tggRuleNode2EObjectMap.put(srcTGGRuleNode, potentialSrcNodeEObject);
+                        tggRuleNode2EObjectMapStack.putPush(srcTGGRuleNode, potentialSrcNodeEObject);
                         return visitNode(srcTGGRuleNode);
                     } else return false;
                 } else {
@@ -372,9 +399,10 @@ public class ChangeSequenceTemplate {
                             .filter(setting -> setting.getEStructuralFeature().equals(incomingEdge.getType()))
                             .map(EStructuralFeature.Setting::getEObject)
                             .collect(Collectors.toSet());
-                    if (handleMatchingCandidatesFor(parentCandidates, srcTGGRuleNode)) {
-                        return visitNode(srcTGGRuleNode); // recurse
-                    } else return false;
+                    return recurseAndTryAllMatchingCandidatesFor(parentCandidates, srcTGGRuleNode);
+//                    if (handleMatchingCandidatesFor(parentCandidates, srcTGGRuleNode)) {
+//                        return visitNode(srcTGGRuleNode); // recurse
+//                    } else return false;
                 }
             } else if (incomingEdge.getDomainType().equals(DomainType.CORR)) {
                 logger.trace("  CORR domain, Context trg node: " + Util.tGGRuleNodeToString(trgTGGRuleNode));
@@ -392,8 +420,8 @@ public class ChangeSequenceTemplate {
                     if (instantiatedCorrNodeAndCorrelatedEObject.isPresent()) {
                         //TODO we might want to put the sourceTGGRuleCorrNode in the map, too? (but it has no EObject...) what do? --> check if SYNC meckers...
                         nodesVisited.add(correlatedNodeInOTHERDomain);
-                        tggRuleNode2EObjectMap.put(sourceTGGRuleCorrNode, instantiatedCorrNodeAndCorrelatedEObject.get().getFirst());
-                        tggRuleNode2EObjectMap.put(correlatedNodeInOTHERDomain, instantiatedCorrNodeAndCorrelatedEObject.get().getSecond());
+                        tggRuleNode2EObjectMapStack.putPush(sourceTGGRuleCorrNode, instantiatedCorrNodeAndCorrelatedEObject.get().getFirst());
+                        tggRuleNode2EObjectMapStack.putPush(correlatedNodeInOTHERDomain, instantiatedCorrNodeAndCorrelatedEObject.get().getSecond());
                         return visitNode(correlatedNodeInOTHERDomain); // recurse in the OTHER domain
                     } else return false;
                 }
@@ -413,7 +441,7 @@ public class ChangeSequenceTemplate {
             TGGRuleNode srcTGGRuleNode = outgoingEdge.getSrcNode();
             TGGRuleNode trgTGGRuleNode = outgoingEdge.getTrgNode();
             if (nodesVisited.contains(trgTGGRuleNode)) { return true; }
-            EObject srcNodeEObject = tggRuleNode2EObjectMap.get(srcTGGRuleNode);
+            EObject srcNodeEObject = tggRuleNode2EObjectMapStack.get(srcTGGRuleNode);
             /*
              * Let createNode.getDomainType be THIS and the other be OTHER
              * Outgoing edges can be:
@@ -462,53 +490,51 @@ public class ChangeSequenceTemplate {
                         .flatMap(eObjectSet -> eObjectSet.stream())
                         .filter(trgEObjectCandidate -> trgEObjectCandidate.eClass().equals(trgTGGRuleNode.getType()))
                         .collect(Collectors.toSet());
-                if (handleMatchingCandidatesFor(matchingEObjects, trgTGGRuleNode)) {
-                    return visitNode(trgTGGRuleNode);
-                } else return false;
+                return recurseAndTryAllMatchingCandidatesFor(matchingEObjects, trgTGGRuleNode);
+//                if (handleMatchingCandidatesFor(matchingEObjects, trgTGGRuleNode)) {
+//                    return visitNode(trgTGGRuleNode);
+//                } else return false;
             } else return true; // not look at CREATE nodes...
         }
 
+
+
         /**
-         * Check whether there is exactly one EObject in the eObjectCandidates set that matches the tggRuleNodes.
-         * <ul>
-         *     <li> If yes, we add the mapping to this.tggRuleNode2EObjectMap and return true
-         *     <li> If more than one, we throw.
-         *     <li> If zero return false.
-         * </ul>
-         * Todo: handling only one candidate most likely is incomplete! A complete search would spawn a context matching "sub-DFS" for EACH candidate
-         * Todo This might throw in evaluation and it might require being handled!
-         * Implementation Idea:
-         * FOR EACH matching eObjectCandidate:
-         * 1. Copy this ContextMatcher, marking the candidate THERE, not here.
-         * 2. finish the DFS there. It should suffice to just call {@link ContextMatcher#contextMatches()} on that.
+         * We "fork" the DFS if we have multiple EObject candidates for mapping a context node against:<br/>
          *
-         * @param eObjectCandidates possible candidates for matching the given {@link TGGRuleNode}.
-         * @return whether there is exactly one EObject in the eObjectCandidates set that matches the tggRuleNodes.
+         * We check each candidate by "attaching" a stack to the TGGRule-->Object map, using new DataStructure {@link MapStack} for convenience.<br/>
+         * If a candidate recursion branch is unsuccessful, we <br/>
+         * <ol>
+         *     <li/> pop the stack until we get the tggRuleNode from before branching,
+         *     <li/> remove the respective entries from the map and
+         *     <li/> un-visit the nodes visited by the failed branch.
+         *     <li/> try the next candidate
+         * </ol>
+         * <br/><br/>
          */
-        private boolean handleMatchingCandidatesFor(Set<EObject> eObjectCandidates, TGGRuleNode tggRuleNode) {
-            logger.trace("      handleMatchingCandidatesFor rule node " + Util.tGGRuleNodeToString(tggRuleNode) + "with candidates: "
+        private boolean recurseAndTryAllMatchingCandidatesFor(Set<EObject> eObjectCandidates, TGGRuleNode tggRuleNode) {
+            logger.trace("      recurseAllMatchingCandidatesFor rule node " + Util.tGGRuleNodeToString(tggRuleNode) + "with candidates: "
                     + eObjectCandidates.stream().map(Util::eObjectToString).collect(Collectors.joining(", ")));
 
-            if (tggRuleNode2EObjectMap.containsKey(tggRuleNode)
-                    && eObjectCandidates.contains(tggRuleNode2EObjectMap.get(tggRuleNode))) {
+            if (tggRuleNode2EObjectMapStack.containsKey(tggRuleNode)
+                    && eObjectCandidates.contains(tggRuleNode2EObjectMapStack.get(tggRuleNode))) {
                 //it might be we have preinitialized our map with the contextnode.
                 // In that case we dont need to go through the whole set, but we still need to recurse further!
-                return true;
+                return visitNode(tggRuleNode);
             }
 
-            // this can possibly be more than one. But we need the one that satisfies our match, if there is one. For now, we assume that there is only one...
-            if (eObjectCandidates.size() > 1) {
-                throw new IllegalStateException("Checking for more than one parent currently not supported. Maybe this should just fail the check instead of throwing...");
-            } else if (eObjectCandidates.size() == 1) {
-                EObject parentEObject = eObjectCandidates.iterator().next();
-                if (parentEObject.eClass().equals(tggRuleNode.getType())) {
-                    // found!
-                    tggRuleNode2EObjectMap.put(tggRuleNode, parentEObject);
-                } else return false;
-                return true;
-            } else {
-                return false;
+            for (EObject eObjectCandidate : eObjectCandidates) {
+                tggRuleNode2EObjectMapStack.putPush(tggRuleNode, eObjectCandidate);
+                //recurse
+                if (visitNode(tggRuleNode)) {
+                    //early return, no need to recurse each candidate.
+                    return true;
+                }
+                //reset the state after failed recursion: Stack, Map and nodes visited.
+                nodesVisited.removeAll(tggRuleNode2EObjectMapStack.removePopUntil(tggRuleNode));
             }
+            // none match --> failure.
+            return false;
         }
 
         /**
@@ -522,7 +548,7 @@ public class ChangeSequenceTemplate {
                     So here, we have to check for null nodes...
                  */
                 if (eObjectPlaceholder.getTggRuleNode() != null) {
-                    tggRuleNode2EObjectMap.put(eObjectPlaceholder.getTggRuleNode(), eObjectPlaceholder.getAffectedEObject());
+                    tggRuleNode2EObjectMapStack.putPush(eObjectPlaceholder.getTggRuleNode(), eObjectPlaceholder.getAffectedEObject());
                 }
             }
         }
