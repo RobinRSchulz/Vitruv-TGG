@@ -7,6 +7,7 @@ import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.emoflon.ibex.tgg.compiler.defaults.IRegistrationHelper;
 import org.emoflon.ibex.tgg.operational.IBlackInterpreter;
 import org.emoflon.ibex.tgg.operational.defaults.IbexOptions;
+import org.emoflon.ibex.tgg.operational.strategies.PropagationDirectionHolder;
 import org.emoflon.ibex.tgg.operational.strategies.modules.IbexExecutable;
 
 import java.io.File;
@@ -27,6 +28,8 @@ public class VitruviusTGGChangePropagationRegistrationHelper implements IRegistr
     private File ibexProjectPath;
 
     private IBlackInterpreter patternMatcher;
+
+    private PropagationDirectionHolder.PropagationDirection propagationDirection;
 
     @Override
     public void registerMetamodels(ResourceSet resourceSet, IbexExecutable ibexExecutable) throws IOException {
@@ -61,36 +64,40 @@ public class VitruviusTGGChangePropagationRegistrationHelper implements IRegistr
         return ibexOptions;
     }
 
-    public VitruviusTGGChangePropagationRegistrationHelper withTargetModel(Resource targetModel) {
-        this.target = targetModel;
+    public VitruviusTGGChangePropagationRegistrationHelper withTRGModel(Resource TRGModel) {
+        this.target = TRGModel;
         return this;
     }
-    public VitruviusTGGChangePropagationRegistrationHelper withSourceModel(Resource sourceModel) {
-        this.source = sourceModel;
+    public VitruviusTGGChangePropagationRegistrationHelper withSRCModel(Resource SRCModel) {
+        this.source = SRCModel;
         return this;
     }
     public VitruviusTGGChangePropagationRegistrationHelper withIbexProjectPath(File ibexProjectPath) {
         this.ibexProjectPath = ibexProjectPath;
         return this;
     }
-    public VitruviusTGGChangePropagationRegistrationHelper withSourceMetamodelPackage(EPackage sourceMetamodelPackage) {
-        this.sourceMetamodelPackage = sourceMetamodelPackage;
+    public VitruviusTGGChangePropagationRegistrationHelper withSRCMetamodelPackage(EPackage SRCMetamodelPackage) {
+        this.sourceMetamodelPackage = SRCMetamodelPackage;
         return this;
     }
-    public VitruviusTGGChangePropagationRegistrationHelper withTargetMetamodelPackage(EPackage targetMetamodelPackage) {
-        this.targetMetamodelPackage = targetMetamodelPackage;
+    public VitruviusTGGChangePropagationRegistrationHelper withTRGMetamodelPackage(EPackage TRGMetamodelPackage) {
+        this.targetMetamodelPackage = TRGMetamodelPackage;
         return this;
     }
-    public VitruviusTGGChangePropagationRegistrationHelper withSourceMetamodelPlatformUri(String sourceMetamodelPlatformUri) {
-        this.sourceMetamodelPlatformUri = sourceMetamodelPlatformUri;
+    public VitruviusTGGChangePropagationRegistrationHelper withSRCMetamodelPlatformUri(String SRCMetamodelPlatformUri) {
+        this.sourceMetamodelPlatformUri = SRCMetamodelPlatformUri;
         return this;
     }
-    public VitruviusTGGChangePropagationRegistrationHelper withTargetMetamodelPlatformUri(String targetMetamodelPlatformUri) {
-        this.targetMetamodelPlatformUri = targetMetamodelPlatformUri;
+    public VitruviusTGGChangePropagationRegistrationHelper withTRGMetamodelPlatformUri(String TRGMetamodelPlatformUri) {
+        this.targetMetamodelPlatformUri = TRGMetamodelPlatformUri;
         return this;
     }
     public VitruviusTGGChangePropagationRegistrationHelper withPatternMatcher(IBlackInterpreter patternMatcher) {
         this.patternMatcher = patternMatcher;
+        return this;
+    }
+    public VitruviusTGGChangePropagationRegistrationHelper withPropagationDirection(PropagationDirectionHolder.PropagationDirection propagationDirection) {
+        this.propagationDirection = propagationDirection;
         return this;
     }
 }

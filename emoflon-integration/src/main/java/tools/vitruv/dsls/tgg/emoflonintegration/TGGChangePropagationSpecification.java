@@ -6,6 +6,7 @@ import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.emoflon.ibex.tgg.operational.strategies.PropagationDirectionHolder.PropagationDirection;
 import runtime.CorrespondenceNode;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.eobject.EObjectExistenceEChange;
@@ -33,26 +34,40 @@ import java.util.stream.Collectors;
 public abstract class TGGChangePropagationSpecification extends AbstractChangePropagationSpecification {
     static Logger logger = Logger.getLogger(TGGChangePropagationSpecification.class);
 
-    private final String sourceMetamodelPlatformUri;
-    private final String targetMetamodelPlatformUri;
+    private final String SRCMetamodelPlatformUri;
+    private final String TRGMetamodelPlatformUri;
+
+    private final MetamodelDescriptor SRCMetamodelDescriptor;
+    private final MetamodelDescriptor TRGMetamodelDescriptor;
 
     private final File ibexProjectPath;
     private final EClass targetRootEclass;
     private final URI targetRootURI;
 
     /**
+     * Params that concern the source and target metamodel always mean that the source is where the change occurs and the target is where it should be propagated to.<br/>
+     * After defining rules in Ibex, one metamodel is labelled SRC and the other TRG. We solve this duality in the following way:<br/>
+     * <li/> Whenever we mean source or target in the Vitruvius sense (meaning source --> target indicating the propagation direction), we say <b>source</b> or <b>target</b>.
+     * <li/> Whenever we mean source or target in the Ibex sense, we say <b>SRC</b> or <b>TRG</b>
      *
+     * @param SRCMetamodelDescriptor just to identify what is SRC and what is TRG.
+     * @param TRGMetamodelDescriptor just to identify what is SRC and what is TRG.
+     * @param SRCMetamodelPlatformUri the platform uri of the metamodel that is labelled SRC in the ibexProject
+     * @param TRGMetamodelPlatformUri the platform uri of the metamodel that is labelled TRG in the ibexProject
      * @param ibexProjectPath file system path to the eMoflon TGG project
      * @param targetRootEclass the root class for the target model to be able to create a corresponding model if none already exists. todo check if this strategy is required.
      * @param targetRootURI URI under which to persist the model created on calling {@code propagateChanges } if no corresponding model already exist.
      */
     public TGGChangePropagationSpecification(MetamodelDescriptor sourceMetamodelDescriptor, MetamodelDescriptor targetMetamodelDescriptor,
-                                             String sourceMetamodelPlatformUri, String targetMetamodelPlatformUri,
+                                             MetamodelDescriptor SRCMetamodelDescriptor, MetamodelDescriptor TRGMetamodelDescriptor,
+                                             String SRCMetamodelPlatformUri, String TRGMetamodelPlatformUri,
                                              File ibexProjectPath,
                                              EClass targetRootEclass, URI targetRootURI) {
         super(sourceMetamodelDescriptor, targetMetamodelDescriptor);
-        this.sourceMetamodelPlatformUri = sourceMetamodelPlatformUri;
-        this.targetMetamodelPlatformUri = targetMetamodelPlatformUri;
+        this.SRCMetamodelDescriptor = SRCMetamodelDescriptor;
+        this.TRGMetamodelDescriptor = TRGMetamodelDescriptor;
+        this.SRCMetamodelPlatformUri = SRCMetamodelPlatformUri;
+        this.TRGMetamodelPlatformUri = TRGMetamodelPlatformUri;
         this.ibexProjectPath = ibexProjectPath;
         this.targetRootEclass = targetRootEclass;
         this.targetRootURI = targetRootURI;
@@ -114,14 +129,19 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
         logger.debug("In propagateNonAtomicChange: Found source model " + sourceModel);
 
         logger.info("------- Calling ibex -------");
+        VitruviusTGGChangePropagationRegistrationHelper registrationHelper = new VitruviusTGGChangePropagationRegistrationHelper().withSRCMetamodelPackage(sourceMetamodel)
+                .withTRGMetamodelPackage(targetMetamodel)
+                .withSRCMetamodelPlatformUri(SRCMetamodelPlatformUri)
+                .withTRGMetamodelPlatformUri(TRGMetamodelPlatformUri)
+                .withIbexProjectPath(ibexProjectPath)
+                .withPatternMatcher(new VitruviusBackwardConversionTGGEngine(vitruviusChange))
+                .withPropagationDirection(getPropagationDirection());
+
+        registrationHelper = getPropagationDirection().equals(PropagationDirection.FORWARD)
+                ? registrationHelper.withSRCModel(sourceModel)
+                : registrationHelper.withTRGModel(sourceModel);
         propagateChangesHandlingTargetModelRetrieval(sourceModel, targetMetamodel, correspondenceModel, resourceAccess,
-                new VitruviusTGGChangePropagationRegistrationHelper().withSourceMetamodelPackage(sourceMetamodel)
-                        .withTargetMetamodelPackage(targetMetamodel)
-                        .withSourceMetamodelPlatformUri(sourceMetamodelPlatformUri)
-                        .withTargetMetamodelPlatformUri(targetMetamodelPlatformUri)
-                        .withIbexProjectPath(ibexProjectPath)
-                        .withSourceModel(sourceModel)
-                        .withPatternMatcher(new VitruviusBackwardConversionTGGEngine(vitruviusChange)),
+                registrationHelper,
                 vitruviusEntrypoint -> {
                     try {
                         return vitruviusEntrypoint.propagateChanges();
@@ -130,7 +150,14 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
                     }
                 }
         );
+    }
 
+    /**
+     *
+     * @return what direction ibex is to be used. Remember: SRC is fixed by design decision, source and target may vary. See class Doc of {@link TGGChangePropagationSpecification}!
+     */
+    private PropagationDirection getPropagationDirection() {
+        return this.SRCMetamodelDescriptor.equals(this.getSourceMetamodelDescriptor()) ? PropagationDirection.FORWARD : PropagationDirection.BACKWARD;
     }
 
     /**
@@ -188,7 +215,10 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
                 Resource targetModel = sourceModel.getResourceSet().createResource(this.targetRootURI); // in this case, this has to be filled later!
 
                 // do the SYNC calling
-                    newlyCreatedIbexCorrs = changePropgationFunction.apply(new VitruviusTGGChangePropagationIbexEntrypoint(ibexRegistrationHelper.withTargetModel(targetModel)));
+                ibexRegistrationHelper = getPropagationDirection().equals(PropagationDirection.FORWARD) // SRC == source ???
+                        ? ibexRegistrationHelper.withTRGModel(targetModel)
+                        : ibexRegistrationHelper.withSRCModel(targetModel);
+                newlyCreatedIbexCorrs = changePropgationFunction.apply(new VitruviusTGGChangePropagationIbexEntrypoint(ibexRegistrationHelper));
 
                 persistNewTargetRoot(targetModel, correspondenceModel, resourceAccess);
             } else {
@@ -199,7 +229,7 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
                         .orElseThrow(() -> new IllegalStateException("Target model found (via correspondence model) but source model has no contents..."))
                         .eResource();
                 // do the SYNC calling
-                newlyCreatedIbexCorrs = changePropgationFunction.apply(new VitruviusTGGChangePropagationIbexEntrypoint(ibexRegistrationHelper.withTargetModel(targetModel)));
+                newlyCreatedIbexCorrs = changePropgationFunction.apply(new VitruviusTGGChangePropagationIbexEntrypoint(ibexRegistrationHelper.withTRGModel(targetModel)));
             }
         } catch (IOException e) {
             throw new RuntimeException("Could not set up eMoflon! " + e);
