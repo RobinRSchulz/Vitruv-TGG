@@ -1,7 +1,7 @@
 package tools.vitruv.dsls.tgg.emoflonintegration.ibex;
 
+import language.DomainType;
 import language.TGGRule;
-import language.TGGRuleEdge;
 import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
@@ -27,9 +27,8 @@ import org.emoflon.ibex.tgg.operational.benchmark.Times;
 import org.emoflon.ibex.tgg.operational.defaults.IbexOptions;
 import org.emoflon.ibex.tgg.operational.matches.ITGGMatch;
 import org.emoflon.ibex.tgg.operational.monitoring.IbexObserver;
-import org.emoflon.ibex.tgg.operational.patterns.IGreenPattern;
-import org.emoflon.ibex.tgg.operational.patterns.IGreenPatternFactory;
 import org.emoflon.ibex.tgg.operational.strategies.OperationalStrategy;
+import org.emoflon.ibex.tgg.operational.strategies.PropagationDirectionHolder.PropagationDirection;
 import org.emoflon.ibex.tgg.operational.strategies.modules.IbexExecutable;
 import org.emoflon.smartemf.persistence.SmartEMFResourceFactoryImpl;
 import runtime.CorrespondenceNode;
@@ -94,6 +93,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     private ChangeSequenceTemplateSet changeSequenceTemplateSet;
     private final VitruviusChange<EObject> vitruviusChange;
     private final Times times;
+    private final PropagationDirection propagationDirection;
 
     private boolean preexistingConsistencyMatchesInitialized = false;
 
@@ -101,12 +101,12 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
      * TODO input here or in init function?
      * VitruviusChange cannot be given in initialize, so here.
      */
-    public VitruviusBackwardConversionTGGEngine(VitruviusChange<EObject> vitruviusChange) {
+    public VitruviusBackwardConversionTGGEngine(VitruviusChange<EObject> vitruviusChange, PropagationDirection propagationDirection) {
         this.vitruviusChange = vitruviusChange;
         this.times = new Times();
         this.baseURI = URI.createPlatformResourceURI("/", true);
         this.matchesThatHaveBeenApplied = new HashSet<>();
-//        this.correspondencesBeforeMatching = new HashMap<>();
+        this.propagationDirection = propagationDirection;
     }
 
     @Override
@@ -129,7 +129,11 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
         Timer.setEnabled(true);
         Timer.start();
 
-        this.changeSequenceTemplateSet = new IbexPatternToChangeSequenceTemplateConverter(this.ibexModel, this.ibexOptions.tgg.flattenedTGG()).convert();
+        this.changeSequenceTemplateSet = new IbexPatternToChangeSequenceTemplateConverter(
+                this.ibexModel,
+                this.ibexOptions.tgg.flattenedTGG(),
+                propagationDirection.equals(PropagationDirection.FORWARD) ? DomainType.SRC : DomainType.TRG)
+                .convert();
         this.vitruviusChangePatternMatcher = new VitruviusChangePatternMatcher(vitruviusChange, changeSequenceTemplateSet);
         this.vitruviusChangeBrokenMatchMatcher = new VitruviusChangeBrokenMatchMatcher(vitruviusChange, this.ibexOptions.tgg.tgg().getRules());
 
@@ -196,9 +200,10 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
         Set<VitruviusBackwardConversionMatch> remainingMatches = getMatchesThatHaventBeenApplied();
 
         // we do not give ALL matches to SYNC but only those that CURRENTLY match context. As matches are applied by SYNC, new matches from this engine may become possible again!
-        this.iMatchObserver.addMatches(remainingMatches.stream()
-                .filter(match -> match.contextMatches(this.observedOperationalStrategy.getResourceHandler()))
-                .collect(Collectors.toSet()));
+        Set<IMatch> matchesToBeAdded = remainingMatches.stream()
+                .filter(match -> match.contextMatches(this.observedOperationalStrategy.getResourceHandler(), this.propagationDirection))
+                .collect(Collectors.toSet());
+        this.iMatchObserver.addMatches(matchesToBeAdded);
 
         getBrokenMatches().forEach(brokenMatch -> {
             logger.trace("Trying to revoke broken match: " + ((VitruviusConsistencyMatch) brokenMatch).toVerboseString());
@@ -242,57 +247,10 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
             Timer.setEnabled(true);
             Timer.start();
 
-            this.matchesFound = vitruviusChangePatternMatcher.getForwardMatches();
+            this.matchesFound = vitruviusChangePatternMatcher.getAdditiveMatches(propagationDirection);
 
             long stop = Timer.stop();
             logger.info("Pattern Matching took " + (stop / 1000000d) + " ms");
-
-            // TODO remove debug
-            logger.trace("ALL MATCHES FOUND");
-            for (IMatch iMatch : matchesFound) {
-                ITGGMatch itggMatch = (ITGGMatch) iMatch;
-                VitruviusBackwardConversionMatch vitruviusBackwardConversionMatch = (VitruviusBackwardConversionMatch) itggMatch;
-                logger.trace("- Match: " + vitruviusBackwardConversionMatch.getMatchedChangeSequenceTemplate().getTggRule().getName());
-                logger.trace(iMatch.toString());
-                IGreenPatternFactory factory = this.observedOperationalStrategy.getGreenFactories().get(itggMatch.getRuleName());
-                IGreenPattern greenPattern = factory.create(itggMatch.getType());
-                ITGGMatch comatch = itggMatch.copy();
-
-                logger.trace("  - greenPattern.getSrcEdges");
-                for (TGGRuleEdge tggRuleEdge : greenPattern.getSrcEdges()) {
-                    EObject src = (EObject) comatch.get(tggRuleEdge.getSrcNode().getName());
-                    String comatchGetSrc = src != null ? Util.eObjectToString(src) : "null";
-                    logger.trace("    - " + tggRuleEdge.getName() + ", srcnodeName=" + tggRuleEdge.getSrcNode().getName() + " -> comatch-get: " + comatchGetSrc);
-                }
-//                vitruviusBackwardConversionMatch.getMatchedChangeSequenceTemplate().getTggRule().getEdges()
-
-                logger.trace("  - greenPattern.getTrgEdges");
-                for (TGGRuleEdge tggRuleEdge : greenPattern.getTrgEdges()) {
-                    EObject src = (EObject) comatch.get(tggRuleEdge.getSrcNode().getName());
-                    String comatchGetSrc = src != null ? Util.eObjectToString(src) : "null";
-                    logger.trace("    - " + tggRuleEdge.getName() + ", srcnodeName=" + tggRuleEdge.getSrcNode().getName() + " -> comatch-get: " + comatchGetSrc);
-                }
-
-
-                logger.trace("  - greenPattern.getCorrEdges");
-                for (TGGRuleEdge edge : greenPattern.getCorrEdges()) {
-                    EObject src = (EObject) comatch.get(edge.getSrcNode().getName());
-                    String comatchGetSrc = src != null ? Util.eObjectToString(src) : "null";
-                    logger.debug("    - " + edge.getName() + ", srcnodeName=" + edge.getSrcNode().getName() + " -> comatch-get: " + comatchGetSrc);
-                }
-
-                logger.trace("  - greenPattern.getTrgNodes");
-                greenPattern.getTrgNodes().forEach(node -> logger.debug("    - " + node.getName()));
-                logger.trace("  - greenPattern.getSrcNodes");
-                greenPattern.getSrcNodes().forEach(node -> logger.debug("    - " + node.getName()));
-                logger.trace("  - greenPattern.getCorrNodes");
-                greenPattern.getCorrNodes().forEach(node -> logger.debug("    - " + node.getName()));
-
-            }
-            logger.trace("\n\n\n-----------------------------Model resources in source before matching---------------------------");
-            logger.trace("Resource: " + this.observedOperationalStrategy.getResourceHandler().getSourceResource().getURI());
-            logger.trace(Util.modelResourceToString(this.observedOperationalStrategy.getResourceHandler().getSourceResource()));
-            logger.trace("\n------------------------------Now starting the matching process-----------------------------------\n\n\n");
         }
     }
 

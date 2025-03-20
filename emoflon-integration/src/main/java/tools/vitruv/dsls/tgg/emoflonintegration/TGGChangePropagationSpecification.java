@@ -134,7 +134,7 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
                 .withSRCMetamodelPlatformUri(SRCMetamodelPlatformUri)
                 .withTRGMetamodelPlatformUri(TRGMetamodelPlatformUri)
                 .withIbexProjectPath(ibexProjectPath)
-                .withPatternMatcher(new VitruviusBackwardConversionTGGEngine(vitruviusChange))
+                .withPatternMatcher(new VitruviusBackwardConversionTGGEngine(vitruviusChange, this.getPropagationDirection()))
                 .withPropagationDirection(getPropagationDirection());
 
         registrationHelper = getPropagationDirection().equals(PropagationDirection.FORWARD)

@@ -79,7 +79,7 @@ public class VitruviusChangeBrokenMatchMatcher {
      * <ol>
      *    <li>detect the subgraph of EObjects + interrelations that are unmarked</li>
      *    <li>generate EChanges for that subgraph</li>
-     *    <li>generate new forward matches with {@link VitruviusChangePatternMatcher#getForwardMatches()}</li>
+     *    <li>generate new forward matches with {@link VitruviusChangePatternMatcher#getAdditiveMatches()}</li>
      *    <li>reiterate...</li>
      * </ol>
      *

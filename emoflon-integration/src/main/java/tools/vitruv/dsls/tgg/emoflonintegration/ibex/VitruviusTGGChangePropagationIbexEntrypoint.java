@@ -6,6 +6,7 @@ import org.eclipse.emf.ecore.EPackage;
 import org.emoflon.ibex.tgg.compiler.defaults.IRegistrationHelper;
 import org.emoflon.ibex.tgg.operational.IBlackInterpreter;
 import org.emoflon.ibex.tgg.operational.benchmark.FullBenchmarkLogger;
+import org.emoflon.ibex.tgg.operational.strategies.PropagationDirectionHolder;
 import org.emoflon.ibex.tgg.operational.strategies.sync.SYNC;
 import runtime.CorrespondenceNode;
 
@@ -20,6 +21,8 @@ import java.util.Set;
 public class VitruviusTGGChangePropagationIbexEntrypoint extends SYNC {
     protected static final Logger logger = Logger.getLogger(VitruviusTGGChangePropagationIbexEntrypoint.class);
 
+    private final PropagationDirectionHolder.PropagationDirection propagationDirection;
+
     /**
      *
      * @param registrationHelper contains information about the pattern matcher, metamodel and model info of source and target,
@@ -28,6 +31,7 @@ public class VitruviusTGGChangePropagationIbexEntrypoint extends SYNC {
      */
     public VitruviusTGGChangePropagationIbexEntrypoint(VitruviusTGGChangePropagationRegistrationHelper registrationHelper) throws IOException {
         super(registrationHelper.createIbexOptions());
+        this.propagationDirection = registrationHelper.getPropagationDirection();
         IBlackInterpreter patternMatcher = this.getOptions().blackInterpreter();
         if (patternMatcher instanceof VitruviusBackwardConversionTGGEngine vitruviusBackwardConversionTGGEngine) {
             // we need feedback about matches created...
@@ -53,8 +57,11 @@ public class VitruviusTGGChangePropagationIbexEntrypoint extends SYNC {
         this.options.debug.benchmarkLogger(new FullBenchmarkLogger());
         long tic = System.currentTimeMillis();
         //TODO needs to be backward, depending on the direction the rules were specified and what currently is source and target! The ChangePropagationSpecification's source and target change, the ibex's don't...
-
-        this.forward();
+        if (propagationDirection.equals(PropagationDirectionHolder.PropagationDirection.FORWARD)) {
+            this.forward();
+        } else {
+            this.backward();
+        }
 
         long toc = System.currentTimeMillis();
         logger.info("Completed SYNC in: " + (toc - tic) + " ms");

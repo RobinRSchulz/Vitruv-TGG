@@ -1,21 +1,10 @@
 package tools.vitruv.dsls.tgg.emoflonintegration.patternmatching;
 
 import org.apache.log4j.Logger;
-import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
-import org.eclipse.emf.ecore.EDataType;
 import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.impl.EDataTypeImpl;
-import org.emoflon.ibex.tgg.operational.strategies.modules.TGGResourceHandler;
-import runtime.Protocol;
-import runtime.TGGRuleApplication;
+import org.emoflon.ibex.tgg.operational.strategies.PropagationDirectionHolder;
 import tools.vitruv.change.atomic.EChange;
-import tools.vitruv.change.atomic.eobject.DeleteEObject;
-import tools.vitruv.change.atomic.feature.UnsetFeature;
-import tools.vitruv.change.atomic.feature.attribute.RemoveEAttributeValue;
-import tools.vitruv.change.atomic.feature.reference.RemoveEReference;
-import tools.vitruv.change.atomic.feature.single.ReplaceSingleValuedFeatureEChange;
-import tools.vitruv.change.atomic.root.RemoveRootEObject;
 import tools.vitruv.change.composite.description.VitruviusChange;
 import tools.vitruv.dsls.tgg.emoflonintegration.Util;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange.EChangeWrapper;
@@ -53,7 +42,7 @@ public class VitruviusChangePatternMatcher {
      *
      * @return patterns that match against this class's VitruviusChange. Context is NOT checked yet, here!
      */
-    public Set<VitruviusBackwardConversionMatch> getForwardMatches() {
+    public Set<VitruviusBackwardConversionMatch> getAdditiveMatches(PropagationDirectionHolder.PropagationDirection propagationDirection) {
         logger.debug("\n[VitruviusChangePatternMatcher] matching the following eChanges against " + changeSequenceTemplateSet.getPatternTemplateParents().size() + " pattern templates:");
         vitruviusChange.getEChanges().forEach(eChange -> logger.debug("  - " + Util.eChangeToString(eChange)));
         // 1. compute all possible matches
@@ -109,7 +98,9 @@ public class VitruviusChangePatternMatcher {
 
         // 2. Check if the context of the patterns matches maybe by leveraging existing ibex functionality??
         // 3. choose patterns to form a Coverage where each change belongs to exactly one pattern (todo maybe less than exactly one since not everything is consistency-relevant)
-        return allInvokedPatternTemplates.stream().map(VitruviusBackwardConversionMatch::new).collect(Collectors.toSet());
+        return allInvokedPatternTemplates.stream()
+                .map(patternTemplate -> new VitruviusBackwardConversionMatch(patternTemplate, propagationDirection.getPatternType()))
+                .collect(Collectors.toSet());
     }
 
 

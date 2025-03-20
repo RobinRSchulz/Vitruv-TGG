@@ -51,7 +51,7 @@ public class VitruviusTGGResourceHandler extends TGGResourceHandler {
 
         // corr and protocol come from the ibex project (like it is done in the superclass)
         try {
-            if (!source.isLoaded()) {
+            if (!source.isLoaded() && Files.exists(Path.of(this.options.project.workspacePath() + "/" + target.getURI()))) {
                 logger.warn("source not loaded, loading...");
                 source.load(null);
             }

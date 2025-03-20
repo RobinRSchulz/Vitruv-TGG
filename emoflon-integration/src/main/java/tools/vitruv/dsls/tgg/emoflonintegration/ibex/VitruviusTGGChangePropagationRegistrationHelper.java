@@ -64,6 +64,10 @@ public class VitruviusTGGChangePropagationRegistrationHelper implements IRegistr
         return ibexOptions;
     }
 
+    public PropagationDirectionHolder.PropagationDirection getPropagationDirection() {
+        return propagationDirection;
+    }
+
     public VitruviusTGGChangePropagationRegistrationHelper withTRGModel(Resource TRGModel) {
         this.target = TRGModel;
         return this;

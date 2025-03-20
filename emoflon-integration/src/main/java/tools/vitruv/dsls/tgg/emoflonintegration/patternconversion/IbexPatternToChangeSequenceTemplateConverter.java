@@ -31,14 +31,17 @@ public class IbexPatternToChangeSequenceTemplateConverter {
      * Collects EChangeWrappers belonging to ONE rule. That means this needs to be resetted before each rule parsing.
      */
     private Collection<EChangeWrapper> eChangeWrappers;
+    
+    private DomainType domainType;
 
 
-    public IbexPatternToChangeSequenceTemplateConverter(IBeXModel iBeXModel, TGG tgg) {
+    public IbexPatternToChangeSequenceTemplateConverter(IBeXModel iBeXModel, TGG tgg, DomainType domainType) {
         this.iBeXModel = iBeXModel;
         this.tgg = tgg;
         this.nodeToPlaceholderMap = new HashMap<>();
         this.graphElementVisitedSet = new HashSet<>();
         this.eChangeWrappers = new LinkedList<>();
+        this.domainType = domainType;
     }
 
     public ChangeSequenceTemplateSet convert() {
@@ -58,8 +61,8 @@ public class IbexPatternToChangeSequenceTemplateConverter {
     private ChangeSequenceTemplate parseRule(final TGGRule rule) {
         eChangeWrappers = new HashSet<>();
         graphElementVisitedSet = new HashSet<>();
-        Util.filterNodes(rule, BindingType.CONTEXT, DomainType.SRC).forEach(this::parseContextNode);
-        Util.filterNodes(rule, BindingType.CREATE, DomainType.SRC).forEach(this::parseCreateNode);
+        Util.filterNodes(rule, BindingType.CONTEXT, domainType).forEach(this::parseContextNode);
+        Util.filterNodes(rule, BindingType.CREATE, domainType).forEach(this::parseCreateNode);
 
         return new ChangeSequenceTemplate(rule, getRelatedPatterns(rule) ,eChangeWrappers);
     }
@@ -80,7 +83,7 @@ public class IbexPatternToChangeSequenceTemplateConverter {
 
         if (ruleNode.getIncomingEdges().stream().filter(tggRuleEdge ->
                 (tggRuleEdge.getBindingType().equals(BindingType.CONTEXT) || tggRuleEdge.getBindingType().equals(BindingType.CREATE))
-                        && tggRuleEdge.getDomainType().equals(DomainType.SRC))
+                        && tggRuleEdge.getDomainType().equals(domainType))
                 .findAny().isEmpty()) {
             // no incoming edges --> root EObject
             eChangeWrappers.add(

@@ -8,6 +8,7 @@ import org.emoflon.ibex.tgg.compiler.patterns.PatternType;
 import org.emoflon.ibex.tgg.compiler.patterns.PatternUtil;
 import org.emoflon.ibex.tgg.operational.matches.ITGGMatch;
 import org.emoflon.ibex.tgg.operational.matches.SimpleTGGMatch;
+import org.emoflon.ibex.tgg.operational.strategies.PropagationDirectionHolder.PropagationDirection;
 import org.emoflon.ibex.tgg.operational.strategies.modules.TGGResourceHandler;
 import tools.vitruv.dsls.tgg.emoflonintegration.Util;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange.ChangeSequenceTemplate;
@@ -28,9 +29,9 @@ public class VitruviusBackwardConversionMatch extends SimpleTGGMatch implements 
      *
      * @param matchedChangeSequenceTemplate a ${@link ChangeSequenceTemplate} that has been matched against a couple of EChanges
      */
-    public VitruviusBackwardConversionMatch(ChangeSequenceTemplate matchedChangeSequenceTemplate) {
+    public VitruviusBackwardConversionMatch(ChangeSequenceTemplate matchedChangeSequenceTemplate, PatternType patternType) {
         // TODO find out when FWD, when BWD and use Directionholder from ibex!
-        super(matchedChangeSequenceTemplate.getIBeXContextPattern(PatternType.FWD).getName());
+        super(matchedChangeSequenceTemplate.getIBeXContextPattern(patternType).getName());
         if (!matchedChangeSequenceTemplate.isInitialized()) {
             throw new IllegalStateException("The changeSequenceTemplate must be initialized");
         }
@@ -39,12 +40,12 @@ public class VitruviusBackwardConversionMatch extends SimpleTGGMatch implements 
         this.contextHasBeenMatchedSuccessfully = false;
     }
 
-    public boolean contextMatches(TGGResourceHandler tggResourceHandler) {
+    public boolean contextMatches(TGGResourceHandler tggResourceHandler, PropagationDirection propagationDirection) {
         logger.debug("VitruviusBackwardConversionMatch::contextMatches called for: " + this.getMatchedChangeSequenceTemplate().getTggRule().getName());
         if (contextHasBeenMatchedSuccessfully) {
             return true;
         } else {
-            Optional<Map<TGGRuleNode, EObject>> tggRuleNodeEObjectMapOptional = matchedChangeSequenceTemplate.contextMatches(tggResourceHandler);
+            Optional<Map<TGGRuleNode, EObject>> tggRuleNodeEObjectMapOptional = matchedChangeSequenceTemplate.contextMatches(tggResourceHandler, propagationDirection);
             if (tggRuleNodeEObjectMapOptional.isPresent()) {
                 logger.debug("  SUCCESSS!!!!");
                 contextHasBeenMatchedSuccessfully = true;

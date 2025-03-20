@@ -10,6 +10,7 @@ import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXContextPattern;
 import org.emoflon.ibex.tgg.compiler.patterns.PatternSuffixes;
 import org.emoflon.ibex.tgg.compiler.patterns.PatternType;
+import org.emoflon.ibex.tgg.operational.strategies.PropagationDirectionHolder.PropagationDirection;
 import org.emoflon.ibex.tgg.operational.strategies.modules.TGGResourceHandler;
 import runtime.CorrespondenceNode;
 import tools.vitruv.change.atomic.EChange;
@@ -196,9 +197,9 @@ public class ChangeSequenceTemplate {
      * Further, this only returns something meaningful, if changes that create sth in the "target" model that this context match relies on are already applied by the SYNC!
      * @return whether this (matched!) template also has the context that the ${@link TGGRule} this represents requires!
      */
-    public Optional<Map<TGGRuleNode, EObject>> contextMatches(TGGResourceHandler tggResourceHandler) {
+    public Optional<Map<TGGRuleNode, EObject>> contextMatches(TGGResourceHandler tggResourceHandler, PropagationDirection propagationDirection) {
         //TODO potential optimization keep the context matcher! We might need to call this method multiple times and that saves us recursion effort.
-        ContextMatcher contextMatcher = new ContextMatcher(tggResourceHandler);
+        ContextMatcher contextMatcher = new ContextMatcher(tggResourceHandler, propagationDirection);
         return (contextMatcher.contextMatches())
                 ? Optional.of(contextMatcher.getTggRuleNode2EObjectMap())
                 : Optional.empty();
@@ -232,11 +233,14 @@ public class ChangeSequenceTemplate {
 
         private final TGGResourceHandler tggResourceHandler;
 
-        public ContextMatcher(TGGResourceHandler tggResourceHandler) {
+        private final PropagationDirection propagationDirection;
+
+        public ContextMatcher(TGGResourceHandler tggResourceHandler, PropagationDirection propagationDirection) {
             this.tggRuleNode2EObjectMapStack = new MapStack<>();
             this.nodesVisited = new HashSet<>();
             this.matchingFailed = true; // initial assumption.
             this.tggResourceHandler = tggResourceHandler;
+            this.propagationDirection = propagationDirection;
 
             initTggRuleNode2EObjectMap();
         }
@@ -285,7 +289,7 @@ public class ChangeSequenceTemplate {
 
          */
             //TODO that stupid bijectivity...
-            for (TGGRuleNode createNode : Util.filterNodes(tggRule, BindingType.CREATE, DomainType.SRC)) {
+            for (TGGRuleNode createNode : Util.filterNodes(tggRule, BindingType.CREATE, propagationDirection.equals(PropagationDirection.FORWARD) ? DomainType.SRC : DomainType.TRG)) {
                 if (!visitNode(createNode)) {
                     matchingFailed = true;
                     // early return
