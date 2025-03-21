@@ -5,7 +5,9 @@ import org.apache.log4j.Logger;
 import org.eclipse.emf.ecore.EPackage;
 import org.emoflon.ibex.tgg.compiler.defaults.IRegistrationHelper;
 import org.emoflon.ibex.tgg.operational.IBlackInterpreter;
+import org.emoflon.ibex.tgg.operational.IRedInterpreter;
 import org.emoflon.ibex.tgg.operational.benchmark.FullBenchmarkLogger;
+import org.emoflon.ibex.tgg.operational.defaults.IbexRedInterpreter;
 import org.emoflon.ibex.tgg.operational.strategies.PropagationDirectionHolder;
 import org.emoflon.ibex.tgg.operational.strategies.sync.SYNC;
 import runtime.CorrespondenceNode;
@@ -31,6 +33,10 @@ public class VitruviusTGGChangePropagationIbexEntrypoint extends SYNC {
      */
     public VitruviusTGGChangePropagationIbexEntrypoint(VitruviusTGGChangePropagationRegistrationHelper registrationHelper) throws IOException {
         super(registrationHelper.createIbexOptions());
+        //override redInterpreter with our own stuff
+        VitruviusTGGIbexRedInterpreter vitruviusTGGIbexRedInterpreter = new VitruviusTGGIbexRedInterpreter(this);
+        this.registerRedInterpeter(vitruviusTGGIbexRedInterpreter);
+
         this.propagationDirection = registrationHelper.getPropagationDirection();
         IBlackInterpreter patternMatcher = this.getOptions().blackInterpreter();
         if (patternMatcher instanceof VitruviusBackwardConversionTGGEngine vitruviusBackwardConversionTGGEngine) {
@@ -38,6 +44,7 @@ public class VitruviusTGGChangePropagationIbexEntrypoint extends SYNC {
             this.registerObserver(vitruviusBackwardConversionTGGEngine);
             // TODO currently only for debug purposes...
             vitruviusBackwardConversionTGGEngine.addObservedOperationalStrategy(this);
+            vitruviusBackwardConversionTGGEngine.addVitruviusTGGIbexRedInterpreter(vitruviusTGGIbexRedInterpreter);
         }
 
     }
@@ -49,7 +56,7 @@ public class VitruviusTGGChangePropagationIbexEntrypoint extends SYNC {
      *
      * @return a map of correspondences that are newly created!
      */
-    public Set<CorrespondenceNode> propagateChanges() throws IOException {
+    public VitruviusTGGChangePropagationResult propagateChanges() throws IOException {
         //TODO is this necessary?
         this.getOptions().tgg.tgg().setCorr(this.getOptions().tgg.flattenedTGG().getCorr());
 
@@ -71,8 +78,15 @@ public class VitruviusTGGChangePropagationIbexEntrypoint extends SYNC {
         // TODO resourceHandler.saveRelevantModels probably needs to be overridden!
         this.saveModels();
         this.terminate();
+
         if (this.getOptions().blackInterpreter() instanceof VitruviusBackwardConversionTGGEngine vitruviusBackwardConversionTGGEngine) {
-            return vitruviusBackwardConversionTGGEngine.getNewlyAddedCorrespondences();
-        } else return new HashSet<>();
+            VitruviusTGGIbexRedInterpreter vitruviusTGGIbexRedInterpreter = (VitruviusTGGIbexRedInterpreter) redInterpreter;
+            return new VitruviusTGGChangePropagationResult(
+                    vitruviusBackwardConversionTGGEngine.getNewlyAddedCorrespondences(),
+                    vitruviusTGGIbexRedInterpreter.getRevokedCorrs(),
+                    vitruviusTGGIbexRedInterpreter.getRevokedRules(),
+                    vitruviusTGGIbexRedInterpreter.getRevokedModelNodes(),
+                    vitruviusTGGIbexRedInterpreter.getRevokedEMFEdges());
+        } else return  new VitruviusTGGChangePropagationResult();
     }
 }

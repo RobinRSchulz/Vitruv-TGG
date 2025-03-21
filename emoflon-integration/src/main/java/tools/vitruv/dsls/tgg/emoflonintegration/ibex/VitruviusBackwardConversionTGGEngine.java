@@ -37,10 +37,7 @@ import tools.vitruv.change.composite.description.VitruviusChange;
 import tools.vitruv.dsls.tgg.emoflonintegration.Util;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.IbexPatternToChangeSequenceTemplateConverter;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.ChangeSequenceTemplateSet;
-import tools.vitruv.dsls.tgg.emoflonintegration.patternmatching.VitruviusBackwardConversionMatch;
-import tools.vitruv.dsls.tgg.emoflonintegration.patternmatching.VitruviusConsistencyMatch;
-import tools.vitruv.dsls.tgg.emoflonintegration.patternmatching.VitruviusChangeBrokenMatchMatcher;
-import tools.vitruv.dsls.tgg.emoflonintegration.patternmatching.VitruviusChangePatternMatcher;
+import tools.vitruv.dsls.tgg.emoflonintegration.patternmatching.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -96,13 +93,14 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     private final PropagationDirection propagationDirection;
 
     private boolean preexistingConsistencyMatchesInitialized = false;
+    private VitruviusTGGIbexRedInterpreter vitruviusTGGIbexRedInterpreter;
 
     /**
      * TODO input here or in init function?
      * VitruviusChange cannot be given in initialize, so here.
      */
     public VitruviusBackwardConversionTGGEngine(VitruviusChange<EObject> vitruviusChange, PropagationDirection propagationDirection) {
-        this.vitruviusChange = vitruviusChange;
+        this.vitruviusChange = new VitruviusChangeTransformer(vitruviusChange).transform();
         this.times = new Times();
         this.baseURI = URI.createPlatformResourceURI("/", true);
         this.matchesThatHaveBeenApplied = new HashSet<>();
@@ -224,10 +222,9 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     @Override
     public IPatternInterpreterProperties getProperties() {
         return new IPatternInterpreterProperties() {
-//            @Override
-//            public boolean needs_paranoid_modifications() {
-//                return true;
-//            }
+            public boolean needs_trash_resource() {
+                return true;
+            }
             //TODO implement methods if needed (e.g. smartEMF support??) this by default returns false for every method
         };
     }
@@ -238,7 +235,11 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     }
 
     private Set<ITGGMatch> getBrokenMatches() {
-        return vitruviusChangeBrokenMatchMatcher.getBrokenMatches(this.observedOperationalStrategy.getResourceHandler());
+        //TODO might be sufficient if calculated once. for now, calculate every time
+        return vitruviusChangeBrokenMatchMatcher
+                .getBrokenMatches(this.observedOperationalStrategy.getResourceHandler())
+                .stream().filter(brokenMatch -> !vitruviusTGGIbexRedInterpreter.getRevokedRules().contains(brokenMatch))
+                .collect(Collectors.toSet());
     }
 
     private void createForwardMatchesIfNotAlreadyPresent() {
@@ -315,5 +316,9 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
 
     public void addObservedOperationalStrategy(OperationalStrategy observedOperationalStrategy) {
         this.observedOperationalStrategy = observedOperationalStrategy;
+    }
+
+    public void addVitruviusTGGIbexRedInterpreter(VitruviusTGGIbexRedInterpreter vitruviusTGGIbexRedInterpreter) {
+        this.vitruviusTGGIbexRedInterpreter = vitruviusTGGIbexRedInterpreter;
     }
 }

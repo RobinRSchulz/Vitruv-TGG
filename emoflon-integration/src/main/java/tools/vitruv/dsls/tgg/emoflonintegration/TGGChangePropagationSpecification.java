@@ -19,6 +19,7 @@ import tools.vitruv.change.utils.ResourceAccess;
 import tools.vitruv.dsls.tgg.emoflonintegration.ibex.VitruviusTGGChangePropagationRegistrationHelper;
 import tools.vitruv.dsls.tgg.emoflonintegration.ibex.VitruviusTGGChangePropagationIbexEntrypoint;
 import tools.vitruv.dsls.tgg.emoflonintegration.ibex.VitruviusBackwardConversionTGGEngine;
+import tools.vitruv.dsls.tgg.emoflonintegration.ibex.VitruviusTGGChangePropagationResult;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,6 +44,8 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
     private final File ibexProjectPath;
     private final EClass targetRootEclass;
     private final URI targetRootURI;
+
+    private final List<VitruviusTGGChangePropagationResult> vitruviusTGGChangePropagationResults;
 
     /**
      * Params that concern the source and target metamodel always mean that the source is where the change occurs and the target is where it should be propagated to.<br/>
@@ -71,6 +74,9 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
         this.ibexProjectPath = ibexProjectPath;
         this.targetRootEclass = targetRootEclass;
         this.targetRootURI = targetRootURI;
+
+        //for evaluation and testing
+        this.vitruviusTGGChangePropagationResults = new ArrayList<>();
     }
 
     /**
@@ -153,6 +159,15 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
     }
 
     /**
+     * [EVALUATION and TESTING helper]
+     *
+     * @return a list of all {@link VitruviusTGGChangePropagationResult}s. 1 entry per change propagation run.
+     */
+    public List<VitruviusTGGChangePropagationResult> getVitruviusTGGChangePropagationResults() {
+        return vitruviusTGGChangePropagationResults;
+    }
+
+    /**
      *
      * @return what direction ibex is to be used. Remember: SRC is fixed by design decision, source and target may vary. See class Doc of {@link TGGChangePropagationSpecification}!
      */
@@ -206,8 +221,9 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
                                                               EditableCorrespondenceModelView<Correspondence> correspondenceModel,
                                                               ResourceAccess resourceAccess,
                                                               VitruviusTGGChangePropagationRegistrationHelper ibexRegistrationHelper,
-                                                              Function<VitruviusTGGChangePropagationIbexEntrypoint, Set<CorrespondenceNode>> changePropgationFunction) {
+                                                              Function<VitruviusTGGChangePropagationIbexEntrypoint, VitruviusTGGChangePropagationResult> changePropgationFunction) {
         Set<CorrespondenceNode> newlyCreatedIbexCorrs;
+        VitruviusTGGChangePropagationResult changePropagationResult;
         //  If no target model exists yet, we need to create one. There are different possible approaches. Currently, the third is in place.
         try {
             if (!modelHasCorrespondencesToResourceOfTargetMetamodel(sourceModel, targetMetamodel, correspondenceModel)) {
@@ -218,7 +234,7 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
                 ibexRegistrationHelper = getPropagationDirection().equals(PropagationDirection.FORWARD) // SRC == source ???
                         ? ibexRegistrationHelper.withTRGModel(targetModel)
                         : ibexRegistrationHelper.withSRCModel(targetModel);
-                newlyCreatedIbexCorrs = changePropgationFunction.apply(new VitruviusTGGChangePropagationIbexEntrypoint(ibexRegistrationHelper));
+                changePropagationResult = changePropgationFunction.apply(new VitruviusTGGChangePropagationIbexEntrypoint(ibexRegistrationHelper));
 
                 persistNewTargetRoot(targetModel, correspondenceModel, resourceAccess);
             } else {
@@ -229,14 +245,16 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
                         .orElseThrow(() -> new IllegalStateException("Target model found (via correspondence model) but source model has no contents..."))
                         .eResource();
                 // do the SYNC calling
-                newlyCreatedIbexCorrs = changePropgationFunction.apply(new VitruviusTGGChangePropagationIbexEntrypoint(ibexRegistrationHelper.withTRGModel(targetModel)));
+                changePropagationResult = changePropgationFunction.apply(new VitruviusTGGChangePropagationIbexEntrypoint(ibexRegistrationHelper.withTRGModel(targetModel)));
             }
         } catch (IOException e) {
             throw new RuntimeException("Could not set up eMoflon! " + e);
         }
 
         // apply the changes
-        addNewlyCreatedCorrespondencesToCorrespondenceModel(newlyCreatedIbexCorrs, correspondenceModel);
+
+        addNewlyCreatedCorrespondencesToCorrespondenceModel(changePropagationResult.getAddedCorrespondences(), correspondenceModel);
+        vitruviusTGGChangePropagationResults.add(changePropagationResult);
         //TODO Add generating a change sequence out of the factually applied matches. This currently relies on change derivation!
 //        handleDanglingEObjects(sourceModel, targetModel);
     }

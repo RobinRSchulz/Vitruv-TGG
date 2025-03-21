@@ -37,8 +37,6 @@ public class VitruviusChangeBrokenMatchMatcher {
     }
 
     public Set<ITGGMatch> getBrokenMatches(TGGResourceHandler resourceHandler) {
-        //TODO might need to recursively invalidate matches: nodes created by the found broken matches that occur in OTHER, intact, matches invalidate these matches and nodes created by those.
-        // might be that this is handled by the RedInterpreter or whatever --> need to check!
         Map<TGGRuleApplication, TGGRule> tggRuleApplicationTGGRuleMap = Util.getTGGRuleApplicationsWithRules(resourceHandler, rules);
         Set<ITGGMatch> matches = getNodeMissingBrokenMatches(resourceHandler, tggRuleApplicationTGGRuleMap);
 
