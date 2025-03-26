@@ -31,6 +31,8 @@ public class VitruviusChangePatternMatcher {
      */
     private Map<EChange<EObject>, Set<EChangeWrapper>> alreadyInvokedEChangeWrappers;
 
+    private List<EChange<EObject>> unmatchedEChanges;
+
     public VitruviusChangePatternMatcher(VitruviusChange<EObject> vitruviusChange, ChangeSequenceTemplateSet changeSequenceTemplateSet) {
         this.vitruviusChange = vitruviusChange;
         this.changeSequenceTemplateSet = changeSequenceTemplateSet;
@@ -89,6 +91,7 @@ public class VitruviusChangePatternMatcher {
         }
         logger.debug("[VitruviusChangePatternMatcher] Computed the following matches \n");
         allInvokedPatternTemplates.forEach(logger::debug);
+        rememberUnmatchedEChanges(allInvokedPatternTemplates);
         visualizeCoverage(allInvokedPatternTemplates);
 
         //TODO need to prevent duplicates that occur if a patterntemplate has more than one EChangewrapper (1 match for each wrapper...)
@@ -103,7 +106,22 @@ public class VitruviusChangePatternMatcher {
                 .collect(Collectors.toSet());
     }
 
+    private void rememberUnmatchedEChanges(Set<ChangeSequenceTemplate> coverage) {
+        // a little inefficient...
+        unmatchedEChanges = vitruviusChange.getEChanges().stream()
+                .filter(eChange ->
+                        coverage.stream().flatMap(changeSequenceTemplate -> changeSequenceTemplate.getEChangeWrappers().stream())
+                                .noneMatch(filledEChangeWrapper -> filledEChangeWrapper.getEChange().equals(eChange)))
+                .toList();
+    }
 
+    /**
+     *
+     * @return changes that have not been matched yet
+     */
+    public List<EChange<EObject>> getUnmatchedEChanges() {
+        return this.unmatchedEChanges;
+    }
 
 
     private void visualizeCoverage(Set<ChangeSequenceTemplate> coverage) {

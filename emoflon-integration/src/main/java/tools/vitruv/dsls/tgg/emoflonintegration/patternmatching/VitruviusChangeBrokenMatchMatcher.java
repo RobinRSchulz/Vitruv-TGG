@@ -36,9 +36,9 @@ public class VitruviusChangeBrokenMatchMatcher {
         this.rules = rules;
     }
 
-    public Set<ITGGMatch> getBrokenMatches(TGGResourceHandler resourceHandler) {
+    public Set<VitruviusConsistencyMatch> getBrokenMatches(TGGResourceHandler resourceHandler) {
         Map<TGGRuleApplication, TGGRule> tggRuleApplicationTGGRuleMap = Util.getTGGRuleApplicationsWithRules(resourceHandler, rules);
-        Set<ITGGMatch> matches = getNodeMissingBrokenMatches(resourceHandler, tggRuleApplicationTGGRuleMap);
+        Set<VitruviusConsistencyMatch> matches = getNodeMissingBrokenMatches(resourceHandler, tggRuleApplicationTGGRuleMap);
 
         // we only want to find NEW matches. That also ensures those matches being complete, i.e. having all their nodes!
         matches.forEach(match -> tggRuleApplicationTGGRuleMap.remove(match.getRuleApplicationNode()));
@@ -49,8 +49,8 @@ public class VitruviusChangeBrokenMatchMatcher {
     /**
      * @return matches that are broken because of a marker that doesn't cover all CONTEXT and CREATE nodes anymore (meaning that some EObject must have been deleted).
      */
-    private Set<ITGGMatch> getNodeMissingBrokenMatches(TGGResourceHandler resourceHandler, Map<TGGRuleApplication, TGGRule> tggRuleApplicationTGGRuleMap) {
-        Set<ITGGMatch> brokenMatches = tggRuleApplicationTGGRuleMap.keySet().stream()
+    private Set<VitruviusConsistencyMatch> getNodeMissingBrokenMatches(TGGResourceHandler resourceHandler, Map<TGGRuleApplication, TGGRule> tggRuleApplicationTGGRuleMap) {
+        Set<VitruviusConsistencyMatch> brokenMatches = tggRuleApplicationTGGRuleMap.keySet().stream()
                 .filter(tggRuleApplication -> {
                     // is there any node that is null but shouldn't?
                     TGGRule tggRule = tggRuleApplicationTGGRuleMap.get(tggRuleApplication);
@@ -85,7 +85,7 @@ public class VitruviusChangeBrokenMatchMatcher {
      *
      * @param resourceHandler provides access to the protocol resource.
      */
-    private Set<ITGGMatch> getAdditionalBrokenMatches(TGGResourceHandler resourceHandler, Map<TGGRuleApplication, TGGRule> intactTGGRuleApplicationTGGRuleMap) {
+    private Set<VitruviusConsistencyMatch> getAdditionalBrokenMatches(TGGResourceHandler resourceHandler, Map<TGGRuleApplication, TGGRule> intactTGGRuleApplicationTGGRuleMap) {
         return vitruviusChange.getEChanges().stream()
                 .filter(eChange -> !Util.isCreatingOrAdditiveEChange(eChange))
                 .filter(eChange -> !(eChange instanceof DeleteEObject<EObject>)) // those are handled by getNodeMissingBrokenMatches already!
@@ -109,7 +109,7 @@ public class VitruviusChangeBrokenMatchMatcher {
      * @param intactTGGRuleApplicationTGGRuleMap contains markers (and their respecitve rules) that are INTACT (not missing any nodes) and should be checked
      * @return broken matches that don't miss a node.
      */
-    private Set<ITGGMatch> handleNonTrivialBreakingEChange(EChange<EObject> breakingChange, Map<TGGRuleApplication, TGGRule> intactTGGRuleApplicationTGGRuleMap) {
+    private Set<VitruviusConsistencyMatch> handleNonTrivialBreakingEChange(EChange<EObject> breakingChange, Map<TGGRuleApplication, TGGRule> intactTGGRuleApplicationTGGRuleMap) {
         logger.warn("  handle breaking change: " + Util.eChangeToString(breakingChange));
         Set<TGGRuleApplication> calculatedBrokenTGGRuleApplications = Set.of();
         switch (breakingChange) {

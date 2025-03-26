@@ -4,6 +4,7 @@ import org.eclipse.emf.ecore.EObject;
 import org.emoflon.ibex.common.emf.EMFEdge;
 import org.emoflon.ibex.tgg.operational.matches.ITGGMatch;
 import runtime.CorrespondenceNode;
+import tools.vitruv.dsls.tgg.emoflonintegration.ibex.VitruviusTGGIbexRedInterpreter.RevokedCorrespondenceNodeWrapper;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -15,7 +16,7 @@ public class VitruviusTGGChangePropagationResult {
 
     private final Set<CorrespondenceNode> addedCorrespondences;
 
-    private final Set<CorrespondenceNode> revokedCorrespondences;
+    private final Set<RevokedCorrespondenceNodeWrapper> revokedCorrespondences;
     private final Set<ITGGMatch> revokedMatches;
     private final Set<EObject> revokedModelNodes;
     private final Set<EMFEdge> revokedEMFEdges;
@@ -33,7 +34,7 @@ public class VitruviusTGGChangePropagationResult {
 
 
     public VitruviusTGGChangePropagationResult(Set<CorrespondenceNode> newlyAddedCorrespondences,
-                                               Set<CorrespondenceNode> revokedCorrs,
+                                               Set<RevokedCorrespondenceNodeWrapper> revokedCorrs,
                                                Set<ITGGMatch> revokedRules,
                                                Set<EObject> revokedModelNodes,
                                                Set<EMFEdge> revokedEMFEdges) {
@@ -48,7 +49,7 @@ public class VitruviusTGGChangePropagationResult {
         return addedCorrespondences;
     }
 
-    public Set<CorrespondenceNode> getRevokedCorrespondences() {
+    public Set<RevokedCorrespondenceNodeWrapper> getRevokedCorrespondences() {
         return revokedCorrespondences;
     }
 

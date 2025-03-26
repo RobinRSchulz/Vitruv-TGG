@@ -9,6 +9,7 @@ import runtime.CorrespondenceNode;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * A {@link IbexRedInterpreter} that remembers what it has done.
@@ -16,7 +17,7 @@ import java.util.Set;
 public class VitruviusTGGIbexRedInterpreter extends IbexRedInterpreter {
 
     private Set<ITGGMatch> revokedRules = new HashSet<>();
-    private Set<CorrespondenceNode> revokedCorrs = new HashSet<>();
+    private Set<RevokedCorrespondenceNodeWrapper> revokedCorrs = new HashSet<>();
     private Set<EObject> revokedModelNodes = new HashSet<>();
     private Set<EMFEdge> revokedEMFEdges = new HashSet<>();
 
@@ -32,19 +33,20 @@ public class VitruviusTGGIbexRedInterpreter extends IbexRedInterpreter {
 
     @Override
     public void revokeCorr(EObject corr, Set<EObject> nodesToRevoke, Set<EMFEdge> edgesToRevoke) {
-        super.revokeCorr(corr, nodesToRevoke, edgesToRevoke);
         // nodesToRevoke and edgesToRevoke are not handled in the super method, but only filled!
-        revokedCorrs.add((CorrespondenceNode) corr);
+        // We do this before calling revokeCorr so that we can copy source and target before their removal.
+        revokedCorrs.add(new RevokedCorrespondenceNodeWrapper((CorrespondenceNode) corr));
+        super.revokeCorr(corr, nodesToRevoke, edgesToRevoke);
     }
 
     @Override
     public void revoke(Set<EObject> nodesToRevoke, Set<EMFEdge> edgesToRevoke) {
         super.revoke(nodesToRevoke, edgesToRevoke);
-        revokedModelNodes.addAll(nodesToRevoke);
+        revokedModelNodes.addAll(nodesToRevoke.stream().filter(eObject -> !(eObject instanceof CorrespondenceNode)).collect(Collectors.toSet())); // only model nodes!
         revokedEMFEdges.addAll(edgesToRevoke);
     }
 
-    public Set<CorrespondenceNode> getRevokedCorrs() {
+    public Set<RevokedCorrespondenceNodeWrapper> getRevokedCorrs() {
         return revokedCorrs;
     }
 
@@ -58,5 +60,29 @@ public class VitruviusTGGIbexRedInterpreter extends IbexRedInterpreter {
 
     public Set<EMFEdge> getRevokedEMFEdges() {
         return revokedEMFEdges;
+    }
+
+    public static class RevokedCorrespondenceNodeWrapper {
+        private final CorrespondenceNode correspondenceNode;
+        private final EObject sourceEObject;
+        private final EObject targetEObject;
+
+        public RevokedCorrespondenceNodeWrapper(CorrespondenceNode correspondenceNode) {
+            this.correspondenceNode = correspondenceNode;
+            this.sourceEObject = (EObject) correspondenceNode.eGet(correspondenceNode.eClass().getEStructuralFeature("source"));
+            this.targetEObject = (EObject) correspondenceNode.eGet(correspondenceNode.eClass().getEStructuralFeature("target"));
+        }
+
+        public CorrespondenceNode getCorrespondenceNode() {
+            return correspondenceNode;
+        }
+
+        public EObject getSourceEObject() {
+            return sourceEObject;
+        }
+
+        public EObject getTargetEObject() {
+            return targetEObject;
+        }
     }
 }

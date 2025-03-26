@@ -7,6 +7,7 @@ import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.emoflon.ibex.tgg.compiler.defaults.IRegistrationHelper;
 import org.emoflon.ibex.tgg.operational.IBlackInterpreter;
 import org.emoflon.ibex.tgg.operational.defaults.IbexOptions;
+import org.emoflon.ibex.tgg.operational.defaults.options.RepairOptions;
 import org.emoflon.ibex.tgg.operational.strategies.PropagationDirectionHolder;
 import org.emoflon.ibex.tgg.operational.strategies.modules.IbexExecutable;
 
@@ -54,12 +55,15 @@ public class VitruviusTGGChangePropagationRegistrationHelper implements IRegistr
             ibexOptions.resourceHandler(new VitruviusTGGResourceHandler(source, target));
         } catch (IOException e) { throw new RuntimeException("Couldn't load TGG resources by using the models already loaded by Vitruvius! "); }
 
+
+
         ibexOptions
                 .blackInterpreter(patternMatcher)
                 .project.name(ibexProjectPath.getName())
                 .project.workspacePath(ibexProjectPath.getParentFile().getAbsolutePath())
                 .project.path(ibexProjectPath.getName())
                 .debug.ibexDebug(true)
+                .repair.useShortcutRules(false) // TODO schon zwei TODOs im Shortcutrule-Code entdeckt, weeeiß ja net ob des so gut geht --> Im Zweifel Future work, bzw Evaluation...
                 .registrationHelper(this);
         return ibexOptions;
     }

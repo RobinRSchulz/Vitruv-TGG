@@ -1,8 +1,12 @@
 package tools.vitruv.dsls.tgg.emoflonintegration.patternmatching;
 
+import edu.kit.ipd.sdq.commons.util.java.Pair;
 import language.BindingType;
 import language.TGGRule;
+import language.TGGRuleEdge;
+import language.TGGRuleNode;
 import org.apache.log4j.Logger;
+import org.eclipse.emf.ecore.EObject;
 import org.emoflon.ibex.tgg.compiler.patterns.PatternType;
 import org.emoflon.ibex.tgg.compiler.patterns.PatternUtil;
 import org.emoflon.ibex.tgg.operational.matches.ITGGMatch;
@@ -20,20 +24,22 @@ public class VitruviusConsistencyMatch extends SimpleTGGMatch implements ITGGMat
     protected static final Logger logger = Logger.getLogger(VitruviusConsistencyMatch.class);
 
     private TGGRuleApplication tggRuleApplication;
+    private TGGRule tggRule;
 
     public VitruviusConsistencyMatch(TGGRuleApplication ruleApplication, TGGRule tggRule) {
         super(tggRule.getName() + "__" + PatternType.CONSISTENCY.name());
         this.tggRuleApplication = ruleApplication;
-        init(ruleApplication, tggRule);
+        this.tggRule = tggRule;
+        init();
     }
 
 
-    private void init(TGGRuleApplication ruleApplication, TGGRule tggRule) {
+    private void init() {
         tggRule.getNodes().stream()
                 .filter(ruleNode ->  // we only want CONTEXT or CREATE nodes in a Match.
                         Set.of(BindingType.CONTEXT, BindingType.CREATE).contains(ruleNode.getBindingType()))
                 .forEach(ruleNode -> {
-                    Object objectCanidate = ruleApplication.eGet(ruleApplication.eClass().getEStructuralFeature(Util.getMarkerStyleName(ruleNode)));
+                    Object objectCanidate = tggRuleApplication.eGet(tggRuleApplication.eClass().getEStructuralFeature(Util.getMarkerStyleName(ruleNode)));
                     if (objectCanidate != null) {
                         this.put(ruleNode.getName(), objectCanidate);
                     } else logger.info("Object " + ruleNode.getName() + " not found. This must really be a broken match!");
@@ -54,6 +60,24 @@ public class VitruviusConsistencyMatch extends SimpleTGGMatch implements ITGGMat
 
     public PatternType getType() {
         return PatternUtil.resolve(this.getPatternName());
+    }
+
+    public Set<Pair<TGGRuleNode, EObject>> getMatchedCreateNodes() {
+        return this.getTggRule().getNodes().stream()
+                .filter(ruleNode -> ruleNode.getBindingType().equals(BindingType.CREATE))
+                .map(tggRuleNode -> new Pair<>(tggRuleNode, (EObject) this.get(tggRuleNode.getName())))
+                .collect(Collectors.toSet());
+    }
+
+    public Set<Pair<TGGRuleNode, EObject>> getMatchedContextNodes() {
+        return this.getTggRule().getNodes().stream()
+                .filter(ruleNode -> ruleNode.getBindingType().equals(BindingType.CONTEXT))
+                .map(tggRuleNode -> new Pair<>(tggRuleNode, (EObject) this.get(tggRuleNode.getName())))
+                .collect(Collectors.toSet());
+    }
+
+    public TGGRule getTggRule() {
+        return tggRule;
     }
 
     @Override

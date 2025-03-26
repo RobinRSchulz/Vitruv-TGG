@@ -33,7 +33,9 @@ import org.emoflon.ibex.tgg.operational.strategies.modules.IbexExecutable;
 import org.emoflon.smartemf.persistence.SmartEMFResourceFactoryImpl;
 import runtime.CorrespondenceNode;
 import runtime.TGGRuleApplication;
+import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.composite.description.VitruviusChange;
+import tools.vitruv.change.composite.description.VitruviusChangeFactory;
 import tools.vitruv.dsls.tgg.emoflonintegration.Util;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.IbexPatternToChangeSequenceTemplateConverter;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.ChangeSequenceTemplateSet;
@@ -95,6 +97,8 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     private boolean preexistingConsistencyMatchesInitialized = false;
     private VitruviusTGGIbexRedInterpreter vitruviusTGGIbexRedInterpreter;
 
+    private final Set<VitruviusConsistencyMatch> matchesThatHaveBeenTriedToRepair;
+
     /**
      * TODO input here or in init function?
      * VitruviusChange cannot be given in initialize, so here.
@@ -104,6 +108,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
         this.times = new Times();
         this.baseURI = URI.createPlatformResourceURI("/", true);
         this.matchesThatHaveBeenApplied = new HashSet<>();
+        this.matchesThatHaveBeenTriedToRepair = new HashSet<>();
         this.propagationDirection = propagationDirection;
     }
 
@@ -176,7 +181,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     /**
      * eMoflon doesn't seem to do this on its own (at least I cannot find out how and where), so we do it here..
      */
-    private void initializePreexistingConsistencyMatches() {
+    private void initializePreexistingConsistencyMatchesIfNotAlreadyPresent() {
         if (!preexistingConsistencyMatchesInitialized) {
             Map<TGGRuleApplication, TGGRule> tggRuleApplicationTGGRuleMap = Util.getTGGRuleApplicationsWithRules(this.ibexExecutable.getResourceHandler(), this.ibexOptions.tgg.tgg().getRules());
             Set<IMatch> consistencyMatches = tggRuleApplicationTGGRuleMap.keySet().stream()
@@ -191,7 +196,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     @Override
     public void updateMatches() {
         // otherwise matches from the protocol are ignored and context matching from a previous run ain't possible...
-        initializePreexistingConsistencyMatches();
+        initializePreexistingConsistencyMatchesIfNotAlreadyPresent();
 
         // new forward matches. currently only creating forward matches ONCE since we match against the whole change sequence...
         createForwardMatchesIfNotAlreadyPresent();
@@ -203,10 +208,53 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
                 .collect(Collectors.toSet());
         this.iMatchObserver.addMatches(matchesToBeAdded);
 
-        getBrokenMatches().forEach(brokenMatch -> {
+        Set<VitruviusConsistencyMatch> brokenMatches = getBrokenMatches();
+        brokenMatches.forEach(brokenMatch -> {
             logger.trace("Trying to revoke broken match: " + ((VitruviusConsistencyMatch) brokenMatch).toVerboseString());
             this.iMatchObserver.removeMatch(brokenMatch);
         });
+
+        // Repair matches that are broken and have not been repaired by shortcut rules
+        if (ibexOptions.repair.useShortcutRules()) {
+            throw new IllegalStateException("Using shortcut rules not supported yet: Need to filter out repaired matches from the broken matches...");
+        }
+        repairUnrepairedBrokenMatches();
+    }
+
+    private void repairUnrepairedBrokenMatches() {
+        // Only try to repair broken matches ONCE
+        Set<VitruviusConsistencyMatch> unrepairedAndUntriedBrokenMatches = this.vitruviusTGGIbexRedInterpreter.getRevokedRules().stream()
+                .map(match -> (VitruviusConsistencyMatch) match)
+                .filter(match -> !matchesThatHaveBeenTriedToRepair.contains(match))
+                .collect(Collectors.toSet());
+        if (unrepairedAndUntriedBrokenMatches.isEmpty()) {
+            return; // no point
+        }
+
+        // Try to calculate new forward matches
+        List<EChange<EObject>> newChangeSequence = new UnrepairedBrokenMatchFixer(
+                this.observedOperationalStrategy.getResourceHandler(), this.ibexOptions.tgg.tgg().getRules(),
+                unrepairedAndUntriedBrokenMatches, propagationDirection)
+                .createNewChangeSequence();
+        // Utilize EChanges that have been left over from the main pattern matching, too!
+        newChangeSequence.addAll(vitruviusChangePatternMatcher.getUnmatchedEChanges());
+        VitruviusChangePatternMatcher newVitruviusChangePatternMatcher = new VitruviusChangePatternMatcher(
+                VitruviusChangeFactory.getInstance().createTransactionalChange(newChangeSequence),
+                changeSequenceTemplateSet
+        );
+        Set<VitruviusBackwardConversionMatch> newMatches = newVitruviusChangePatternMatcher.getAdditiveMatches(propagationDirection);
+
+        // Only try to repair broken matches ONCE
+        matchesThatHaveBeenTriedToRepair.addAll(unrepairedAndUntriedBrokenMatches);
+
+        // Add matches for further calls of SYNC to THIS->updateMatches
+        Set<IMatch> matchesToBeAdded = newMatches.stream()
+                .filter(match -> match.contextMatches(this.observedOperationalStrategy.getResourceHandler(), this.propagationDirection))
+                .collect(Collectors.toSet());
+        this.matchesFound.addAll(newMatches);
+
+        // do one run in case this was the last call from SYNC...
+        this.iMatchObserver.addMatches(matchesToBeAdded);
     }
 
     @Override
@@ -222,9 +270,6 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     @Override
     public IPatternInterpreterProperties getProperties() {
         return new IPatternInterpreterProperties() {
-            public boolean needs_trash_resource() {
-                return true;
-            }
             //TODO implement methods if needed (e.g. smartEMF support??) this by default returns false for every method
         };
     }
@@ -234,7 +279,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
         return this.times;
     }
 
-    private Set<ITGGMatch> getBrokenMatches() {
+    private Set<VitruviusConsistencyMatch> getBrokenMatches() {
         //TODO might be sufficient if calculated once. for now, calculate every time
         return vitruviusChangeBrokenMatchMatcher
                 .getBrokenMatches(this.observedOperationalStrategy.getResourceHandler())
