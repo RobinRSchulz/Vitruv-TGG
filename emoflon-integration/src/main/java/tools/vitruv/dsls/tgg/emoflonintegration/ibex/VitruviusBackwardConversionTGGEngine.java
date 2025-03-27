@@ -223,7 +223,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
 
     private void repairUnrepairedBrokenMatches() {
         // Only try to repair broken matches ONCE
-        Set<VitruviusConsistencyMatch> unrepairedAndUntriedBrokenMatches = this.vitruviusTGGIbexRedInterpreter.getRevokedRules().stream()
+        Set<VitruviusConsistencyMatch> unrepairedAndUntriedBrokenMatches = this.vitruviusTGGIbexRedInterpreter.getRevokedRuleMatches().stream()
                 .map(match -> (VitruviusConsistencyMatch) match)
                 .filter(match -> !matchesThatHaveBeenTriedToRepair.contains(match))
                 .collect(Collectors.toSet());
@@ -231,8 +231,8 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
             return; // no point
         }
 
-        // Try to calculate new forward matches
-        List<EChange<EObject>> newChangeSequence = new UnrepairedBrokenMatchFixer(
+        // Try to calculate new forward matches:
+        List<EChange<EObject>> newChangeSequence = new UnrepairedBrokenMatchOldChangesRetriever(
                 this.observedOperationalStrategy.getResourceHandler(), this.ibexOptions.tgg.tgg().getRules(),
                 unrepairedAndUntriedBrokenMatches, propagationDirection)
                 .createNewChangeSequence();
@@ -283,7 +283,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
         //TODO might be sufficient if calculated once. for now, calculate every time
         return vitruviusChangeBrokenMatchMatcher
                 .getBrokenMatches(this.observedOperationalStrategy.getResourceHandler())
-                .stream().filter(brokenMatch -> !vitruviusTGGIbexRedInterpreter.getRevokedRules().contains(brokenMatch))
+                .stream().filter(brokenMatch -> !vitruviusTGGIbexRedInterpreter.getRevokedRuleMatches().contains(brokenMatch))
                 .collect(Collectors.toSet());
     }
 

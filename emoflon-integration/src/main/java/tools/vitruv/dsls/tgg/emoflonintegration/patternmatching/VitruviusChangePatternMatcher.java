@@ -99,9 +99,10 @@ public class VitruviusChangePatternMatcher {
          * --> Create a Map EChange -> TggRule
          */
 
-        // 2. Check if the context of the patterns matches maybe by leveraging existing ibex functionality??
-        // 3. choose patterns to form a Coverage where each change belongs to exactly one pattern (todo maybe less than exactly one since not everything is consistency-relevant)
-        return allInvokedPatternTemplates.stream()
+        // Choose patterns to form a Coverage where each change is covered by at most one pattern and convert them to Matches
+        return new PatternCoverageFlattener(allInvokedPatternTemplates, vitruviusChange)
+                .getFlattenedPatternApplications()
+                .stream()
                 .map(patternTemplate -> new VitruviusBackwardConversionMatch(patternTemplate, propagationDirection.getPatternType()))
                 .collect(Collectors.toSet());
     }

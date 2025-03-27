@@ -100,6 +100,10 @@ public class ChangeSequenceTemplate {
         return eChangeWrappers;
     }
 
+    public Set<EChange<EObject>> getEChanges() {
+        return eChangeWrappers.stream().map(EChangeWrapper::getEChange).collect(Collectors.toSet());
+    }
+
     /**
      *
      * @return all placeholders that are being held by the EChangeWrappers this ChangeSequenceTemplate consists of.

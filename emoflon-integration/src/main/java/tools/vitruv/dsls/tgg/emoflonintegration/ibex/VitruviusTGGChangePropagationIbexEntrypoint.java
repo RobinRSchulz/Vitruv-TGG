@@ -1,20 +1,12 @@
 package tools.vitruv.dsls.tgg.emoflonintegration.ibex;
 
-import language.TGGRule;
 import org.apache.log4j.Logger;
-import org.eclipse.emf.ecore.EPackage;
-import org.emoflon.ibex.tgg.compiler.defaults.IRegistrationHelper;
 import org.emoflon.ibex.tgg.operational.IBlackInterpreter;
-import org.emoflon.ibex.tgg.operational.IRedInterpreter;
 import org.emoflon.ibex.tgg.operational.benchmark.FullBenchmarkLogger;
-import org.emoflon.ibex.tgg.operational.defaults.IbexRedInterpreter;
 import org.emoflon.ibex.tgg.operational.strategies.PropagationDirectionHolder;
 import org.emoflon.ibex.tgg.operational.strategies.sync.SYNC;
-import runtime.CorrespondenceNode;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * This is the entrypoint for the propagation of Vitruvius Changes with TGG rules.
@@ -84,7 +76,7 @@ public class VitruviusTGGChangePropagationIbexEntrypoint extends SYNC {
             return new VitruviusTGGChangePropagationResult(
                     vitruviusBackwardConversionTGGEngine.getNewlyAddedCorrespondences(),
                     vitruviusTGGIbexRedInterpreter.getRevokedCorrs(),
-                    vitruviusTGGIbexRedInterpreter.getRevokedRules(),
+                    vitruviusTGGIbexRedInterpreter.getRevokedRuleMatches(),
                     vitruviusTGGIbexRedInterpreter.getRevokedModelNodes(),
                     vitruviusTGGIbexRedInterpreter.getRevokedEMFEdges());
         } else return  new VitruviusTGGChangePropagationResult();

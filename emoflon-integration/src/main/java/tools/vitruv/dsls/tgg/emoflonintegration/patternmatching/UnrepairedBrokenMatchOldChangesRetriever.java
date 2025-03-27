@@ -6,9 +6,7 @@ import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
-import org.eclipse.emf.ecore.InternalEObject;
 import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.emoflon.ibex.tgg.operational.strategies.PropagationDirectionHolder.PropagationDirection;
 import org.emoflon.ibex.tgg.operational.strategies.modules.TGGResourceHandler;
 import tools.vitruv.change.atomic.EChange;
@@ -18,8 +16,6 @@ import tools.vitruv.change.atomic.feature.reference.InsertEReference;
 import tools.vitruv.change.atomic.feature.reference.ReferenceFactory;
 import tools.vitruv.change.atomic.root.InsertRootEObject;
 import tools.vitruv.change.atomic.root.RootFactory;
-import tools.vitruv.change.composite.description.VitruviusChange;
-import tools.vitruv.change.composite.description.VitruviusChangeFactory;
 import tools.vitruv.dsls.tgg.emoflonintegration.Util;
 
 import java.util.*;
@@ -29,8 +25,8 @@ import java.util.stream.Collectors;
  * Broken matches, that remain unrepaired by either shortcut rules not being sufficiently applicable or unreliable and thus unused,
  * must be repaired by creating new additive matches from what's broken
  */
-public class UnrepairedBrokenMatchFixer {
-    protected static final Logger logger = Logger.getLogger(UnrepairedBrokenMatchFixer.class);
+public class UnrepairedBrokenMatchOldChangesRetriever {
+    protected static final Logger logger = Logger.getLogger(UnrepairedBrokenMatchOldChangesRetriever.class);
 
     private Set<VitruviusConsistencyMatch> brokenAndUnrepairedMatches;
     private TGGResourceHandler resourceHandler;
@@ -38,7 +34,7 @@ public class UnrepairedBrokenMatchFixer {
     private Collection<TGGRule> rules;
     private PropagationDirection propagationDirection;
 
-    public UnrepairedBrokenMatchFixer(TGGResourceHandler resourceHandler, Collection<TGGRule> rules, Set<VitruviusConsistencyMatch> brokenAndUnrepairedMatches, PropagationDirection propagationDirection) {
+    public UnrepairedBrokenMatchOldChangesRetriever(TGGResourceHandler resourceHandler, Collection<TGGRule> rules, Set<VitruviusConsistencyMatch> brokenAndUnrepairedMatches, PropagationDirection propagationDirection) {
         this.brokenAndUnrepairedMatches = brokenAndUnrepairedMatches;
         this.resourceHandler = resourceHandler;
         this.rules = rules;

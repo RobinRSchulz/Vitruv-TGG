@@ -54,7 +54,7 @@ public class VitruviusTGGIbexRedInterpreter extends IbexRedInterpreter {
         return revokedModelNodes;
     }
 
-    public Set<ITGGMatch> getRevokedRules() {
+    public Set<ITGGMatch> getRevokedRuleMatches() {
         return revokedRules;
     }
 
