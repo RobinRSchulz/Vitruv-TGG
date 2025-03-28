@@ -28,6 +28,8 @@ public class VitruviusTGGChangePropagationIbexEntrypoint extends SYNC {
         //override redInterpreter with our own stuff
         VitruviusTGGIbexRedInterpreter vitruviusTGGIbexRedInterpreter = new VitruviusTGGIbexRedInterpreter(this);
         this.registerRedInterpeter(vitruviusTGGIbexRedInterpreter);
+        //override SeqRepair with our own stuff (needed to switch repairing attributes off and on...)
+        this.repairer = new FlexibleSeqRepair(this, this.propagationDirectionHolder);
 
         this.propagationDirection = registrationHelper.getPropagationDirection();
         IBlackInterpreter patternMatcher = this.getOptions().blackInterpreter();
@@ -38,7 +40,6 @@ public class VitruviusTGGChangePropagationIbexEntrypoint extends SYNC {
             vitruviusBackwardConversionTGGEngine.addObservedOperationalStrategy(this);
             vitruviusBackwardConversionTGGEngine.addVitruviusTGGIbexRedInterpreter(vitruviusTGGIbexRedInterpreter);
         }
-
     }
 
     /**

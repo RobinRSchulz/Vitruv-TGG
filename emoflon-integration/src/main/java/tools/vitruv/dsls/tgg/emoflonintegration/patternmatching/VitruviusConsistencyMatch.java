@@ -33,6 +33,16 @@ public class VitruviusConsistencyMatch extends SimpleTGGMatch implements ITGGMat
         init();
     }
 
+    /**
+     *
+     * @return whether each {@link BindingType#CREATE} and {@link BindingType#CONTEXT} node of the {@link TGGRule} this match represents is actually matched.
+     */
+    public boolean isFullyMatched() {
+        return tggRule.getNodes().stream()
+                .filter(ruleNode -> // we only want CONTEXT or CREATE nodes in a Match.
+                        Set.of(BindingType.CONTEXT, BindingType.CREATE).contains(ruleNode.getBindingType()))
+                .noneMatch(ruleNode -> tggRuleApplication.eGet(tggRuleApplication.eClass().getEStructuralFeature(Util.getMarkerStyleName(ruleNode))) == null);
+    }
 
     private void init() {
         tggRule.getNodes().stream()
