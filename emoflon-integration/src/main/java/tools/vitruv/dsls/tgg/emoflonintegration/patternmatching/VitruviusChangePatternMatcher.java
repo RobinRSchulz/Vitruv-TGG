@@ -94,15 +94,7 @@ public class VitruviusChangePatternMatcher {
         rememberUnmatchedEChanges(allInvokedPatternTemplates);
         visualizeCoverage(allInvokedPatternTemplates);
 
-        //TODO need to prevent duplicates that occur if a patterntemplate has more than one EChangewrapper (1 match for each wrapper...)
-        /* Idea: We allow multiple an Echange to be covered by multiple patterns, but only one of each pattern type (i.e. via their rule reference?? That doesnt break anything!
-         * --> Create a Map EChange -> TggRule
-         */
-
-        // Choose patterns to form a Coverage where each change is covered by at most one pattern and convert them to Matches
-        return new PatternCoverageFlattener(allInvokedPatternTemplates, vitruviusChange)
-                .getFlattenedPatternApplications()
-                .stream()
+        return allInvokedPatternTemplates.stream()
                 .map(patternTemplate -> new VitruviusBackwardConversionMatch(patternTemplate, propagationDirection.getPatternType()))
                 .collect(Collectors.toSet());
     }

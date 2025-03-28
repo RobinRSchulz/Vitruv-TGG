@@ -25,26 +25,30 @@ import java.util.stream.Collectors;
  * </ol>
  */
 public class PatternCoverageFlattener {
+    //TODO make this class return
 
     /**
      * This remains unmodified, only provides the sorting!
      */
-    private final LinkedList<ChangeSequenceTemplate> sortedPatternApplications;
+    private final LinkedList<VitruviusBackwardConversionMatch> sortedPatternApplications;
     /**
      * This is the set we modify and return
      */
-    private final Set<ChangeSequenceTemplate> patternApplications;
+    private final Set<VitruviusBackwardConversionMatch> patternApplications;
     private final List<EChange<EObject>> changeSequence;
 
-    public PatternCoverageFlattener(Set<ChangeSequenceTemplate> patternApplications, VitruviusChange<EObject> vitruviusChange) {
+//    stream().map(VitruviusBackwardConversionMatch::getMatchedChangeSequenceTemplate).collect(Collectors.toSet()
+
+
+    public PatternCoverageFlattener(Set<VitruviusBackwardConversionMatch> patternApplications, VitruviusChange<EObject> vitruviusChange) {
         this.patternApplications = new HashSet<>(patternApplications);
         this.changeSequence = vitruviusChange.getEChanges();
         this.sortedPatternApplications = patternApplications.stream()
-                .sorted(Comparator.comparingInt(a -> a.getEChangeWrappers().size()))
+                .sorted(Comparator.comparingInt(a -> a.getMatchedChangeSequenceTemplate().getEChangeWrappers().size()))
                 .collect(Collectors.toCollection(LinkedList::new));
     }
 
-    public Set<ChangeSequenceTemplate> getFlattenedPatternApplications() {
+    public Set<VitruviusBackwardConversionMatch> getFlattenedPatternApplications() {
         applyContainmentLevelHeuristic();
         applyMaxCoverageAndDistanceHeuristic();
         assertFlatness();
@@ -52,12 +56,12 @@ public class PatternCoverageFlattener {
     }
 
     private void applyContainmentLevelHeuristic() {
-        ListIterator<ChangeSequenceTemplate> listIterator = sortedPatternApplications.listIterator();
+        ListIterator<VitruviusBackwardConversionMatch> listIterator = sortedPatternApplications.listIterator();
         while (listIterator.hasNext()) {
-            ChangeSequenceTemplate patternApplication = listIterator.next();
+            VitruviusBackwardConversionMatch patternApplication = listIterator.next();
             if (listIterator.hasNext()) {
-                for (ChangeSequenceTemplate containerCandidate : sortedPatternApplications.subList(listIterator.nextIndex(), sortedPatternApplications.size())) {
-                    if (isContainedIn(patternApplication, containerCandidate)) {
+                for (VitruviusBackwardConversionMatch containerCandidate : sortedPatternApplications.subList(listIterator.nextIndex(), sortedPatternApplications.size())) {
+                    if (isContainedIn(patternApplication.getMatchedChangeSequenceTemplate(), containerCandidate.getMatchedChangeSequenceTemplate())) {
                         patternApplications.remove(patternApplication);
                         // we don't need to run through ALL containers, since the next will be covered anyway...
                         break;
@@ -79,12 +83,12 @@ public class PatternCoverageFlattener {
 
     private void applyMaxCoverageAndDistanceHeuristic() {
         for (EChange<EObject> eChange : changeSequence) {
-            Set<ChangeSequenceTemplate> relevantPatternApplications = getRelevantPatternApplications(eChange);
+            Set<VitruviusBackwardConversionMatch> relevantPatternApplications = getRelevantPatternApplications(eChange);
             if (relevantPatternApplications.isEmpty()) continue;
             int maxCoverage = getMaxCoverage(relevantPatternApplications);
             // first ensure only maximum-coverage pattern applications are chosen. Then choose the one with the highest density
-            ChangeSequenceTemplate survivingPatternApplication = relevantPatternApplications.stream()
-                    .filter(patternApplication -> patternApplication.getEChanges().size() == maxCoverage)
+            VitruviusBackwardConversionMatch survivingPatternApplication = relevantPatternApplications.stream()
+                    .filter(patternApplication -> patternApplication.getMatchedChangeSequenceTemplate().getEChanges().size() == maxCoverage)
                     .map(patternApplication -> new Pair<>(patternApplication, densityHeuristic(patternApplication)))
                     .max(Comparator.comparing(Pair::getSecond))
                     .orElseThrow(() -> new IllegalStateException("No ChangeSequenceTempplates"))
@@ -101,22 +105,22 @@ public class PatternCoverageFlattener {
      * @param changeSequenceTemplate
      * @return Khelladi's distance/ density heuristic: is between 0 and 1. the higher the denser the changes are grouped together
      */
-    private double densityHeuristic(ChangeSequenceTemplate changeSequenceTemplate) {
-        List<Integer> indexes = changeSequenceTemplate.getEChanges().stream().map(changeSequence::indexOf).toList();
+    private double densityHeuristic(VitruviusBackwardConversionMatch changeSequenceTemplate) {
+        List<Integer> indexes = changeSequenceTemplate.getMatchedChangeSequenceTemplate().getEChanges().stream().map(changeSequence::indexOf).toList();
         int firstIndex = indexes.stream().mapToInt(i -> i).min().orElseThrow(() -> new IllegalStateException("Empty ChangeSequenceTemplate"));
         int lastIndex = indexes.stream().mapToInt(i -> i).max().orElseThrow(() -> new IllegalStateException("Empty ChangeSequenceTemplate"));
-        int size = changeSequenceTemplate.getEChangeWrappers().size();
+        int size = changeSequenceTemplate.getMatchedChangeSequenceTemplate().getEChangeWrappers().size();
 
         return ((double)(size-1)) / ((double)(lastIndex - firstIndex));
     }
 
-    private Set<ChangeSequenceTemplate> getRelevantPatternApplications(EChange<EObject> eChange) {
-        return patternApplications.stream().filter(patternApplication -> patternApplication.getEChanges().contains(eChange)).collect(Collectors.toSet());
+    private Set<VitruviusBackwardConversionMatch> getRelevantPatternApplications(EChange<EObject> eChange) {
+        return patternApplications.stream().filter(patternApplication -> patternApplication.getMatchedChangeSequenceTemplate().getEChanges().contains(eChange)).collect(Collectors.toSet());
     }
 
-    private int getMaxCoverage(Set<ChangeSequenceTemplate> relevantPatternApplications) {
+    private int getMaxCoverage(Set<VitruviusBackwardConversionMatch> relevantPatternApplications) {
         return relevantPatternApplications.stream()
-                .map(patternApplication -> patternApplication.getEChanges().size())
+                .map(patternApplication -> patternApplication.getMatchedChangeSequenceTemplate().getEChanges().size())
                 .mapToInt(size -> size)
                 .max()
                 .orElseThrow(() -> new IllegalStateException("Empty ChangeSequenceTemplate"));

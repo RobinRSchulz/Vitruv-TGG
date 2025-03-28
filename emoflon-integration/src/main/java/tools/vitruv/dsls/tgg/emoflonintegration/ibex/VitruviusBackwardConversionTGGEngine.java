@@ -203,10 +203,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
         Set<VitruviusBackwardConversionMatch> remainingMatches = getMatchesThatHaventBeenApplied();
 
         // we do not give ALL matches to SYNC but only those that CURRENTLY match context. As matches are applied by SYNC, new matches from this engine may become possible again!
-        Set<IMatch> matchesToBeAdded = remainingMatches.stream()
-                .filter(match -> match.contextMatches(this.observedOperationalStrategy.getResourceHandler(), this.propagationDirection))
-                .collect(Collectors.toSet());
-        this.iMatchObserver.addMatches(matchesToBeAdded);
+        matchContext_flatten_andHandToSYNC(remainingMatches);
 
         Set<VitruviusConsistencyMatch> brokenMatches = getBrokenMatches();
         brokenMatches.forEach(brokenMatch -> {
@@ -248,13 +245,21 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
         matchesThatHaveBeenTriedToRepair.addAll(unrepairedAndUntriedBrokenMatches);
 
         // Add matches for further calls of SYNC to THIS->updateMatches
-        Set<IMatch> matchesToBeAdded = newMatches.stream()
-                .filter(match -> match.contextMatches(this.observedOperationalStrategy.getResourceHandler(), this.propagationDirection))
-                .collect(Collectors.toSet());
         this.matchesFound.addAll(newMatches);
 
         // do one run in case this was the last call from SYNC...
-        this.iMatchObserver.addMatches(matchesToBeAdded);
+        matchContext_flatten_andHandToSYNC(newMatches);
+    }
+
+    private void matchContext_flatten_andHandToSYNC(Set<VitruviusBackwardConversionMatch> matches) {
+        Set<VitruviusBackwardConversionMatch> matchesToBeFlattened = matches.stream()
+                .filter(match -> match.contextMatches(this.observedOperationalStrategy.getResourceHandler(), this.propagationDirection))
+                .collect(Collectors.toSet());
+
+        this.iMatchObserver.addMatches(
+                // "Flattening": Choose patterns to form a Coverage where each change is covered by at most one pattern and convert them to Matches
+                new HashSet<>(new PatternCoverageFlattener(matchesToBeFlattened, vitruviusChange).getFlattenedPatternApplications())
+        );
     }
 
     @Override
