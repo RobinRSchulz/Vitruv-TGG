@@ -63,6 +63,7 @@ public class VitruviusTGGChangePropagationRegistrationHelper implements IRegistr
                 .project.workspacePath(ibexProjectPath.getParentFile().getAbsolutePath())
                 .project.path(ibexProjectPath.getName())
                 .debug.ibexDebug(true)
+                .repair.repairAttributes(false) // will not work because of NPE in SeqRepair.class (emoflon)
                 .repair.useShortcutRules(false) // TODO schon zwei TODOs im Shortcutrule-Code entdeckt, weeeiß ja net ob des so gut geht --> Im Zweifel Future work, bzw Evaluation...
                 .registrationHelper(this);
         return ibexOptions;
