@@ -141,17 +141,23 @@ public class IbexPatternToChangeSequenceTemplateConverter {
             Since we do a DFS, we expect an already created placeholder representing the src node.
             This is encapsulated by getOrCreatePlaceHolder
          */
-        if (Util.isManyValued(ruleEdge.getType())) {
-            eChangeWrappers.add(
-                    new EReferenceValueIndexEChangeWrapper(
-                            ReferencePackage.eINSTANCE.getInsertEReference(),
-                            ruleEdge.getSrcNode().getType(), // the affected EObject always is the node where this edge comes from
-                            getOrCreatePlaceHolder(ruleEdge.getSrcNode()),
-                            ruleEdge.getType(),
-                            getOrCreatePlaceHolder(ruleEdge.getTrgNode()))
-            );
-        } else {
-            eChangeWrappers.add(
+
+            /*
+                Handle bidirectional references: If containment, the change sequence will only contain the containment reference. The opposite reference is called "container".
+                We cannot expect the container reference to be present in the change, so we need to skip it, here!
+             */
+        if (!ruleEdge.getType().isContainer()) {
+            if (Util.isManyValued(ruleEdge.getType())) {
+                eChangeWrappers.add(
+                        new EReferenceValueIndexEChangeWrapper(
+                                ReferencePackage.eINSTANCE.getInsertEReference(),
+                                ruleEdge.getSrcNode().getType(), // the affected EObject always is the node where this edge comes from
+                                getOrCreatePlaceHolder(ruleEdge.getSrcNode()),
+                                ruleEdge.getType(),
+                                getOrCreatePlaceHolder(ruleEdge.getTrgNode()))
+                );
+            } else {
+                eChangeWrappers.add(
 //                /*
 //                    in the case of ReplaceSingeValuedEReference (which represents replacement (not handled here) but also the insertion of a value into a single-valued EReference),
 //                    we use null as the TGG rule placeholder for the old value, because there is no such thing as an old value in a TGG pattern, meaning we cannot assign a TGGRuleNode!
@@ -166,15 +172,18 @@ public class IbexPatternToChangeSequenceTemplateConverter {
                     /* Normally, single-valued eChanges would NOT be represented by InsertEReference EChanges, but by ReplaceSingleValuedEReference EChanges.
                        But since this EChange is sometimes additive AND subtractive, we transform those into an InsertEReference change (plus a RemoveEReference, if it is a "true" replacement )
                     */
-                    new EReferenceValueIndexEChangeWrapper(
-                            ReferencePackage.eINSTANCE.getInsertEReference(),
-                            ruleEdge.getSrcNode().getType(),
-                            getOrCreatePlaceHolder(ruleEdge.getSrcNode()),
-                            ruleEdge.getType(),
-                            getOrCreatePlaceHolder(ruleEdge.getTrgNode())
-                    )
-            );
+                        new EReferenceValueIndexEChangeWrapper(
+                                ReferencePackage.eINSTANCE.getInsertEReference(),
+                                ruleEdge.getSrcNode().getType(),
+                                getOrCreatePlaceHolder(ruleEdge.getSrcNode()),
+                                ruleEdge.getType(),
+                                getOrCreatePlaceHolder(ruleEdge.getTrgNode())
+                        )
+                );
+            }
         }
+
+
 
         // continue DFS
         if (ruleEdge.getTrgNode().getBindingType().equals(BindingType.CONTEXT)) {
