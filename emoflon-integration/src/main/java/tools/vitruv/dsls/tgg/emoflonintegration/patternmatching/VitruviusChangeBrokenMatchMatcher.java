@@ -9,12 +9,15 @@ import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.EStructuralFeature;
 import org.emoflon.ibex.common.operational.IMatch;
 import org.emoflon.ibex.tgg.operational.matches.ITGGMatch;
+import org.emoflon.ibex.tgg.operational.strategies.PropagationDirectionHolder;
 import org.emoflon.ibex.tgg.operational.strategies.modules.TGGResourceHandler;
 import runtime.TGGRuleApplication;
 import tools.vitruv.change.atomic.EChange;
+import tools.vitruv.change.atomic.eobject.CreateEObject;
 import tools.vitruv.change.atomic.eobject.DeleteEObject;
 import tools.vitruv.change.atomic.feature.UnsetFeature;
 import tools.vitruv.change.atomic.feature.attribute.RemoveEAttributeValue;
+import tools.vitruv.change.atomic.feature.attribute.UpdateAttributeEChange;
 import tools.vitruv.change.atomic.feature.reference.RemoveEReference;
 import tools.vitruv.change.atomic.feature.single.ReplaceSingleValuedFeatureEChange;
 import tools.vitruv.change.atomic.root.RemoveRootEObject;
@@ -43,6 +46,7 @@ public class VitruviusChangeBrokenMatchMatcher {
         // we only want to find NEW matches. That also ensures those matches being complete, i.e. having all their nodes!
         matches.forEach(match -> tggRuleApplicationTGGRuleMap.remove(match.getRuleApplicationNode()));
         matches.addAll(getAdditionalBrokenMatches(resourceHandler, tggRuleApplicationTGGRuleMap));
+        matches.addAll(getMatchesBrokenByAttributeChanges(tggRuleApplicationTGGRuleMap));
         return matches;
     }
 
@@ -69,6 +73,45 @@ public class VitruviusChangeBrokenMatchMatcher {
         return brokenMatches;
     }
 
+    private Set<VitruviusConsistencyMatch> getMatchesBrokenByAttributeChanges(Map<TGGRuleApplication, TGGRule> tggRuleApplicationTGGRuleMap) {
+        Set<UpdateAttributeEChange<EObject>> updateAttributeEChanges = vitruviusChange.getEChanges().stream()
+                .filter(eChange -> eChange instanceof UpdateAttributeEChange<EObject>)
+                .map(eChange -> (UpdateAttributeEChange<EObject>) eChange)
+                .collect(Collectors.toSet());
+        // only look at EChanges whose affected EObject has not been created in the current change sequence.
+        Set<UpdateAttributeEChange<EObject>> relevantUpdateAttributeEChanges = updateAttributeEChanges.stream().filter(updateAttributeEChange -> {
+            EObject affectedEObject = updateAttributeEChange.getAffectedElement();
+            return vitruviusChange.getEChanges().stream()
+                    .filter(eChange -> eChange instanceof CreateEObject<EObject>)
+                    .map(eChange -> ((CreateEObject<EObject>) eChange).getAffectedElement())
+                    .noneMatch(createdEObject -> createdEObject.equals(affectedEObject));
+        }).collect(Collectors.toSet());
+         Set<VitruviusConsistencyMatch> matches = new HashSet<>();
+         relevantUpdateAttributeEChanges.forEach(updateAttributeEChange -> {
+             // get the Marker/ pattern application where it was CREATEd
+             for (Map.Entry<TGGRuleApplication, TGGRule> entry : tggRuleApplicationTGGRuleMap.entrySet()) {
+                 TGGRuleApplication tggRuleApplication = entry.getKey();
+                 TGGRule tggRule = entry.getValue();
+                 //check if there are any pattern applications where the AE of updateAttributeEChange is covered with a CREATE node.
+                 if (tggRule.getNodes().stream().filter(tggRuleNode -> tggRuleNode.getBindingType().equals(BindingType.CREATE))
+                         .anyMatch(ruleNode -> {
+                             EObject candidate = (EObject) tggRuleApplication.eGet(tggRuleApplication.eClass().getEStructuralFeature(Util.getMarkerStyleName(ruleNode)));
+                             return updateAttributeEChange.getAffectedElement().equals(candidate);
+                         })) {
+                     //todo add new match
+                     matches.add(new VitruviusConsistencyMatch(tggRuleApplication, tggRule));
+                     break;
+                 }
+
+             }
+         });
+         if (!matches.isEmpty()) {
+             logger.warn("\n\n\nFOUND MATCHES BROOOOOOKEEEEN BY ATTRIBUTE CHANGES!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+             logger.warn(matches);
+         }
+         return matches;
+    }
+
     /**
      * We currently do not cover all cases.
      * If we report broken matches that "free" (in terms of eMoflon "unmark") EObjects from being covered by a pattern application,
@@ -77,7 +120,7 @@ public class VitruviusChangeBrokenMatchMatcher {
      * <ol>
      *    <li>detect the subgraph of EObjects + interrelations that are unmarked</li>
      *    <li>generate EChanges for that subgraph</li>
-     *    <li>generate new forward matches with {@link VitruviusChangePatternMatcher#getAdditiveMatches()}</li>
+     *    <li>generate new forward matches with {@link VitruviusChangePatternMatcher#getAdditiveMatches(PropagationDirectionHolder.PropagationDirection)} ()}</li>
      *    <li>reiterate...</li>
      * </ol>
      *
