@@ -37,6 +37,7 @@ import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.composite.description.VitruviusChange;
 import tools.vitruv.change.composite.description.VitruviusChangeFactory;
 import tools.vitruv.dsls.tgg.emoflonintegration.Util;
+import tools.vitruv.dsls.tgg.emoflonintegration.ibex.smartEmfFix.SmartEMFResourceFactoryImplFixed;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.IbexPatternToChangeSequenceTemplateConverter;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.ChangeSequenceTemplateSet;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternmatching.*;
@@ -138,7 +139,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
                 propagationDirection.equals(PropagationDirection.FORWARD) ? DomainType.SRC : DomainType.TRG)
                 .convert();
         this.vitruviusChangePatternMatcher = new VitruviusChangePatternMatcher(vitruviusChange, changeSequenceTemplateSet);
-        this.vitruviusChangeBrokenMatchMatcher = new VitruviusChangeBrokenMatchMatcher(vitruviusChange, this.ibexOptions.tgg.tgg().getRules());
+        this.vitruviusChangeBrokenMatchMatcher = new VitruviusChangeBrokenMatchMatcher(vitruviusChange, this.ibexOptions.tgg.tgg().getRules().stream().filter(tggRule -> !tggRule.isAbstract()).collect(Collectors.toSet()));
 
         long stop = Timer.stop();
 
@@ -161,7 +162,8 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     public ResourceSet createAndPrepareResourceSet(String workspacePath) {
         this.resourceSet = new ResourceSetImpl();
         resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap()
-                .put(Resource.Factory.Registry.DEFAULT_EXTENSION, new SmartEMFResourceFactoryImpl(workspacePath));
+                .put(Resource.Factory.Registry.DEFAULT_EXTENSION, new SmartEMFResourceFactoryImplFixed(workspacePath));
+//                .put(Resource.Factory.Registry.DEFAULT_EXTENSION, new SmartEMFResourceFactoryImpl(workspacePath));
 //				.put(Resource.Factory.Registry.DEFAULT_EXTENSION, new XMIResourceFactoryImpl());
         try {
             resourceSet.getURIConverter().getURIMap().put(
@@ -183,7 +185,8 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
      */
     private void initializePreexistingConsistencyMatchesIfNotAlreadyPresent() {
         if (!preexistingConsistencyMatchesInitialized) {
-            Map<TGGRuleApplication, TGGRule> tggRuleApplicationTGGRuleMap = Util.getTGGRuleApplicationsWithRules(this.ibexExecutable.getResourceHandler(), this.ibexOptions.tgg.tgg().getRules());
+            Map<TGGRuleApplication, TGGRule> tggRuleApplicationTGGRuleMap = Util.getTGGRuleApplicationsWithRules(this.ibexExecutable.getResourceHandler(),
+                    this.ibexOptions.tgg.tgg().getRules().stream().filter(tggRule -> !tggRule.isAbstract()).collect(Collectors.toSet()));
             Set<IMatch> consistencyMatches = tggRuleApplicationTGGRuleMap.keySet().stream()
                     .map(tggRuleApplication -> new VitruviusConsistencyMatch(tggRuleApplication, tggRuleApplicationTGGRuleMap.get(tggRuleApplication)))
                     .collect(Collectors.toSet());
@@ -230,7 +233,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
 
         // Try to calculate new forward matches:
         List<EChange<EObject>> newChangeSequence = new UnrepairedBrokenMatchOldChangesRetriever(
-                this.observedOperationalStrategy.getResourceHandler(), this.ibexOptions.tgg.tgg().getRules(),
+                this.observedOperationalStrategy.getResourceHandler(), this.ibexOptions.tgg.tgg().getRules().stream().filter(tggRule -> !tggRule.isAbstract()).collect(Collectors.toSet()),
                 unrepairedAndUntriedBrokenMatches, propagationDirection)
                 .createNewChangeSequence();
         // Utilize EChanges that have been left over from the main pattern matching, too!

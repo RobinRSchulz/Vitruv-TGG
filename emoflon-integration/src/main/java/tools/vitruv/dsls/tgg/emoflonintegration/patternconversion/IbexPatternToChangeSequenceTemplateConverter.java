@@ -2,6 +2,9 @@ package tools.vitruv.dsls.tgg.emoflonintegration.patternconversion;
 
 import language.*;
 import org.apache.log4j.Logger;
+import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.EPackage;
+import org.eclipse.emf.ecore.InternalEObject;
 import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXContextPattern;
 import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXModel;
 import org.emoflon.ibex.tgg.compiler.patterns.PatternSuffixes;
@@ -47,7 +50,9 @@ public class IbexPatternToChangeSequenceTemplateConverter {
     public ChangeSequenceTemplateSet convert() {
         printRulesDebugInfo();
 
-        Collection<ChangeSequenceTemplate> patternTemplates = this.tgg.getRules().stream().map(this::parseRule).collect(Collectors.toList());
+        Collection<ChangeSequenceTemplate> patternTemplates = this.tgg.getRules().stream()
+                .filter(tggRule -> !tggRule.isAbstract())
+                .map(this::parseRule).collect(Collectors.toList());
         patternTemplates.forEach(logger::debug);
         return new ChangeSequenceTemplateSet(patternTemplates);
     }
@@ -245,7 +250,7 @@ public class IbexPatternToChangeSequenceTemplateConverter {
         logger.debug("*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~");
         logger.debug("Rules: ");
         logger.debug("*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~");
-        for (TGGRule rule : this.tgg.getRules()) {
+        for (TGGRule rule : this.tgg.getRules().stream().filter(tggRule -> !tggRule.isAbstract()).collect(Collectors.toSet())) {
             logger.debug("  - TGGRule(" + rule.getName() + "): ");
             rule.getNodes().forEach(tggRuleNode -> {
                 logger.debug("    - " + nodeToString(tggRuleNode));
@@ -256,6 +261,29 @@ public class IbexPatternToChangeSequenceTemplateConverter {
                 logger.trace("      - incomingCorrsSource edges: ");
                 tggRuleNode.getIncomingCorrsSource().forEach(node -> logger.trace("        - " + nodeToString(node)));
             });
+
+            Set<TGGRuleNode> proxyNodes = rule.getNodes().stream().filter(ruleNode -> ruleNode.getType().eIsProxy()).collect(Collectors.toSet());
+            Set<TGGRuleEdge> proxyEdges = rule.getEdges().stream().filter(ruleEdge -> ruleEdge.getType().eIsProxy()).collect(Collectors.toSet());
+            if (!proxyNodes.isEmpty() || !proxyEdges.isEmpty()) {
+                logger.warn("CORRUPT RULE: " + rule.getName() + "has nodes and/ or edges whose type is an unresolved proxy!");
+                proxyNodes.forEach(proxyNode -> logger.warn("  - " + proxyNode.getName() + ", " + proxyNode.getType()));
+                proxyEdges.forEach(proxyEdge -> logger.warn("  - " + proxyEdge.getName() + ", " + proxyEdge.getType()));
+                logger.info("  ");
+            }
+            for (TGGRuleNode proxyNode : proxyNodes) {
+                URI proxyURI = ((InternalEObject) proxyNode.getType()).eProxyURI();
+                String fragment = proxyURI.fragment();
+                EPackage.Registry.INSTANCE.entrySet().stream()
+                        .filter(entry -> ((EPackage) entry.getValue()).eResource().getEObject(fragment) != null)
+                        .forEach(entry -> logger.warn("  - FOUND the package!!! " + entry.getKey() + " todo weiteres Vorgehen"));
+            }
+            for (TGGRuleEdge proxyEdge : proxyEdges) {
+                URI proxyURI = ((InternalEObject) proxyEdge.getType()).eProxyURI();
+                String fragment = proxyURI.fragment();
+                EPackage.Registry.INSTANCE.entrySet().stream()
+                        .filter(entry -> ((EPackage) entry.getValue()).eResource().getEObject(fragment) != null)
+                        .forEach(entry -> logger.warn("  - FOUND the package!!! " + entry.getKey() + " todo weiteres Vorgehen"));
+            }
         }
     }
 
