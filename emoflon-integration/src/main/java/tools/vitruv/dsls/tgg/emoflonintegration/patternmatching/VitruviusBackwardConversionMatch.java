@@ -11,6 +11,7 @@ import org.emoflon.ibex.tgg.operational.matches.SimpleTGGMatch;
 import org.emoflon.ibex.tgg.operational.strategies.PropagationDirectionHolder.PropagationDirection;
 import org.emoflon.ibex.tgg.operational.strategies.modules.TGGResourceHandler;
 import tools.vitruv.dsls.tgg.emoflonintegration.Util;
+import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.EObjectPlaceholder;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange.ChangeSequenceTemplate;
 
 import java.util.HashSet;
@@ -57,6 +58,21 @@ public class VitruviusBackwardConversionMatch extends SimpleTGGMatch implements 
         }
     }
 
+    /**
+     *
+     * @return all EObjects that have been mapped to CREATE nodes of this matches {@link ChangeSequenceTemplate}
+     */
+    public Set<EObject> getEObjectsThisMatchWouldCreate() {
+        return this.getMatchedChangeSequenceTemplate().getAllPlaceholders().stream()
+                .filter(eObjectPlaceholder -> eObjectPlaceholder.getTggRuleNode() != null)
+                .filter(eObjectPlaceholder -> eObjectPlaceholder.getTggRuleNode().getBindingType().equals(BindingType.CREATE))
+                .map(EObjectPlaceholder::getAffectedEObject)
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * TODO kann eich weg... und durch getEObjectsThisMatchWouldCreate ersetzt werden!
+     */
     public Set<EObject> getEObjectsCreatedByThisMatch() {
         if (this.contextHasBeenMatchedSuccessfully) {
             return this.tggRuleNodeEObjectMap.entrySet().stream()

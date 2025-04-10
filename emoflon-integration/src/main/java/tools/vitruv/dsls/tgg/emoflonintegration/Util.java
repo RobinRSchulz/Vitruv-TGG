@@ -154,13 +154,11 @@ public class Util {
     }
 
     public static Map<TGGRuleApplication, TGGRule> mapTGGRuleApplicationsToTGGRules(Set<TGGRuleApplication> markers, Collection<TGGRule> rules) {
-        logger.warn("RULES " + rules.stream().map(TGGRule::getName).collect(Collectors.joining(", ")));
         Map<TGGRuleApplication, TGGRule> map = new HashMap<>();
         markers.forEach(marker -> {
             Set<TGGRule> ruleCandidates = rules.stream()
                     .filter(rule -> marker.eClass().getName().split("__")[0].equals(rule.getName())) //TODO use some emoflon stuff instead..
                     .collect(Collectors.toSet());
-            logger.warn("Marker: " + Util.eObjectToString(marker) + ", ruleCandidates: " + ruleCandidates.stream().map(TGGRule::getName).collect(Collectors.joining(", ")));
             if (ruleCandidates.size() != 1) throw new IllegalStateException("Marker could not be mapped to a rule " + Util.eSomethingToString(marker));
             map.put(marker, ruleCandidates.iterator().next());
         });

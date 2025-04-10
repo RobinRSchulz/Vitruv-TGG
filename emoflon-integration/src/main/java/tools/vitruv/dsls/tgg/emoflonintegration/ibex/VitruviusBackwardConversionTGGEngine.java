@@ -30,7 +30,6 @@ import org.emoflon.ibex.tgg.operational.monitoring.IbexObserver;
 import org.emoflon.ibex.tgg.operational.strategies.OperationalStrategy;
 import org.emoflon.ibex.tgg.operational.strategies.PropagationDirectionHolder.PropagationDirection;
 import org.emoflon.ibex.tgg.operational.strategies.modules.IbexExecutable;
-import org.emoflon.smartemf.persistence.SmartEMFResourceFactoryImpl;
 import runtime.CorrespondenceNode;
 import runtime.TGGRuleApplication;
 import tools.vitruv.change.atomic.EChange;
@@ -193,6 +192,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
             logger.warn("  LOADED MARKERS : \n    - " + consistencyMatches.stream().map(IMatch::toString).collect(Collectors.joining("\n    - ")));
             this.iMatchObserver.addMatches(consistencyMatches);
         }
+        this.ibexExecutable.getOptions().tgg.flattenedTGG().getRules();
         this.preexistingConsistencyMatchesInitialized = true;
     }
 
@@ -203,7 +203,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
 
         // new forward matches. currently only creating forward matches ONCE since we match against the whole change sequence...
         createForwardMatchesIfNotAlreadyPresent();
-        Set<VitruviusBackwardConversionMatch> remainingMatches = getMatchesThatHaventBeenApplied();
+        Set<VitruviusBackwardConversionMatch> remainingMatches = getMatchesThatHaventBeenAppliedAndAreStillIntact();
 
         // we do not give ALL matches to SYNC but only those that CURRENTLY match context. As matches are applied by SYNC, new matches from this engine may become possible again!
         matchContext_flatten_andHandToSYNC(remainingMatches);
@@ -309,11 +309,21 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     }
 
     /**
-     *
+     * Matches could have been applied already or have become broken by another match having added EObjects that this match would create.
+     * @return matches that can be applied, ignoring whether the context matches or not.
      */
-    private Set<VitruviusBackwardConversionMatch> getMatchesThatHaventBeenApplied() {
+    private Set<VitruviusBackwardConversionMatch> getMatchesThatHaventBeenAppliedAndAreStillIntact() {
         // we know what matches have been applied by monitoring what our ping-pong opponent does (in ::update()).
-        return this.matchesFound.stream().filter(match -> !this.matchesThatHaveBeenApplied.contains(match)).collect(Collectors.toSet());
+        Set<EObject> createdEObjectsAlreadyCovered = this.matchesThatHaveBeenApplied.stream()
+                .map(match -> (VitruviusBackwardConversionMatch) match)
+                .flatMap(match -> match.getEObjectsCreatedByThisMatch().stream())
+                .collect(Collectors.toSet());
+
+        // need to filter out those matches that contain CREATE nodes that have been applied by other rules!
+        return this.matchesFound.stream()
+                .filter(match -> !this.matchesThatHaveBeenApplied.contains(match))
+                .filter(match -> match.getEObjectsThisMatchWouldCreate().stream().noneMatch(createdEObjectsAlreadyCovered::contains))
+                .collect(Collectors.toSet());
     }
 
 
