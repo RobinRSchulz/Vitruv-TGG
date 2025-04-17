@@ -292,7 +292,6 @@ public class ChangeSequenceTemplate {
             * mark visited nodes
 
          */
-            //TODO that stupid bijectivity...
             for (TGGRuleNode createNode : Util.filterNodes(tggRule, BindingType.CREATE, propagationDirection.equals(PropagationDirection.FORWARD) ? DomainType.SRC : DomainType.TRG)) {
                 if (!visitNode(createNode)) {
                     matchingFailed = true;
