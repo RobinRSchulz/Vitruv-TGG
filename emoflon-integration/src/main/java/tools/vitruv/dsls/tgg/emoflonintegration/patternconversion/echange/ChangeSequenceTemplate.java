@@ -363,7 +363,7 @@ public class ChangeSequenceTemplate {
                 if (incomingEdge.getType().isContainment()) {
                     logger.trace("    HAVE WE FOUND IT? (container!) " + Util.eObjectToString(trgNodeEObject.eContainer()));
                     EObject potentialSrcNodeEObject = trgNodeEObject.eContainer();
-                    if (srcTGGRuleNode.getType().equals(potentialSrcNodeEObject.eClass())) {
+                    if (srcTGGRuleNode.getType().isSuperTypeOf(potentialSrcNodeEObject.eClass())) {
                         // dont know if this check is necessary
                         tggRuleNode2EObjectMapStack.putPush(srcTGGRuleNode, potentialSrcNodeEObject);
                         return visitNode(srcTGGRuleNode);
@@ -443,7 +443,7 @@ public class ChangeSequenceTemplate {
                             return set;
                         })
                         .flatMap(Collection::stream)
-                        .filter(trgEObjectCandidate -> trgEObjectCandidate.eClass().equals(trgTGGRuleNode.getType()))
+                        .filter(trgEObjectCandidate -> trgTGGRuleNode.getType().isSuperTypeOf(trgEObjectCandidate.eClass()))
                         .collect(Collectors.toSet());
                 return recurseAndTryAllMatchingCandidatesFor(matchingEObjects, trgTGGRuleNode);
             } else return true; // not look at CREATE nodes...
@@ -531,7 +531,7 @@ public class ChangeSequenceTemplate {
                         ruleNodeInOtherDomain.getDomainType().equals(DomainType.SRC) ? "source" : "target"
                 ));
                 // only return the EObject if it matches the rule node (which should be guaranteed via the corr node but who knows...)
-                return ruleNodeInOtherDomain.getType().equals(matchingInstantiatedNodeInOtherDomain.eClass())
+                return ruleNodeInOtherDomain.getType().isSuperTypeOf(matchingInstantiatedNodeInOtherDomain.eClass())
                         ? Optional.of(new Pair<>(matchingInstantiatedTGGRuleCorr, matchingInstantiatedNodeInOtherDomain))
                         : Optional.empty();
             } else return Optional.empty();

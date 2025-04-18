@@ -205,7 +205,7 @@ public class VitruviusChangeBrokenMatchMatcher {
             TGGRule rule = marker2TGGRule.getValue();
             return rule.getNodes().stream()
                     .filter(ruleNode -> bindingTypes.contains(ruleNode.getBindingType()))
-                    .filter(ruleNode -> affectedEObject.eClass().equals(ruleNode.getType()))
+                    .filter(ruleNode -> ruleNode.getType().isSuperTypeOf(affectedEObject.eClass()))
                     // filter rule nodes that match the marker and the AE
                     .filter(tggRuleNode -> affectedEObject.equals(marker.eGet(marker.eClass().getEStructuralFeature(Util.getMarkerStyleName(tggRuleNode)))))
                     // check references (type and marker)
@@ -229,7 +229,7 @@ public class VitruviusChangeBrokenMatchMatcher {
             TGGRule rule = marker2TGGRule.getValue();
             return rule.getNodes().stream()
                     .filter(ruleNode -> bindingTypes.contains(ruleNode.getBindingType()))
-                    .filter(ruleNode -> affectedEObject.eClass().equals(ruleNode.getType()))
+                    .filter(ruleNode -> ruleNode.getType().isSuperTypeOf(affectedEObject.eClass()))
                     // filter rule nodes that match the marker and the AE
                     .filter(tggRuleNode -> affectedEObject.equals(marker.eGet(marker.eClass().getEStructuralFeature(Util.getMarkerStyleName(tggRuleNode)))))
                     // check references (type and marker)
@@ -248,7 +248,7 @@ public class VitruviusChangeBrokenMatchMatcher {
             TGGRuleApplication marker = marker2TGGRule.getKey();
             return marker2TGGRule.getValue().getNodes().stream()
                     .filter(tggRuleNode -> bindingTypes.contains(tggRuleNode.getBindingType()))
-                    .filter(tggRuleNode -> eObject.eClass().equals(tggRuleNode.getType())) // not necessary
+                    .filter(tggRuleNode -> tggRuleNode.getType().isSuperTypeOf(eObject.eClass())) // not necessary
                     .anyMatch(tggRuleNode -> eObject.equals( // can the eObject be found anywhere in the marker?
                             marker.eGet(marker.eClass().getEStructuralFeature(Util.getMarkerStyleName(tggRuleNode)))));
         }, tggRuleApplications2TGGRulesMap);

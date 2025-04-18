@@ -126,14 +126,16 @@ public class UnrepairedBrokenMatchOldChangesRetriever {
 
 
                 //TODO check if the edge is still there before adding it!
-                Object actualValue = affectedElement.eGet(affectedFeature);
-                if (actualValue != null) {
-                    if (affectedFeature.isMany() && ((EList<?>) actualValue).contains(newValue)) {
-                        changes.add(insertEReference);
-                    } else if (actualValue.equals(newValue)) {
-                        changes.add(insertEReference);
+                if (affectedElement != null) {
+                    Object actualValue = affectedElement.eGet(affectedFeature);
+                    if (actualValue != null) {
+                        if (affectedFeature.isMany() && ((EList<?>) actualValue).contains(newValue)) {
+                            changes.add(insertEReference);
+                        } else if (actualValue.equals(newValue)) {
+                            changes.add(insertEReference);
+                        }
                     }
-                }
+                } //TODO else warn
             }
         }
         return changes;

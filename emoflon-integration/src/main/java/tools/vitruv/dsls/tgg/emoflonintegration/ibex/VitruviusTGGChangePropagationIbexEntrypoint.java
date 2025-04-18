@@ -26,7 +26,7 @@ public class VitruviusTGGChangePropagationIbexEntrypoint extends SYNC {
     public VitruviusTGGChangePropagationIbexEntrypoint(VitruviusTGGChangePropagationRegistrationHelper registrationHelper) throws IOException {
         super(registrationHelper.createIbexOptions());
         //override redInterpreter with our own stuff
-        VitruviusTGGIbexRedInterpreter vitruviusTGGIbexRedInterpreter = new VitruviusTGGIbexRedInterpreter(this);
+        VitruviusTGGIbexRedInterpreter vitruviusTGGIbexRedInterpreter = new VitruviusTGGIbexRedInterpreter(this, (VitruviusBackwardConversionTGGEngine) this.getOptions().blackInterpreter());
         this.registerRedInterpeter(vitruviusTGGIbexRedInterpreter);
         //override SeqRepair with our own stuff (needed to switch repairing attributes off and on...)
         this.repairer = new FlexibleSeqRepair(this, this.propagationDirectionHolder);

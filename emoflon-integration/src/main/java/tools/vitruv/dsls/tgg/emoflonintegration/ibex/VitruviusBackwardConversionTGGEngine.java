@@ -74,6 +74,7 @@ import java.util.stream.Collectors;
  */
 public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, TimeMeasurable, IContextPatternInterpreter, IbexObserver {
     protected static final Logger logger = Logger.getLogger(VitruviusBackwardConversionTGGEngine.class);
+    private boolean needs_paranoid_modificiations = false;
 
     private EPackage.Registry registry;
     private IMatchObserver iMatchObserver;
@@ -138,7 +139,8 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
                 propagationDirection.equals(PropagationDirection.FORWARD) ? DomainType.SRC : DomainType.TRG)
                 .convert();
         this.vitruviusChangePatternMatcher = new VitruviusChangePatternMatcher(vitruviusChange, changeSequenceTemplateSet);
-        this.vitruviusChangeBrokenMatchMatcher = new VitruviusChangeBrokenMatchMatcher(vitruviusChange, this.ibexOptions.tgg.tgg().getRules().stream().filter(tggRule -> !tggRule.isAbstract()).collect(Collectors.toSet()));
+        //TODO DAS IST DER VERKACKTE FEHLER
+        this.vitruviusChangeBrokenMatchMatcher = new VitruviusChangeBrokenMatchMatcher(vitruviusChange, this.ibexOptions.tgg.flattenedTGG().getRules().stream().filter(tggRule -> !tggRule.isAbstract()).collect(Collectors.toSet()));
 
         long stop = Timer.stop();
 
@@ -185,7 +187,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     private void initializePreexistingConsistencyMatchesIfNotAlreadyPresent() {
         if (!preexistingConsistencyMatchesInitialized) {
             Map<TGGRuleApplication, TGGRule> tggRuleApplicationTGGRuleMap = Util.getTGGRuleApplicationsWithRules(this.ibexExecutable.getResourceHandler(),
-                    this.ibexOptions.tgg.tgg().getRules().stream().filter(tggRule -> !tggRule.isAbstract()).collect(Collectors.toSet()));
+                    this.ibexOptions.tgg.flattenedTGG().getRules().stream().filter(tggRule -> !tggRule.isAbstract()).collect(Collectors.toSet()));
             Set<IMatch> consistencyMatches = tggRuleApplicationTGGRuleMap.keySet().stream()
                     .map(tggRuleApplication -> new VitruviusConsistencyMatch(tggRuleApplication, tggRuleApplicationTGGRuleMap.get(tggRuleApplication)))
                     .collect(Collectors.toSet());
@@ -233,7 +235,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
 
         // Try to calculate new forward matches:
         List<EChange<EObject>> newChangeSequence = new UnrepairedBrokenMatchOldChangesRetriever(
-                this.observedOperationalStrategy.getResourceHandler(), this.ibexOptions.tgg.tgg().getRules().stream().filter(tggRule -> !tggRule.isAbstract()).collect(Collectors.toSet()),
+                this.observedOperationalStrategy.getResourceHandler(), this.ibexOptions.tgg.flattenedTGG().getRules().stream().filter(tggRule -> !tggRule.isAbstract()).collect(Collectors.toSet()),
                 unrepairedAndUntriedBrokenMatches, propagationDirection)
                 .createNewChangeSequence();
         // Utilize EChanges that have been left over from the main pattern matching, too!
@@ -278,8 +280,26 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     @Override
     public IPatternInterpreterProperties getProperties() {
         return new IPatternInterpreterProperties() {
-            //TODO implement methods if needed (e.g. smartEMF support??) this by default returns false for every method
+
+            /**
+             * This is another ibex bug workaround. We need both paranoid and un-paranoid modifications to each prevent different kinds of bugs:
+             * For deleting changes, we need it set to true, because otherwise some {@link UnsupportedOperationException} is thrown in some models (e.g. UML).
+             * For additive changes, we need it set to false, because otherwise the serialization looks like ... and some references are lost, (e.g. UML-> Generalization::general)
+             */
+            @Override
+            public boolean needs_paranoid_modificiations() { return needs_paranoid_modificiations ; }
         };
+    }
+
+    /**
+     * Set the value that {@link VitruviusBackwardConversionTGGEngine#getProperties()#needs_paranoid_modificiations} returns.
+     *
+     * This is another ibex bug workaround. We need both paranoid and un-paranoid modifications to each prevent different kinds of bugs:
+     * For deleting changes, we need it set to true, because otherwise some {@link UnsupportedOperationException} is thrown in some models (e.g. UML).
+     * For additive changes, we need it set to false, because otherwise the serialization looks like ... and some references are lost, (e.g. UML-> Generalization::general)
+     */
+    public void setNeeds_paranoid_modificiations(boolean needs_paranoid_modificiations) {
+        this.needs_paranoid_modificiations = needs_paranoid_modificiations;
     }
 
     @Override
