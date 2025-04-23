@@ -29,12 +29,36 @@ public class VitruviusTGGResourceHandler extends TGGResourceHandler {
     // remember the former resourceset, as we hand resources over to the ibex' resource set and need to hand it back...
     private final ResourceSet vitruvResourceSet;
 
+    private String corrPath;
+    private String protocolPath;
+
     public VitruviusTGGResourceHandler(Resource source, Resource target) throws IOException {
         super();
         this.sourceToBeLoaded = source;
         this.targetToBeLoaded = target;
         this.vitruvResourceSet = source.getResourceSet();
-        // load protocol from file.
+
+        // load protocol and corr from file.
+    }
+
+
+    /**
+     *
+     * @param source source model resource
+     * @param target target model resource
+     * @param corrPath path to corr.xmi, must be workspace-relative
+     * @param protocolPath path to protocol.xmi, must be workspace-relative
+     * @throws IOException
+     */
+    public VitruviusTGGResourceHandler(Resource source, Resource target, String corrPath, String protocolPath) throws IOException {
+        super();
+        this.sourceToBeLoaded = source;
+        this.targetToBeLoaded = target;
+        this.vitruvResourceSet = source.getResourceSet();
+
+        // load protocol and corr from file.
+        this.corrPath = corrPath;
+        this.protocolPath = protocolPath;
     }
 
     /**
@@ -62,8 +86,8 @@ public class VitruviusTGGResourceHandler extends TGGResourceHandler {
                 target.load(null);
             }
 
-            corr = loadResource(options.project.path() + "/instances/corr.xmi");
-            protocol = loadResource(options.project.path() + "/instances/protocol.xmi");
+            corr = loadResource(corrPath != null ? corrPath : options.project.path() + "/instances/corr.xmi");
+            protocol = loadResource(protocolPath!= null ? protocolPath : options.project.path() + "/instances/protocol.xmi");
         } catch (IOException e) {
             e.printStackTrace();
             Throwable t = e.getCause();

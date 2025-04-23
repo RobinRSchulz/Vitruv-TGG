@@ -404,4 +404,11 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     public void addVitruviusTGGIbexRedInterpreter(VitruviusTGGIbexRedInterpreter vitruviusTGGIbexRedInterpreter) {
         this.vitruviusTGGIbexRedInterpreter = vitruviusTGGIbexRedInterpreter;
     }
+
+    public Set<VitruviusBackwardConversionMatch> getAppliedMatches() {
+        return this.matchesThatHaveBeenApplied.stream()
+                .filter(match -> match instanceof VitruviusBackwardConversionMatch)
+                .map(match -> (VitruviusBackwardConversionMatch) match)
+                .collect(Collectors.toSet());
+    }
 }

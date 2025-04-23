@@ -5,6 +5,7 @@ import org.emoflon.ibex.common.emf.EMFEdge;
 import org.emoflon.ibex.tgg.operational.matches.ITGGMatch;
 import runtime.CorrespondenceNode;
 import tools.vitruv.dsls.tgg.emoflonintegration.ibex.VitruviusTGGIbexRedInterpreter.RevokedCorrespondenceNodeWrapper;
+import tools.vitruv.dsls.tgg.emoflonintegration.patternmatching.VitruviusBackwardConversionMatch;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -21,10 +22,13 @@ public class VitruviusTGGChangePropagationResult {
     private final Set<EObject> revokedModelNodes;
     private final Set<EMFEdge> revokedEMFEdges;
 
+    private final Set<VitruviusBackwardConversionMatch> appliedMatches;
+
     /**
      * Empty Result
      */
     public VitruviusTGGChangePropagationResult() {
+        appliedMatches = new HashSet<>();
         addedCorrespondences = new HashSet<>();
         revokedCorrespondences = new HashSet<>();
         revokedMatches = new HashSet<>();
@@ -33,16 +37,22 @@ public class VitruviusTGGChangePropagationResult {
     }
 
 
-    public VitruviusTGGChangePropagationResult(Set<CorrespondenceNode> newlyAddedCorrespondences,
+    public VitruviusTGGChangePropagationResult(Set<VitruviusBackwardConversionMatch> appliedMatches,
+            Set<CorrespondenceNode> newlyAddedCorrespondences,
                                                Set<RevokedCorrespondenceNodeWrapper> revokedCorrs,
                                                Set<ITGGMatch> revokedRules,
                                                Set<EObject> revokedModelNodes,
                                                Set<EMFEdge> revokedEMFEdges) {
+        this.appliedMatches = appliedMatches;
         this.addedCorrespondences = newlyAddedCorrespondences;
         this.revokedCorrespondences = revokedCorrs;
         this.revokedMatches = revokedRules;
         this.revokedModelNodes = revokedModelNodes;
         this.revokedEMFEdges = revokedEMFEdges;
+    }
+
+    public Set<VitruviusBackwardConversionMatch> getAppliedMatches() {
+        return appliedMatches;
     }
 
     public Set<CorrespondenceNode> getAddedCorrespondences() {

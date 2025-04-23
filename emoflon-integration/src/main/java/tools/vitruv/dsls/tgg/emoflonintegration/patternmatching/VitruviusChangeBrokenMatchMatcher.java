@@ -69,7 +69,7 @@ public class VitruviusChangeBrokenMatchMatcher {
                                     tggRuleApplication.eGet(tggRuleApplication.eClass().getEStructuralFeature(Util.getMarkerStyleName(ruleNode))) == null);
                 })
                 .map(tggRuleApplication -> new VitruviusConsistencyMatch(tggRuleApplication, tggRuleApplicationTGGRuleMap.get(tggRuleApplication))).collect(Collectors.toSet());
-        logger.warn("  Calculated broken matches: \n    - " + brokenMatches.stream().map(IMatch::toString).collect(Collectors.joining("\n    - ")));
+        logger.debug("  Calculated broken matches: \n    - " + brokenMatches.stream().map(IMatch::toString).collect(Collectors.joining("\n    - ")));
         return brokenMatches;
     }
 
@@ -195,6 +195,7 @@ public class VitruviusChangeBrokenMatchMatcher {
         if (eReference.isMany()) {
             EList<EObject> eList = (EList<EObject>) affectedEObject.eGet(eReference);
             if (eList != null && eList.contains(value)) {
+                // contains(value) means that the list still contains the eObject after it has been deleted.
                 throw new IllegalStateException("We do not support lists where elements occur twice. TODO make this a warning?");
             }
         }

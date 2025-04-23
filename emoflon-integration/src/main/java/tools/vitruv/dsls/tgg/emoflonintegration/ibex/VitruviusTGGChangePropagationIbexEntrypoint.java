@@ -74,7 +74,9 @@ public class VitruviusTGGChangePropagationIbexEntrypoint extends SYNC {
 
         if (this.getOptions().blackInterpreter() instanceof VitruviusBackwardConversionTGGEngine vitruviusBackwardConversionTGGEngine) {
             VitruviusTGGIbexRedInterpreter vitruviusTGGIbexRedInterpreter = (VitruviusTGGIbexRedInterpreter) redInterpreter;
+
             return new VitruviusTGGChangePropagationResult(
+                    vitruviusBackwardConversionTGGEngine.getAppliedMatches(),
                     vitruviusBackwardConversionTGGEngine.getNewlyAddedCorrespondences(),
                     vitruviusTGGIbexRedInterpreter.getRevokedCorrs(),
                     vitruviusTGGIbexRedInterpreter.getRevokedRuleMatches(),

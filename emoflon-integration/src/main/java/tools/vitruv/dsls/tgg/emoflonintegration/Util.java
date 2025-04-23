@@ -5,6 +5,7 @@ import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.TreeIterator;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
+import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.util.EObjectContainmentEList;
@@ -131,7 +132,9 @@ public class Util {
 
     public static String eObjectToString(Object object) {
         EObject eObject = (EObject) object;
-        return eObject.eClass().getName() + ":" + Integer.toHexString(eObject.hashCode());
+        EStructuralFeature potentialNameFeature = eObject.eClass().getEStructuralFeature("name");
+        return eObject.eClass().getName() + ":" + Integer.toHexString(eObject.hashCode())
+                + ((potentialNameFeature != null) ? ", name=" + eObject.eGet(potentialNameFeature) : "");
     }
 
     public static String tGGRuleNodeToString(TGGRuleNode tggRuleNode) {

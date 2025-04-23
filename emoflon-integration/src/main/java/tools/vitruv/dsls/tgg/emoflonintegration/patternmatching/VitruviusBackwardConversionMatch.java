@@ -116,4 +116,12 @@ public class VitruviusBackwardConversionMatch extends SimpleTGGMatch implements 
     public String toString() {
         return "[VitruviusBackwardConversionMatch] patternName=" + this.getPatternName() + ", type=" + getType() + ", ruleName=" + getRuleName();
     }
+
+    public String toEvalString() {
+        return "[" + this.getRuleName() + "]: \n"
+                + "  - EChanges: \n    - " + this.getMatchedChangeSequenceTemplate()
+                .getEChanges().stream()
+                .map(Util::eChangeToString)
+                .collect(Collectors.joining("\n    - "));
+    }
 }
