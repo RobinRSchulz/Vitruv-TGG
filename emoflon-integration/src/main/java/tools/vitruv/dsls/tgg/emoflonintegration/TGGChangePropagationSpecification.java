@@ -42,7 +42,7 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
     private final MetamodelDescriptor TRGMetamodelDescriptor;
 
     private final File ibexProjectPath;
-    private final EClass targetRootEclass;
+    private final Set<EClass> targetRootEClasses;
     private final URI targetRootURI;
 
     private final List<VitruviusTGGChangePropagationResult> vitruviusTGGChangePropagationResults;
@@ -58,21 +58,21 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
      * @param SRCMetamodelPlatformUri the platform uri of the metamodel that is labelled SRC in the ibexProject
      * @param TRGMetamodelPlatformUri the platform uri of the metamodel that is labelled TRG in the ibexProject
      * @param ibexProjectPath file system path to the eMoflon TGG project
-     * @param targetRootEclass the root class for the target model to be able to create a corresponding model if none already exists. todo check if this strategy is required.
+     * @param targetRootEClasses the possible root classes for the target model to be able to create a corresponding model if none already exists. todo check if this strategy is required.
      * @param targetRootURI URI under which to persist the model created on calling {@code propagateChanges } if no corresponding model already exist.
      */
     public TGGChangePropagationSpecification(MetamodelDescriptor sourceMetamodelDescriptor, MetamodelDescriptor targetMetamodelDescriptor,
                                              MetamodelDescriptor SRCMetamodelDescriptor, MetamodelDescriptor TRGMetamodelDescriptor,
                                              String SRCMetamodelPlatformUri, String TRGMetamodelPlatformUri,
                                              File ibexProjectPath,
-                                             EClass targetRootEclass, URI targetRootURI) {
+                                             Set<EClass> targetRootEClasses, URI targetRootURI) {
         super(sourceMetamodelDescriptor, targetMetamodelDescriptor);
         this.SRCMetamodelDescriptor = SRCMetamodelDescriptor;
         this.TRGMetamodelDescriptor = TRGMetamodelDescriptor;
         this.SRCMetamodelPlatformUri = SRCMetamodelPlatformUri;
         this.TRGMetamodelPlatformUri = TRGMetamodelPlatformUri;
         this.ibexProjectPath = ibexProjectPath;
-        this.targetRootEclass = targetRootEclass;
+        this.targetRootEClasses = targetRootEClasses;
         this.targetRootURI = targetRootURI;
 
         //for evaluation and testing
@@ -305,15 +305,12 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
     private void persistNewTargetRoot(Resource targetModel,
                                       EditableCorrespondenceModelView<Correspondence> correspondenceModel,
                                       ResourceAccess resourceAccess) {
-
-        Set<EObject> potentialRoots = targetModel.getContents().stream().filter(eChange -> eChange.eClass().equals(this.targetRootEclass)).collect(Collectors.toSet());
-        if (potentialRoots.isEmpty()) {
-            logger.debug("No changes to the target model.");
-        } else if (potentialRoots.size() == 1) {
-            EObject targetRoot = potentialRoots.iterator().next();
-            logger.debug("Found newly created root node " + Util.eObjectToString(targetRoot) + ". Persisting it...");
-            resourceAccess.persistAsRoot(targetRoot, this.targetRootURI);
-        } else throw new IllegalStateException("Multiple target roots! Don't know which to persist as root!");
+        Set<EObject> newRoots = targetModel.getContents().stream()
+                .filter(eChange -> this.targetRootEClasses.contains(eChange.eClass()))
+                .collect(Collectors.toSet());
+        newRoots.forEach(newRoot -> {
+            resourceAccess.persistAsRoot(newRoot, this.targetRootURI);
+        });
     }
 
     private boolean modelHasCorrespondencesToResourceOfTargetMetamodel(Resource sourceModelResource, EPackage targetMetamodelPackage, EditableCorrespondenceModelView<Correspondence> correspondenceModel) {

@@ -174,25 +174,23 @@ public class ChangeSequenceTemplate {
             oldToNewEChangeWrapperMap.put(changeWrapper, newEChangeWrapper);
             newEChangeWrappers.add(newEChangeWrapper);
         }
-        ChangeSequenceTemplate copiedTemplate = new ChangeSequenceTemplate(this.tggRule, this.iBeXContextPatternMap, newEChangeWrappers, oldToNewEChangeWrapperMap);
 
         // now, we can systematically replace the OLD placeholders in the NEW eChangeWrappers with NEW placeholders to achieve a deep copy
         // 1. Create a Map OLDPlaceholder -> NEWPlaceholder
-        Set<EObjectPlaceholder> allPlaceholders = new HashSet<>();
-        for (EChangeWrapper changeWrapper : copiedTemplate.getEChangeWrappers()) {
-            allPlaceholders.addAll(changeWrapper.getAllPlaceholders());
-        }
-        Map<EObjectPlaceholder, EObjectPlaceholder> oldToNewPlaceholders = new HashMap<>();
-        for (EObjectPlaceholder oldPlaceholder : allPlaceholders) {
-            oldToNewPlaceholders.put(oldPlaceholder, new EObjectPlaceholder(oldPlaceholder.getTggRuleNode()));
-        }
+        Map<EObjectPlaceholder, EObjectPlaceholder> oldToNewPlaceholders = newEChangeWrappers.stream()
+                .flatMap(eChangeWrapper -> eChangeWrapper.getAllPlaceholders().stream())
+                .distinct()
+                .collect(Collectors.toMap(
+                        eObjectPlaceholder -> eObjectPlaceholder,
+                        eObjectPlaceholder -> new EObjectPlaceholder(eObjectPlaceholder.getTggRuleNode())
+                ));
 
         // 2. Replace the OLD placeholders in the NEW eChangeWrappers with the NEW placeholders.
-        for (EChangeWrapper eChangeWrapper : copiedTemplate.getEChangeWrappers()) {
+        for (EChangeWrapper eChangeWrapper : newEChangeWrappers) {
             eChangeWrapper.replaceAllPlaceholders(oldToNewPlaceholders);
         }
 
-        return copiedTemplate;
+        return new ChangeSequenceTemplate(this.tggRule, this.iBeXContextPatternMap, newEChangeWrappers, oldToNewEChangeWrapperMap);
     }
 
     /**

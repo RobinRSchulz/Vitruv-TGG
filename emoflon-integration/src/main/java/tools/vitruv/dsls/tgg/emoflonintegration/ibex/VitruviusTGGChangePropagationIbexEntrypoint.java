@@ -1,5 +1,6 @@
 package tools.vitruv.dsls.tgg.emoflonintegration.ibex;
 
+import language.TGGRule;
 import org.apache.log4j.Logger;
 import org.emoflon.ibex.tgg.operational.IBlackInterpreter;
 import org.emoflon.ibex.tgg.operational.benchmark.FullBenchmarkLogger;
@@ -7,6 +8,8 @@ import org.emoflon.ibex.tgg.operational.strategies.PropagationDirectionHolder;
 import org.emoflon.ibex.tgg.operational.strategies.sync.SYNC;
 
 import java.io.IOException;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * This is the entrypoint for the propagation of Vitruvius Changes with TGG rules.
@@ -76,6 +79,8 @@ public class VitruviusTGGChangePropagationIbexEntrypoint extends SYNC {
             VitruviusTGGIbexRedInterpreter vitruviusTGGIbexRedInterpreter = (VitruviusTGGIbexRedInterpreter) redInterpreter;
 
             return new VitruviusTGGChangePropagationResult(
+                    this.getIntactRules(),
+                    this.getCorruptRules(),
                     vitruviusBackwardConversionTGGEngine.getAppliedMatches(),
                     vitruviusBackwardConversionTGGEngine.getNewlyAddedCorrespondences(),
                     vitruviusTGGIbexRedInterpreter.getRevokedCorrs(),
@@ -83,5 +88,23 @@ public class VitruviusTGGChangePropagationIbexEntrypoint extends SYNC {
                     vitruviusTGGIbexRedInterpreter.getRevokedModelNodes(),
                     vitruviusTGGIbexRedInterpreter.getRevokedEMFEdges());
         } else return  new VitruviusTGGChangePropagationResult();
+    }
+
+    private Set<TGGRule> getCorruptRules() {
+        return this.getOptions().tgg.flattenedTGG().getRules().stream()
+                .filter(tggRule -> !tggRule.isAbstract())
+                .filter(rule ->
+                        rule.getNodes().stream().anyMatch(ruleNode -> ruleNode.getType().eIsProxy())
+                                || rule.getEdges().stream().anyMatch(ruleEdge -> ruleEdge.getType().eIsProxy())
+                ).collect(Collectors.toSet());
+    }
+
+    private Set<TGGRule> getIntactRules() {
+        return this.getOptions().tgg.flattenedTGG().getRules().stream()
+                .filter(tggRule -> !tggRule.isAbstract())
+                .filter(rule ->
+                        rule.getNodes().stream().noneMatch(ruleNode -> ruleNode.getType().eIsProxy())
+                                && rule.getEdges().stream().noneMatch(ruleEdge -> ruleEdge.getType().eIsProxy())
+                ).collect(Collectors.toSet());
     }
 }

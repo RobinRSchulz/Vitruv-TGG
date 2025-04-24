@@ -22,7 +22,7 @@ public class ChangeSequenceTemplateSet {
     /**
      * maps an Echange Type to all EChange-Wrappers this pattern contains
      */
-    private Map<EClass, Set<ChangeSequenceTemplate>> ibexPatternTemplatesByEChangeType;
+    private Map<EClass, Set<ChangeSequenceTemplate>> changeSequenceTemplatesByEChangeType;
 
     public ChangeSequenceTemplateSet(Collection<ChangeSequenceTemplate> patternTemplateParents) {
         this.patternTemplateParents = patternTemplateParents;
@@ -32,10 +32,10 @@ public class ChangeSequenceTemplateSet {
 
     private void initialize() {
         // make the mapping EChangeType -> relevant patterns easily accessible
-        ibexPatternTemplatesByEChangeType = new HashMap<>();
+        changeSequenceTemplatesByEChangeType = new HashMap<>();
         for (ChangeSequenceTemplate ibexPatternTemplate : patternTemplateParents) {
             for (EChangeWrapper eChangeWrapper : ibexPatternTemplate.getEChangeWrappers()) {
-                ibexPatternTemplatesByEChangeType.computeIfAbsent(eChangeWrapper.getEChangeType(), k -> new HashSet<>()).add(ibexPatternTemplate);
+                changeSequenceTemplatesByEChangeType.computeIfAbsent(eChangeWrapper.getEChangeType(), k -> new HashSet<>()).add(ibexPatternTemplate);
             }
         }
     }
@@ -51,17 +51,17 @@ public class ChangeSequenceTemplateSet {
      */
     public Set<ChangeSequenceTemplate> getAndInitRelevantIbexPatternTemplatesByEChange(EChange<EObject> eChange) {
         Set<ChangeSequenceTemplate> partlyInitializedTemplates = new HashSet<>();
-        if (!ibexPatternTemplatesByEChangeType.containsKey(eChange.eClass())) {
+        if (!changeSequenceTemplatesByEChangeType.containsKey(eChange.eClass())) {
             logger.warn("No rule defined to cover the following change's type: " + Util.eChangeToString(eChange));
             return Collections.emptySet();
         }
-        for (ChangeSequenceTemplate ibexPatternTemplate : ibexPatternTemplatesByEChangeType.get(eChange.eClass())) {
-            ibexPatternTemplate.getEChangeWrappers().stream()
+        for (ChangeSequenceTemplate changeSequenceTemplate : changeSequenceTemplatesByEChangeType.get(eChange.eClass())) {
+            changeSequenceTemplate.getEChangeWrappers().stream()
                     .filter(eChangeWrapper -> eChangeWrapper.matches(eChange))
                     .forEach(eChangeWrapper -> {
                         // we got a pattern with >= 1 eChangewrappers matching the eChange. We now want to create one invoked IbexPatternTemplate with the respective eChangeWrapper already initialized.
                         // thus, we initialize the one eChangeWrapper here
-                        ChangeSequenceTemplate changeSequenceTemplateCopy = ibexPatternTemplate.deepCopy();
+                        ChangeSequenceTemplate changeSequenceTemplateCopy = changeSequenceTemplate.deepCopy();
                         changeSequenceTemplateCopy.getThisInstancesEChangeWrapperFromParent(eChangeWrapper).initialize(eChange);
                         partlyInitializedTemplates.add(changeSequenceTemplateCopy);
                     });

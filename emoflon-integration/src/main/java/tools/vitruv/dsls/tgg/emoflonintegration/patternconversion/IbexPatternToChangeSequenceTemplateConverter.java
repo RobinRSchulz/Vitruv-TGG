@@ -268,21 +268,6 @@ public class IbexPatternToChangeSequenceTemplateConverter {
                 logger.warn("CORRUPT RULE: " + rule.getName() + "has nodes and/ or edges whose type is an unresolved proxy!");
                 proxyNodes.forEach(proxyNode -> logger.warn("  - " + proxyNode.getName() + ", " + proxyNode.getType()));
                 proxyEdges.forEach(proxyEdge -> logger.warn("  - " + proxyEdge.getName() + ", " + proxyEdge.getType()));
-                logger.info("  ");
-            }
-            for (TGGRuleNode proxyNode : proxyNodes) {
-                URI proxyURI = ((InternalEObject) proxyNode.getType()).eProxyURI();
-                String fragment = proxyURI.fragment();
-                EPackage.Registry.INSTANCE.entrySet().stream()
-                        .filter(entry -> ((EPackage) entry.getValue()).eResource().getEObject(fragment) != null)
-                        .forEach(entry -> logger.warn("  - FOUND the package!!! " + entry.getKey() + " todo weiteres Vorgehen"));
-            }
-            for (TGGRuleEdge proxyEdge : proxyEdges) {
-                URI proxyURI = ((InternalEObject) proxyEdge.getType()).eProxyURI();
-                String fragment = proxyURI.fragment();
-                EPackage.Registry.INSTANCE.entrySet().stream()
-                        .filter(entry -> ((EPackage) entry.getValue()).eResource().getEObject(fragment) != null)
-                        .forEach(entry -> logger.warn("  - FOUND the package!!! " + entry.getKey() + " todo weiteres Vorgehen"));
             }
         }
     }

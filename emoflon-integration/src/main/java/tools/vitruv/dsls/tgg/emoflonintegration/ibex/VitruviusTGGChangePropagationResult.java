@@ -1,5 +1,6 @@
 package tools.vitruv.dsls.tgg.emoflonintegration.ibex;
 
+import language.TGGRule;
 import org.eclipse.emf.ecore.EObject;
 import org.emoflon.ibex.common.emf.EMFEdge;
 import org.emoflon.ibex.tgg.operational.matches.ITGGMatch;
@@ -23,11 +24,15 @@ public class VitruviusTGGChangePropagationResult {
     private final Set<EMFEdge> revokedEMFEdges;
 
     private final Set<VitruviusBackwardConversionMatch> appliedMatches;
+    private final Set<TGGRule> intactRules;
+    private final Set<TGGRule> corruptRules;
 
     /**
      * Empty Result
      */
     public VitruviusTGGChangePropagationResult() {
+        intactRules = new HashSet<>();
+        corruptRules = new HashSet<>();
         appliedMatches = new HashSet<>();
         addedCorrespondences = new HashSet<>();
         revokedCorrespondences = new HashSet<>();
@@ -37,18 +42,32 @@ public class VitruviusTGGChangePropagationResult {
     }
 
 
-    public VitruviusTGGChangePropagationResult(Set<VitruviusBackwardConversionMatch> appliedMatches,
+    public VitruviusTGGChangePropagationResult(
+            Set<TGGRule> intactRules,
+            Set<TGGRule> corruptRules,
+            Set<VitruviusBackwardConversionMatch> appliedMatches,
             Set<CorrespondenceNode> newlyAddedCorrespondences,
                                                Set<RevokedCorrespondenceNodeWrapper> revokedCorrs,
                                                Set<ITGGMatch> revokedRules,
                                                Set<EObject> revokedModelNodes,
                                                Set<EMFEdge> revokedEMFEdges) {
+
+        this.intactRules = intactRules;
+        this.corruptRules = corruptRules;
         this.appliedMatches = appliedMatches;
         this.addedCorrespondences = newlyAddedCorrespondences;
         this.revokedCorrespondences = revokedCorrs;
         this.revokedMatches = revokedRules;
         this.revokedModelNodes = revokedModelNodes;
         this.revokedEMFEdges = revokedEMFEdges;
+    }
+
+    public Set<TGGRule> getIntactRules() {
+        return intactRules;
+    }
+
+    public Set<TGGRule> getCorruptRules() {
+        return corruptRules;
     }
 
     public Set<VitruviusBackwardConversionMatch> getAppliedMatches() {
