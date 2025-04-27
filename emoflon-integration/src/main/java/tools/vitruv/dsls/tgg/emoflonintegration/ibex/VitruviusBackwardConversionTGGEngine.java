@@ -139,7 +139,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
                 propagationDirection.equals(PropagationDirection.FORWARD) ? DomainType.SRC : DomainType.TRG)
                 .convert();
         this.vitruviusChangePatternMatcher = new VitruviusChangePatternMatcher(vitruviusChange, changeSequenceTemplateSet);
-        //TODO DAS IST DER VERKACKTE FEHLER
+
         this.vitruviusChangeBrokenMatchMatcher = new VitruviusChangeBrokenMatchMatcher(vitruviusChange, this.ibexOptions.tgg.flattenedTGG().getRules().stream().filter(tggRule -> !tggRule.isAbstract()).collect(Collectors.toSet()));
 
         long stop = Timer.stop();

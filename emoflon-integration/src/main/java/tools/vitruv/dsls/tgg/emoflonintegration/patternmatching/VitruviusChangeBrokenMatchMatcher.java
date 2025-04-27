@@ -105,26 +105,10 @@ public class VitruviusChangeBrokenMatchMatcher {
 
              }
          });
-         if (!matches.isEmpty()) {
-             logger.warn("\n\n\nFOUND MATCHES BROOOOOOKEEEEN BY ATTRIBUTE CHANGES!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-             logger.warn(matches);
-         }
          return matches;
     }
 
     /**
-     * We currently do not cover all cases.
-     * If we report broken matches that "free" (in terms of eMoflon "unmark") EObjects from being covered by a pattern application,
-     * and that is not handled by the application of short-cut rules in the SYNC algorithm, we cannot cover this (yet).
-     * It would be solveable like this:
-     * <ol>
-     *    <li>detect the subgraph of EObjects + interrelations that are unmarked</li>
-     *    <li>generate EChanges for that subgraph</li>
-     *    <li>generate new forward matches with {@link VitruviusChangePatternMatcher#getAdditiveMatches(PropagationDirectionHolder.PropagationDirection)} ()}</li>
-     *    <li>reiterate...</li>
-     * </ol>
-     *
-     * TODO we currently ignore
      *
      * @param resourceHandler provides access to the protocol resource.
      */

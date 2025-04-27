@@ -40,8 +40,6 @@ public class VitruviusChangePatternMatcher {
     }
 
     /**
-     * todo evtl an Khelladi orientieren, bzw. überlegen ob mein sofort-matching wirklich besser ist
-     *
      * @return patterns that match against this class's VitruviusChange. Context is NOT checked yet, here!
      */
     public Set<VitruviusBackwardConversionMatch> getAdditiveMatches(PropagationDirectionHolder.PropagationDirection propagationDirection) {

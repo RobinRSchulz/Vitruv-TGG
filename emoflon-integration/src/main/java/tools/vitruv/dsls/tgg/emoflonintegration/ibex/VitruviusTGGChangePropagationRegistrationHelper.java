@@ -120,17 +120,13 @@ public class VitruviusTGGChangePropagationRegistrationHelper implements IRegistr
         try {
             //class loader should have access to this CL's classes as well as the ibex project
             Class userDefinedConstraintFactoryClass = new SimpleNameSupportingURLClassLoader(
-                    new URL[]{
-                            new File(ibexProjectPath, "/bin").toURI().toURL(),
-//                            new File(ibexProjectPath, "bin/org/emoflon/ibex/tgg/operational/csp/constraints/factories" + ibexOptions.project.name().toLowerCase()).toURI().toURL()
-                    },
+                    new URL[]{new File(ibexProjectPath, "/bin").toURI().toURL()},
                     this.getClass().getClassLoader())
                     .loadClass("org.emoflon.ibex.tgg.operational.csp.constraints.factories." + ibexOptions.project.name().toLowerCase() + ".UserDefinedRuntimeTGGAttrConstraintFactory");
 
             ibexOptions.csp.userDefinedConstraints((RuntimeTGGAttrConstraintFactory) userDefinedConstraintFactoryClass.getConstructor().newInstance());
         } catch (MalformedURLException | InvocationTargetException | InstantiationException | IllegalAccessException | NoSuchMethodException e) {
-            logger.warn("Couldnt load UserDefinedRuntimeTGGAttrConstraintFactory");
-//            throw new RuntimeException(e);
+            logger.warn("Couldn't load UserDefinedRuntimeTGGAttrConstraintFactory");
         }
     }
 }
