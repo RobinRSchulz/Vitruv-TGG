@@ -36,6 +36,7 @@ public class VitruviusTGGChangePropagationRegistrationHelper implements IRegistr
     private IBlackInterpreter patternMatcher;
 
     private PropagationDirectionHolder.PropagationDirection propagationDirection;
+    private boolean useShortcutRules = false;
 
     @Override
     public void registerMetamodels(ResourceSet resourceSet, IbexExecutable ibexExecutable) throws IOException {
@@ -69,7 +70,7 @@ public class VitruviusTGGChangePropagationRegistrationHelper implements IRegistr
                 .project.path(ibexProjectPath.getName())
                 .debug.ibexDebug(true)
                 .repair.repairAttributes(true)
-                .repair.useShortcutRules(false) // TODO schon zwei TODOs im Shortcutrule-Code entdeckt, weeeiß ja net ob des so gut geht --> Im Zweifel Future work, bzw Evaluation...
+                .repair.useShortcutRules(useShortcutRules) // TODO schon zwei TODOs im Shortcutrule-Code entdeckt, weeeiß ja net ob des so gut geht --> Im Zweifel Future work, bzw Evaluation...
                 .registrationHelper(this);
         tryToFindAndAddUserDefinedAttributeConstraints(ibexOptions);
         return ibexOptions;
@@ -115,13 +116,20 @@ public class VitruviusTGGChangePropagationRegistrationHelper implements IRegistr
         this.propagationDirection = propagationDirection;
         return this;
     }
+    public VitruviusTGGChangePropagationRegistrationHelper withUseShortcutRules(boolean useShortcutRules) {
+        this.useShortcutRules = useShortcutRules;
+        return this;
+    }
 
     private void tryToFindAndAddUserDefinedAttributeConstraints(IbexOptions ibexOptions) {
         try {
             //class loader should have access to this CL's classes as well as the ibex project
-            Class userDefinedConstraintFactoryClass = new SimpleNameSupportingURLClassLoader(
-                    new URL[]{new File(ibexProjectPath, "/bin").toURI().toURL()},
-                    this.getClass().getClassLoader())
+            Class userDefinedConstraintFactoryClass =
+                    SimpleNameSupportingURLClassLoader
+                            .getInstance(new URL[]{new File(ibexProjectPath, "/bin").toURI().toURL()})
+//                    new SimpleNameSupportingURLClassLoader(
+//                    new URL[]{new File(ibexProjectPath, "/bin").toURI().toURL()},
+//                    this.getClass().getClassLoader())
                     .loadClass("org.emoflon.ibex.tgg.operational.csp.constraints.factories." + ibexOptions.project.name().toLowerCase() + ".UserDefinedRuntimeTGGAttrConstraintFactory");
 
             ibexOptions.csp.userDefinedConstraints((RuntimeTGGAttrConstraintFactory) userDefinedConstraintFactoryClass.getConstructor().newInstance());

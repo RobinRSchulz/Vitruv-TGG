@@ -36,6 +36,10 @@ public class PatternCoverageFlattener {
      */
     private final Set<VitruviusBackwardConversionMatch> patternApplications;
     private final List<EChange<EObject>> changeSequence;
+    private final Map<EChange, Integer> changeSequenceIndexMap;
+
+    private static final Map<EChange, Set<VitruviusBackwardConversionMatch>> staticEChangeToPatternApplicationMap = new HashMap<>();
+    private static final Set<VitruviusBackwardConversionMatch> staticPatternApplicationsSet = new HashSet<>();
 
 //    stream().map(VitruviusBackwardConversionMatch::getMatchedChangeSequenceTemplate).collect(Collectors.toSet()
 
@@ -43,13 +47,59 @@ public class PatternCoverageFlattener {
     public PatternCoverageFlattener(Set<VitruviusBackwardConversionMatch> patternApplications, VitruviusChange<EObject> vitruviusChange) {
         this.patternApplications = new HashSet<>(patternApplications);
         this.changeSequence = vitruviusChange.getEChanges();
+
+        // performance optimizations
+        this.changeSequenceIndexMap = new HashMap<>(changeSequence.size());
+        initializeIndexesForChangeSequence();
+        initializeStaticEChangeToPatternApplicationMap(patternApplications);
+
         this.sortedPatternApplications = patternApplications.stream()
                 .sorted(Comparator.comparingInt(a -> a.getMatchedChangeSequenceTemplate().getEChangeWrappers().size()))
                 .collect(Collectors.toCollection(LinkedList::new));
     }
 
+    private void initializeStaticEChangeToPatternApplicationMap(Set<VitruviusBackwardConversionMatch> patternApplications) {
+        staticPatternApplicationsSet.addAll(patternApplications);
+        // todo idee: statische Map machen und immer nur hier bereinigen
+        for (EChange<EObject> eChange : changeSequence) {
+            Set<VitruviusBackwardConversionMatch> staticPatternApplications = staticEChangeToPatternApplicationMap
+                    .computeIfAbsent(eChange, eChange1 -> new HashSet<>());
+
+            for (VitruviusBackwardConversionMatch vitruviusBackwardConversionMatch : patternApplications) {
+                if (!staticPatternApplicationsSet.contains(vitruviusBackwardConversionMatch)) {
+                    if (vitruviusBackwardConversionMatch.getMatchedChangeSequenceTemplate().getEChanges().contains(eChange)) {
+                        staticPatternApplications.add(vitruviusBackwardConversionMatch);
+                    }
+                }
+            }
+
+
+//            this.staticEChangeToPatternApplicationMap.put(
+//                    eChange,
+//                    patternApplications.stream()
+//                            .filter(patternApplication -> patternApplication.getMatchedChangeSequenceTemplate()
+//                                    .getEChanges().contains(eChange))
+//                            .collect(Collectors.toSet()));
+        }
+    }
+
+    private void initializeIndexesForChangeSequence() {
+        int i = 0;
+        for (EChange eChange : this.changeSequence) {
+            this.changeSequenceIndexMap.put(eChange, i);
+        }
+    }
+
     public Set<VitruviusBackwardConversionMatch> getFlattenedPatternApplications() {
+        if (isFlat()) {
+            // early return
+            return patternApplications;
+        }
         applyContainmentLevelHeuristic();
+        if (isFlat()) {
+            // early return
+            return patternApplications;
+        }
         applyMaxCoverageAndDistanceHeuristic();
         assertFlatness();
         return patternApplications;
@@ -106,7 +156,7 @@ public class PatternCoverageFlattener {
      * @return Khelladi's distance/ density heuristic: is between 0 and 1. the higher the denser the changes are grouped together
      */
     private double densityHeuristic(VitruviusBackwardConversionMatch changeSequenceTemplate) {
-        List<Integer> indexes = changeSequenceTemplate.getMatchedChangeSequenceTemplate().getEChanges().stream().map(changeSequence::indexOf).toList();
+        List<Integer> indexes = changeSequenceTemplate.getMatchedChangeSequenceTemplate().getEChanges().stream().map(changeSequenceIndexMap::get).toList();
         int firstIndex = indexes.stream().mapToInt(i -> i).min().orElseThrow(() -> new IllegalStateException("Empty ChangeSequenceTemplate"));
         int lastIndex = indexes.stream().mapToInt(i -> i).max().orElseThrow(() -> new IllegalStateException("Empty ChangeSequenceTemplate"));
         int size = changeSequenceTemplate.getMatchedChangeSequenceTemplate().getEChangeWrappers().size();
@@ -115,7 +165,15 @@ public class PatternCoverageFlattener {
     }
 
     private Set<VitruviusBackwardConversionMatch> getRelevantPatternApplications(EChange<EObject> eChange) {
-        return patternApplications.stream().filter(patternApplication -> patternApplication.getMatchedChangeSequenceTemplate().getEChanges().contains(eChange)).collect(Collectors.toSet());
+        // for performance reasons, the map is pre-calculated. Since patternApplications contains the current coverage, these are significant.
+        return this.staticEChangeToPatternApplicationMap.get(eChange).stream()
+                .filter(patternApplications::contains)
+                .collect(Collectors.toSet());
+//
+//        return patternApplications.stream()
+//                .filter(patternApplication -> patternApplication.getMatchedChangeSequenceTemplate()
+//                        .getEChanges().contains(eChange))
+//                .collect(Collectors.toSet());
     }
 
     private int getMaxCoverage(Set<VitruviusBackwardConversionMatch> relevantPatternApplications) {
@@ -126,13 +184,16 @@ public class PatternCoverageFlattener {
                 .orElseThrow(() -> new IllegalStateException("Empty ChangeSequenceTemplate"));
     }
 
+
+    private boolean isFlat() {
+        return changeSequence.stream()
+                .noneMatch(eChange -> getRelevantPatternApplications(eChange).size() > 1);
+    }
     /**
      * If conflicts exist after flattening, the algorithm is faulty.
      *
      */
     private void assertFlatness() {
-        changeSequence.forEach(eChange -> {
-            assert getRelevantPatternApplications(eChange).size() <= 1;
-        });
+        assert isFlat();
     }
 }

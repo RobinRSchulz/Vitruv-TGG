@@ -52,7 +52,7 @@ public class ChangeSequenceTemplateSet {
     public Set<ChangeSequenceTemplate> getAndInitRelevantIbexPatternTemplatesByEChange(EChange<EObject> eChange) {
         Set<ChangeSequenceTemplate> partlyInitializedTemplates = new HashSet<>();
         if (!changeSequenceTemplatesByEChangeType.containsKey(eChange.eClass())) {
-            logger.warn("No rule defined to cover the following change's type: " + Util.eChangeToString(eChange));
+            logger.debug("No rule defined to cover the following change's type: " + Util.eChangeToString(eChange));
             return Collections.emptySet();
         }
         for (ChangeSequenceTemplate changeSequenceTemplate : changeSequenceTemplatesByEChangeType.get(eChange.eClass())) {

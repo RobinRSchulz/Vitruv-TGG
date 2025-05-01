@@ -43,8 +43,6 @@ public class VitruviusChangePatternMatcher {
      * @return patterns that match against this class's VitruviusChange. Context is NOT checked yet, here!
      */
     public Set<VitruviusBackwardConversionMatch> getAdditiveMatches(PropagationDirectionHolder.PropagationDirection propagationDirection) {
-        logger.debug("\n[VitruviusChangePatternMatcher] matching the following eChanges against " + changeSequenceTemplateSet.getPatternTemplateParents().size() + " pattern templates:");
-        vitruviusChange.getEChanges().forEach(eChange -> logger.debug("  - " + Util.eChangeToString(eChange)));
         // 1. compute all possible matches
         // TODO optimization: not compute all matches but mark EChanges (at the possible cost of missing sth?)
         Set<ChangeSequenceTemplate> allInvokedPatternTemplates = new HashSet<>();
@@ -57,20 +55,14 @@ public class VitruviusChangePatternMatcher {
             rememberWrappersInvokedWithEChange(eChange, patternTemplates);
             allInvokedPatternTemplates.addAll(patternTemplates);
 
-            logger.trace("[VitruviusChangePatternMatcher] Matching the following eChange against " + patternTemplates.size() + " suitable pattern templates: \n" + Util.eChangeToString(eChange));
-            logger.trace("[VitruviusChangePatternMatcher] The suitable pattern templates: ");
             patternTemplates.forEach(patternTemplate -> logger.trace("\n- " + patternTemplate));
-            logger.trace("[VitruviusChangePatternMatcher] Trying to match the uninitialized wrappers, too...");
 
             for (ChangeSequenceTemplate patternTemplate : patternTemplates) {
                 for (EChangeWrapper eChangeWrapper : patternTemplate.getUninitializedEChangeWrappers()) {
-                    logger.trace("[VitruviusChangePatternMatcher] Trying to match " + eChangeWrapper);
                     boolean eChangeWrapperInitialized = false;
                     // find a match for the echangewrapper in the VitruviusChange.
                     for (EChange<EObject> eChangeCandidate : eChangesByEChangeType.getOrDefault(eChangeWrapper.getEChangeType(), Collections.emptySet())) {
-                        logger.trace("[VitruviusChangePatternMatcher] Trying to match it against " + Util.eChangeToString(eChangeCandidate));
                         if (eChangeWrapper.matches(eChangeCandidate)) {
-                            logger.trace("[VitruviusChangePatternMatcher] SUCCESS!");
                             eChangeWrapper.initialize(eChangeCandidate);
                             eChangeWrapperInitialized = true;
                             // to avoid duplicates, remember which pattern types are already invoked for the current eChange.
@@ -90,7 +82,7 @@ public class VitruviusChangePatternMatcher {
         logger.debug("[VitruviusChangePatternMatcher] Computed the following matches \n");
         allInvokedPatternTemplates.forEach(logger::debug);
         rememberUnmatchedEChanges(allInvokedPatternTemplates);
-        visualizeCoverage(allInvokedPatternTemplates);
+//        visualizeCoverage(allInvokedPatternTemplates);
 
         return allInvokedPatternTemplates.stream()
                 .map(patternTemplate -> new VitruviusBackwardConversionMatch(patternTemplate, propagationDirection.getPatternType()))
@@ -112,20 +104,6 @@ public class VitruviusChangePatternMatcher {
      */
     public List<EChange<EObject>> getUnmatchedEChanges() {
         return this.unmatchedEChanges;
-    }
-
-
-    private void visualizeCoverage(Set<ChangeSequenceTemplate> coverage) {
-        logger.debug(
-                "[VitruviusChangePatternMatcher] Pattern Coverage of the given Vitruvius change:\n" +
-                "| # Patterns covering | EChange                                    |\n" +
-                "|---------------------|--------------------------------------------|\n" +
-                vitruviusChange.getEChanges().stream().map(eChange ->
-                                "| " + coverage.stream().filter(ibexPatternTemplate ->
-                                        ibexPatternTemplate.getEChangeWrappers().stream().anyMatch(eChangeWrapper -> eChangeWrapper.getEChange().equals(eChange))).count()
-                                        + "                  | " + Util.eChangeToString(eChange) + "       |")
-                        .collect(Collectors.joining("\n"))
-        );
     }
 
     private void initialize() {

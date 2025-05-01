@@ -11,7 +11,22 @@ import java.util.Map;
 public class SimpleNameSupportingURLClassLoader extends URLClassLoader {
     private final Map<String, Class<?>> packagelessClassNameToClass = new HashMap<>();
 
-    public SimpleNameSupportingURLClassLoader(URL[] urls, ClassLoader parent) {
+    private static SimpleNameSupportingURLClassLoader instance;
+
+    /**
+     *
+     * @param urls
+     * @return this singleton instance, instanciated with the first urls. todo change to
+     */
+    public static SimpleNameSupportingURLClassLoader getInstance(URL[] urls) {
+        if (instance == null) {
+            instance = new SimpleNameSupportingURLClassLoader(urls,
+                    SimpleNameSupportingURLClassLoader.class.getClassLoader());
+        }
+        return instance;
+    }
+
+    private SimpleNameSupportingURLClassLoader(URL[] urls, ClassLoader parent) {
         super(urls, parent);
     }
 
@@ -48,5 +63,10 @@ public class SimpleNameSupportingURLClassLoader extends URLClassLoader {
             return loadedClass;
         }
 
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + "parent: " + getParent();
     }
 }

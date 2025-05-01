@@ -64,7 +64,7 @@ public class VitruviusHiPETGGEngine extends HiPETGGEngine {
         String path = getProjectBinDirectory() + generateHiPEClassName().replace(".", "/").replace("HiPEEngine", "ibex-patterns.xmi");
 
         File file = new File(path);
-        logger.info("ibex-patterns.xmi path: " + file);
+//        logger.info("ibex-patterns.xmi path: " + file);
         try {
             cp = file.getCanonicalPath();
             cp = cp.replace("%20", " ");
@@ -82,7 +82,7 @@ public class VitruviusHiPETGGEngine extends HiPETGGEngine {
         IBeXModel ibexModel = (IBeXModel)r.getContents().getFirst();
         //
         IBeXPatternSet ibexPatterns = ibexModel.getPatternSet();
-        logger.info("ibexPatterns: " + ibexPatterns.getContextPatterns());
+//        logger.info("ibexPatterns: " + ibexPatterns.getContextPatterns());
         setPrivateSuperclassField("ibexPatterns", ibexPatterns);
 
         for(IBeXContext context : ibexPatterns.getContextPatterns()) {
@@ -167,10 +167,13 @@ public class VitruviusHiPETGGEngine extends HiPETGGEngine {
     private Class loadIbexProjectSpecificClass(final File directory, String className) throws ClassNotFoundException {
         try {
             //class loader should have access to this CL's classes as well as the ibex project
-            return new SimpleNameSupportingURLClassLoader(
-                    new URL[]{directory.toURI().toURL()},
-                    this.getClass().getClassLoader())
-                .loadClass(className);
+
+//            return new SimpleNameSupportingURLClassLoader(
+//                    new URL[]{directory.toURI().toURL()},
+//                    this.getClass().getClassLoader())
+            return SimpleNameSupportingURLClassLoader
+                    .getInstance(new URL[]{directory.toURI().toURL()})
+                    .loadClass(className);
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }

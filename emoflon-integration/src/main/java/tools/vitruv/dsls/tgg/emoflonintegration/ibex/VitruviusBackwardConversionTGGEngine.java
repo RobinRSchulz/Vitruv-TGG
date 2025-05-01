@@ -22,8 +22,8 @@ import org.emoflon.ibex.tgg.compiler.patterns.PatternSuffixes;
 import org.emoflon.ibex.tgg.compiler.patterns.PatternUtil;
 import org.emoflon.ibex.tgg.operational.IBlackInterpreter;
 import org.emoflon.ibex.tgg.operational.benchmark.TimeMeasurable;
-import org.emoflon.ibex.tgg.operational.benchmark.Timer;
 import org.emoflon.ibex.tgg.operational.benchmark.Times;
+import tools.vitruv.dsls.tgg.emoflonintegration.Timer;
 import org.emoflon.ibex.tgg.operational.defaults.IbexOptions;
 import org.emoflon.ibex.tgg.operational.matches.ITGGMatch;
 import org.emoflon.ibex.tgg.operational.monitoring.IbexObserver;
@@ -44,6 +44,7 @@ import tools.vitruv.dsls.tgg.emoflonintegration.patternmatching.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -92,7 +93,10 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     private VitruviusChangeBrokenMatchMatcher vitruviusChangeBrokenMatchMatcher;
     private ChangeSequenceTemplateSet changeSequenceTemplateSet;
     private final VitruviusChange<EObject> vitruviusChange;
-    private final Times times;
+    private final Map<String, Timer> timeMeasurements;
+    private Timer contextMatchingTotalTimer;
+    private Timer coverageFlatteningTotalTimer;
+
     private final PropagationDirection propagationDirection;
 
     private boolean preexistingConsistencyMatchesInitialized = false;
@@ -106,11 +110,15 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
      */
     public VitruviusBackwardConversionTGGEngine(VitruviusChange<EObject> vitruviusChange, PropagationDirection propagationDirection) {
         this.vitruviusChange = new VitruviusChangeTransformer(vitruviusChange).transform();
-        this.times = new Times();
+        this.timeMeasurements = new HashMap<>();
         this.baseURI = URI.createPlatformResourceURI("/", true);
         this.matchesThatHaveBeenApplied = new HashSet<>();
         this.matchesThatHaveBeenTriedToRepair = new HashSet<>();
         this.propagationDirection = propagationDirection;
+
+        // sum up certain sub-aspects' times
+        this.contextMatchingTotalTimer = new Timer();
+        this.coverageFlatteningTotalTimer = new Timer();
     }
 
     @Override
@@ -130,8 +138,9 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
 
     @Override
     public void initPatterns(IBeXPatternSet iBeXPatternSet) {
-        Timer.setEnabled(true);
-        Timer.start();
+        Timer timer = new Timer();
+        timeMeasurements.put("pattern conversion", timer);
+        timer.start();
 
         this.changeSequenceTemplateSet = new IbexPatternToChangeSequenceTemplateConverter(
                 this.ibexModel,
@@ -142,9 +151,9 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
 
         this.vitruviusChangeBrokenMatchMatcher = new VitruviusChangeBrokenMatchMatcher(vitruviusChange, this.ibexOptions.tgg.flattenedTGG().getRules().stream().filter(tggRule -> !tggRule.isAbstract()).collect(Collectors.toSet()));
 
-        long stop = Timer.stop();
+        timer.stop();
 
-        logger.info("Pattern Conversion took " + (stop / 1000000d) + " ms");
+        logger.info("Pattern Conversion took " + timer.getTime(TimeUnit.MILLISECONDS) + " ms");
         for (IBeXContext contextPattern : iBeXPatternSet.getContextPatterns()) {
             PatternUtil.registerPattern(contextPattern.getName(), PatternSuffixes.extractType(contextPattern.getName()));
         }
@@ -186,12 +195,16 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
      */
     private void initializePreexistingConsistencyMatchesIfNotAlreadyPresent() {
         if (!preexistingConsistencyMatchesInitialized) {
+            Timer timer = new Timer();
+            timeMeasurements.put("Initializing preexisting consistency matches", timer);
+            timer.start();
             Map<TGGRuleApplication, TGGRule> tggRuleApplicationTGGRuleMap = Util.getTGGRuleApplicationsWithRules(this.ibexExecutable.getResourceHandler(),
                     this.ibexOptions.tgg.flattenedTGG().getRules().stream().filter(tggRule -> !tggRule.isAbstract()).collect(Collectors.toSet()));
             Set<IMatch> consistencyMatches = tggRuleApplicationTGGRuleMap.keySet().stream()
                     .map(tggRuleApplication -> new VitruviusConsistencyMatch(tggRuleApplication, tggRuleApplicationTGGRuleMap.get(tggRuleApplication)))
                     .collect(Collectors.toSet());
-            logger.warn("  LOADED MARKERS : \n    - " + consistencyMatches.stream().map(IMatch::toString).collect(Collectors.joining("\n    - ")));
+            timer.stop();
+            logger.trace("  LOADED MARKERS : \n    - " + consistencyMatches.stream().map(IMatch::toString).collect(Collectors.joining("\n    - ")));
             this.iMatchObserver.addMatches(consistencyMatches);
         }
         this.ibexExecutable.getOptions().tgg.flattenedTGG().getRules();
@@ -217,9 +230,9 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
         });
 
         // Repair matches that are broken and have not been repaired by shortcut rules
-        if (ibexOptions.repair.useShortcutRules()) {
-            throw new IllegalStateException("Using shortcut rules not supported yet: Need to filter out repaired matches from the broken matches...");
-        }
+//        if (ibexOptions.repair.useShortcutRules()) {
+//            throw new IllegalStateException("Using shortcut rules not supported yet: Need to filter out repaired matches from the broken matches...");
+//        }
         repairUnrepairedBrokenMatches();
     }
 
@@ -257,13 +270,23 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     }
 
     private void matchContext_flatten_andHandToSYNC(Set<VitruviusBackwardConversionMatch> matches) {
+        Timer contextMatchingTimer = new Timer();
+        contextMatchingTimer.start();
         Set<VitruviusBackwardConversionMatch> matchesToBeFlattened = matches.stream()
                 .filter(match -> match.contextMatches(this.observedOperationalStrategy.getResourceHandler(), this.propagationDirection))
                 .collect(Collectors.toSet());
+        contextMatchingTimer.stop();
+        this.contextMatchingTotalTimer = this.contextMatchingTotalTimer.add(contextMatchingTimer);
 
+
+        Timer coverageFlatteningTimer = new Timer();
+        coverageFlatteningTimer.start();
+        Set<VitruviusBackwardConversionMatch> flattenedPatternApplications = new PatternCoverageFlattener(matchesToBeFlattened, vitruviusChange).getFlattenedPatternApplications();
+        coverageFlatteningTimer.stop();
+        this.coverageFlatteningTotalTimer = this.coverageFlatteningTotalTimer.add(coverageFlatteningTimer);
         this.iMatchObserver.addMatches(
                 // "Flattening": Choose patterns to form a Coverage where each change is covered by at most one pattern and convert them to Matches
-                new HashSet<>(new PatternCoverageFlattener(matchesToBeFlattened, vitruviusChange).getFlattenedPatternApplications())
+                new HashSet<>(flattenedPatternApplications)
         );
     }
 
@@ -304,7 +327,8 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
 
     @Override
     public Times getTimes() {
-        return this.times;
+        // we dont use this...
+        return new Times();
     }
 
     private Set<VitruviusConsistencyMatch> getBrokenMatches() {
@@ -318,13 +342,14 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     private void createForwardMatchesIfNotAlreadyPresent() {
         if (this.matchesFound == null) {
 
-            Timer.setEnabled(true);
-            Timer.start();
+            Timer timer = new Timer();
+            timeMeasurements.put("Main green forward matching", timer);
+            timer.start();
 
             this.matchesFound = vitruviusChangePatternMatcher.getAdditiveMatches(propagationDirection);
 
-            long stop = Timer.stop();
-            logger.info("Pattern Matching took " + (stop / 1000000d) + " ms");
+            timer.stop();
+            logger.info("Pattern Matching took " + timer.getTime(TimeUnit.MILLISECONDS) + " ms");
         }
     }
 
@@ -366,6 +391,12 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public Map<String, Timer> getTimeMeasurements() {
+        timeMeasurements.put("context matching total", contextMatchingTotalTimer);
+        timeMeasurements.put("coverage flattening total", coverageFlatteningTotalTimer);
+        return timeMeasurements;
     }
 
     @Override

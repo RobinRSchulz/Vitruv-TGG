@@ -5,10 +5,13 @@ import org.eclipse.emf.ecore.EObject;
 import org.emoflon.ibex.common.emf.EMFEdge;
 import org.emoflon.ibex.tgg.operational.matches.ITGGMatch;
 import runtime.CorrespondenceNode;
+import tools.vitruv.dsls.tgg.emoflonintegration.Timer;
 import tools.vitruv.dsls.tgg.emoflonintegration.ibex.VitruviusTGGIbexRedInterpreter.RevokedCorrespondenceNodeWrapper;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternmatching.VitruviusBackwardConversionMatch;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -27,6 +30,8 @@ public class VitruviusTGGChangePropagationResult {
     private final Set<TGGRule> intactRules;
     private final Set<TGGRule> corruptRules;
 
+    private Map<String, Timer> timeMeasurements;
+
     /**
      * Empty Result
      */
@@ -39,6 +44,7 @@ public class VitruviusTGGChangePropagationResult {
         revokedMatches = new HashSet<>();
         revokedModelNodes = new HashSet<>();
         revokedEMFEdges = new HashSet<>();
+        timeMeasurements = new HashMap<>();
     }
 
 
@@ -50,7 +56,8 @@ public class VitruviusTGGChangePropagationResult {
                                                Set<RevokedCorrespondenceNodeWrapper> revokedCorrs,
                                                Set<ITGGMatch> revokedRules,
                                                Set<EObject> revokedModelNodes,
-                                               Set<EMFEdge> revokedEMFEdges) {
+                                               Set<EMFEdge> revokedEMFEdges,
+            Map<String, Timer> timeMeasurements) {
 
         this.intactRules = intactRules;
         this.corruptRules = corruptRules;
@@ -60,6 +67,12 @@ public class VitruviusTGGChangePropagationResult {
         this.revokedMatches = revokedRules;
         this.revokedModelNodes = revokedModelNodes;
         this.revokedEMFEdges = revokedEMFEdges;
+        this.timeMeasurements = timeMeasurements;
+    }
+
+    public VitruviusTGGChangePropagationResult setTimeMeasurements(Map<String, Timer> timeMeasurements) {
+        this.timeMeasurements = timeMeasurements;
+        return this;
     }
 
     public Set<TGGRule> getIntactRules() {
@@ -92,5 +105,9 @@ public class VitruviusTGGChangePropagationResult {
 
     public Set<EMFEdge> getRevokedEMFEdges() {
         return revokedEMFEdges;
+    }
+
+    public Map<String, Timer> getTimeMeasurements() {
+        return timeMeasurements;
     }
 }

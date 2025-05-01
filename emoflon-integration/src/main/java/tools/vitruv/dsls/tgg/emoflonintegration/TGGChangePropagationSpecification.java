@@ -44,6 +44,7 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
     private final File ibexProjectPath;
     private final Set<EClass> targetRootEClasses;
     private final URI targetRootURI;
+    private final boolean useShortcutRules;
 
     private final List<VitruviusTGGChangePropagationResult> vitruviusTGGChangePropagationResults;
 
@@ -65,7 +66,8 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
                                              MetamodelDescriptor SRCMetamodelDescriptor, MetamodelDescriptor TRGMetamodelDescriptor,
                                              String SRCMetamodelPlatformUri, String TRGMetamodelPlatformUri,
                                              File ibexProjectPath,
-                                             Set<EClass> targetRootEClasses, URI targetRootURI) {
+                                             Set<EClass> targetRootEClasses, URI targetRootURI,
+                                             boolean useShortcutRules) {
         super(sourceMetamodelDescriptor, targetMetamodelDescriptor);
         this.SRCMetamodelDescriptor = SRCMetamodelDescriptor;
         this.TRGMetamodelDescriptor = TRGMetamodelDescriptor;
@@ -74,6 +76,7 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
         this.ibexProjectPath = ibexProjectPath;
         this.targetRootEClasses = targetRootEClasses;
         this.targetRootURI = targetRootURI;
+        this.useShortcutRules = useShortcutRules;
 
         //for evaluation and testing
         this.vitruviusTGGChangePropagationResults = new ArrayList<>();
@@ -140,6 +143,7 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
                 .withSRCMetamodelPlatformUri(SRCMetamodelPlatformUri)
                 .withTRGMetamodelPlatformUri(TRGMetamodelPlatformUri)
                 .withIbexProjectPath(ibexProjectPath)
+                .withUseShortcutRules(useShortcutRules)
                 .withPatternMatcher(new VitruviusBackwardConversionTGGEngine(vitruviusChange, this.getPropagationDirection()))
                 .withPropagationDirection(getPropagationDirection());
 

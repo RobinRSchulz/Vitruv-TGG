@@ -34,20 +34,25 @@ public class VitruviusChangeBrokenMatchMatcher {
     private final VitruviusChange<EObject> vitruviusChange;
     private final Collection<TGGRule> rules;
 
+    private Set<VitruviusConsistencyMatch> brokenMatchesCache;
+
     public VitruviusChangeBrokenMatchMatcher(VitruviusChange<EObject> vitruviusChange, Collection<TGGRule> rules) {
         this.vitruviusChange = vitruviusChange;
         this.rules = rules;
     }
 
     public Set<VitruviusConsistencyMatch> getBrokenMatches(TGGResourceHandler resourceHandler) {
-        Map<TGGRuleApplication, TGGRule> tggRuleApplicationTGGRuleMap = Util.getTGGRuleApplicationsWithRules(resourceHandler, rules);
-        Set<VitruviusConsistencyMatch> matches = getNodeMissingBrokenMatches(resourceHandler, tggRuleApplicationTGGRuleMap);
+        if (brokenMatchesCache == null) {
+            Map<TGGRuleApplication, TGGRule> tggRuleApplicationTGGRuleMap = Util.getTGGRuleApplicationsWithRules(resourceHandler, rules);
+            Set<VitruviusConsistencyMatch> matches = getNodeMissingBrokenMatches(resourceHandler, tggRuleApplicationTGGRuleMap);
 
-        // we only want to find NEW matches. That also ensures those matches being complete, i.e. having all their nodes!
-        matches.forEach(match -> tggRuleApplicationTGGRuleMap.remove(match.getRuleApplicationNode()));
-        matches.addAll(getAdditionalBrokenMatches(resourceHandler, tggRuleApplicationTGGRuleMap));
-        matches.addAll(getMatchesBrokenByAttributeChanges(tggRuleApplicationTGGRuleMap));
-        return matches;
+            // we only want to find NEW matches. That also ensures those matches being complete, i.e. having all their nodes!
+            matches.forEach(match -> tggRuleApplicationTGGRuleMap.remove(match.getRuleApplicationNode()));
+            matches.addAll(getAdditionalBrokenMatches(resourceHandler, tggRuleApplicationTGGRuleMap));
+            matches.addAll(getMatchesBrokenByAttributeChanges(tggRuleApplicationTGGRuleMap));
+            brokenMatchesCache = matches;
+        }
+        return brokenMatchesCache;
     }
 
     /**
@@ -137,7 +142,7 @@ public class VitruviusChangeBrokenMatchMatcher {
      * @return broken matches that don't miss a node.
      */
     private Set<VitruviusConsistencyMatch> handleNonTrivialBreakingEChange(EChange<EObject> breakingChange, Map<TGGRuleApplication, TGGRule> intactTGGRuleApplicationTGGRuleMap) {
-        logger.warn("  handle breaking change: " + Util.eChangeToString(breakingChange));
+        logger.trace("  handle breaking change: " + Util.eChangeToString(breakingChange));
         Set<TGGRuleApplication> calculatedBrokenTGGRuleApplications = Set.of();
         switch (breakingChange) {
             case DeleteEObject<EObject> deleteEObject -> {

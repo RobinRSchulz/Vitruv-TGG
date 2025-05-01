@@ -36,6 +36,9 @@ public class ChangeSequenceTemplate {
     private final TGGRule tggRule;
     private final Map<PatternType, IBeXContextPattern> iBeXContextPatternMap;
 
+    private Set<EChange<EObject>> eChangesIfInitialized;
+    private boolean isInitialized = false;
+
     /**
      * This is a convenvience field for instantiated Pattern Template, mapping wrappers of the original to this instance's wrappers.
      */
@@ -93,7 +96,10 @@ public class ChangeSequenceTemplate {
      * @return whether all eChanges this ChangeSequenceTemplate holds have been full initialized with EChanges.
      */
     public boolean isInitialized() {
-        return this.eChangeWrappers.stream().allMatch(EChangeWrapper::isInitialized);
+        if (!this.isInitialized) {
+            this.isInitialized = this.eChangeWrappers.stream().allMatch(EChangeWrapper::isInitialized);
+        }
+        return this.isInitialized;
     }
 
     public Collection<EChangeWrapper> getEChangeWrappers() {
@@ -101,7 +107,14 @@ public class ChangeSequenceTemplate {
     }
 
     public Set<EChange<EObject>> getEChanges() {
-        return eChangeWrappers.stream().map(EChangeWrapper::getEChange).collect(Collectors.toSet());
+        //performance critical, so this is cached.
+        if (isInitialized()) {
+            if (eChangesIfInitialized == null) {
+                eChangesIfInitialized = eChangeWrappers.stream().map(EChangeWrapper::getEChange).collect(Collectors.toSet());
+            }
+            return eChangesIfInitialized;
+        } else throw new IllegalStateException("This ChangeSequenceTemplate is not fully initialized!");
+//        return eChangeWrappers.stream().map(EChangeWrapper::getEChange).collect(Collectors.toSet());
     }
 
     /**
