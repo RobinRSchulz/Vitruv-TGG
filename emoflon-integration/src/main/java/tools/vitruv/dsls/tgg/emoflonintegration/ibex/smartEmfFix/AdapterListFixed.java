@@ -14,15 +14,11 @@ public class AdapterListFixed extends AdapterList {
 
     @Override
     public int indexOf(Object o) {
-//        this.adapters.toArray()
-//        return super.indexOf(o);
-        //todo check if more to do ...
         return 0;
     }
 
     @Override
     public void add(int index, Adapter element) {
-        //noop. Todo check if not so goodie
-//        super.add(index, element);
+        //noop.
     }
 }

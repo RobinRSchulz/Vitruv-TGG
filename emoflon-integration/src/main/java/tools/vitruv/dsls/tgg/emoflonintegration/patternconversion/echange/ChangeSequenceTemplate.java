@@ -213,7 +213,7 @@ public class ChangeSequenceTemplate {
      * @return whether this (matched!) template also has the context that the ${@link TGGRule} this represents requires!
      */
     public Optional<Map<TGGRuleNode, EObject>> contextMatches(TGGResourceHandler tggResourceHandler, PropagationDirection propagationDirection) {
-        //TODO potential optimization keep the context matcher! We might need to call this method multiple times and that saves us recursion effort.
+        // potential optimization: keep the context matcher! We might need to call this method multiple times and that saves us recursion effort.
         ContextMatcher contextMatcher = new ContextMatcher(tggResourceHandler, propagationDirection);
         return (contextMatcher.contextMatches())
                 ? Optional.of(contextMatcher.getTggRuleNode2EObjectMap())

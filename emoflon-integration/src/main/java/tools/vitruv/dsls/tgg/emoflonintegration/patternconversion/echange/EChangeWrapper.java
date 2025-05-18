@@ -165,7 +165,7 @@ public abstract class EChangeWrapper {
      * Initialize everything that doesn't concern setting the eChange and filling the affectedElementPlaceholder.
      * Beware! This EChangeWrapper might be partly initialized, as some placeholders could have already been filled
      * by initializing another EChangeWrapper belonging to the same ${@link ChangeSequenceTemplate} as this one.
-     * Implementations need to account for that by throwing ${@link IllegalStateException}. TODO implement that!
+     * Implementations need to account for that by throwing ${@link IllegalStateException}.
      */
     protected abstract void initializeExtension(EChange<EObject> eChange);
 

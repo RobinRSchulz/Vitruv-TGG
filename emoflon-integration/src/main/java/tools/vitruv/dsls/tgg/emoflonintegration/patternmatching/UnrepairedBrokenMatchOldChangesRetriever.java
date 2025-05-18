@@ -87,7 +87,6 @@ public class UnrepairedBrokenMatchOldChangesRetriever {
 
     private List<EChange<EObject>> createEChangesForMatch(VitruviusConsistencyMatch match) {
         List<EChange<EObject>> changes = new LinkedList<>();
-        //TODO need to filter out EObjects that are not existing anymore!
 
         // Each CREATE node object gets a CreateEObject EChange. If the CREATE node has no incoming edges (Context or create), it also gets an InsertRootEObject EChange
         for (Pair<TGGRuleNode, EObject> tggRuleNodeEObjectPair : match.getMatchedCreateNodes()) {
@@ -124,8 +123,6 @@ public class UnrepairedBrokenMatchOldChangesRetriever {
                 insertEReference.setNewValue(newValue);
                 insertEReference.setAffectedFeature(affectedFeature);
 
-
-                //TODO check if the edge is still there before adding it!
                 if (affectedElement != null) {
                     Object actualValue = affectedElement.eGet(affectedFeature);
                     if (actualValue != null) {
@@ -135,7 +132,7 @@ public class UnrepairedBrokenMatchOldChangesRetriever {
                             changes.add(insertEReference);
                         }
                     }
-                } //TODO else warn
+                }
             }
         }
         return changes;

@@ -31,7 +31,6 @@ public class VitruviusBackwardConversionMatch extends SimpleTGGMatch implements 
      * @param matchedChangeSequenceTemplate a ${@link ChangeSequenceTemplate} that has been matched against a couple of EChanges
      */
     public VitruviusBackwardConversionMatch(ChangeSequenceTemplate matchedChangeSequenceTemplate, PatternType patternType) {
-        // TODO find out when FWD, when BWD and use Directionholder from ibex!
         super(matchedChangeSequenceTemplate.getIBeXContextPattern(patternType).getName());
         if (!matchedChangeSequenceTemplate.isInitialized()) {
             throw new IllegalStateException("The changeSequenceTemplate must be initialized");
@@ -51,7 +50,7 @@ public class VitruviusBackwardConversionMatch extends SimpleTGGMatch implements 
                 logger.debug("  SUCCESSS!!!!");
                 contextHasBeenMatchedSuccessfully = true;
                 this.tggRuleNodeEObjectMap = tggRuleNodeEObjectMapOptional.get();
-                // add the matched EObjects to this (TODO check if the name is right...)
+                // add the matched EObjects to this
                 this.tggRuleNodeEObjectMap.forEach((tggRuleNode, eObject) -> this.put(tggRuleNode.getName(), eObject));
                 return true;
             } else return false;
@@ -70,9 +69,6 @@ public class VitruviusBackwardConversionMatch extends SimpleTGGMatch implements 
                 .collect(Collectors.toSet());
     }
 
-    /**
-     * TODO kann eich weg... und durch getEObjectsThisMatchWouldCreate ersetzt werden!
-     */
     public Set<EObject> getEObjectsCreatedByThisMatch() {
         if (this.contextHasBeenMatchedSuccessfully) {
             return this.tggRuleNodeEObjectMap.entrySet().stream()
@@ -87,14 +83,11 @@ public class VitruviusBackwardConversionMatch extends SimpleTGGMatch implements 
     }
 
     private void init(ChangeSequenceTemplate matchedChangeSequenceTemplate) {
-        // TODO this should be the equivalent of how HiPEGTMatch does it. check!
         matchedChangeSequenceTemplate.getAllPlaceholders().stream()
-                .filter(eObjectPlaceholder -> eObjectPlaceholder.getTggRuleNode() != null) // todo in case of "oldValue", we have a null placeholder occurring...
+                .filter(eObjectPlaceholder -> eObjectPlaceholder.getTggRuleNode() != null) // in case of "oldValue", we have a null placeholder occurring...
                 .forEach(eObjectPlaceholder ->
                         this.put(eObjectPlaceholder.getTggRuleNode().getName(), eObjectPlaceholder.getAffectedEObject())
                 );
-        //TODO Add all context nodes! also add corr? probably not...
-//        matchedChangeSequenceTemplate.getTggRule().getNodes()
     }
 
     public ITGGMatch copy() {

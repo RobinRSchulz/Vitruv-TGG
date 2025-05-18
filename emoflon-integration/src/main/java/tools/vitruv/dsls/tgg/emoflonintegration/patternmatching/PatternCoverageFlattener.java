@@ -25,8 +25,6 @@ import java.util.stream.Collectors;
  * </ol>
  */
 public class PatternCoverageFlattener {
-    //TODO make this class return
-
     /**
      * This remains unmodified, only provides the sorting!
      */
@@ -60,7 +58,6 @@ public class PatternCoverageFlattener {
 
     private void initializeStaticEChangeToPatternApplicationMap(Set<VitruviusBackwardConversionMatch> patternApplications) {
         staticPatternApplicationsSet.addAll(patternApplications);
-        // todo idee: statische Map machen und immer nur hier bereinigen
         for (EChange<EObject> eChange : changeSequence) {
             Set<VitruviusBackwardConversionMatch> staticPatternApplications = staticEChangeToPatternApplicationMap
                     .computeIfAbsent(eChange, eChange1 -> new HashSet<>());
@@ -118,7 +115,6 @@ public class PatternCoverageFlattener {
                     }
                 }
                 if (!patternApplications.contains(patternApplication)) {
-                    //TODO we dont really need modification of this list. --> delete?
                     listIterator.remove();
                 }
             }
@@ -169,11 +165,6 @@ public class PatternCoverageFlattener {
         return this.staticEChangeToPatternApplicationMap.get(eChange).stream()
                 .filter(patternApplications::contains)
                 .collect(Collectors.toSet());
-//
-//        return patternApplications.stream()
-//                .filter(patternApplication -> patternApplication.getMatchedChangeSequenceTemplate()
-//                        .getEChanges().contains(eChange))
-//                .collect(Collectors.toSet());
     }
 
     private int getMaxCoverage(Set<VitruviusBackwardConversionMatch> relevantPatternApplications) {

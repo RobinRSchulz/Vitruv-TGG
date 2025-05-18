@@ -38,13 +38,17 @@ public class VitruviusTGGChangePropagationIbexEntrypoint extends SYNC {
         if (patternMatcher instanceof VitruviusBackwardConversionTGGEngine vitruviusBackwardConversionTGGEngine) {
             VitruviusTGGIbexRedInterpreter vitruviusTGGIbexRedInterpreter = new VitruviusTGGIbexRedInterpreter(this, (VitruviusBackwardConversionTGGEngine) this.getOptions().blackInterpreter());
             this.registerRedInterpeter(vitruviusTGGIbexRedInterpreter);
+
             //override SeqRepair with our own stuff (needed to switch repairing attributes off and on...)
             this.repairer = new FlexibleSeqRepair(this, this.propagationDirectionHolder);
 
             // we need feedback about matches created...
             this.registerObserver(vitruviusBackwardConversionTGGEngine);
-            // TODO currently only for debug purposes...
+
+            // enable access to "consistency matches" (protocol)
             vitruviusBackwardConversionTGGEngine.addObservedOperationalStrategy(this);
+
+            // enable deleting broken consistency matches (not done automatically by ibex..) and getting feedback on which reported broken matches have been deleted.
             vitruviusBackwardConversionTGGEngine.addVitruviusTGGIbexRedInterpreter(vitruviusTGGIbexRedInterpreter);
         }
     }
@@ -57,7 +61,6 @@ public class VitruviusTGGChangePropagationIbexEntrypoint extends SYNC {
      * @return a map of correspondences that are newly created!
      */
     public VitruviusTGGChangePropagationResult propagateChanges() throws IOException {
-        //TODO is this necessary?
         this.getOptions().tgg.tgg().setCorr(this.getOptions().tgg.flattenedTGG().getCorr());
 
         logger.info("Starting SYNC");
@@ -65,7 +68,7 @@ public class VitruviusTGGChangePropagationIbexEntrypoint extends SYNC {
 
         Timer timer = new Timer();
         timer.start();
-        //TODO needs to be backward, depending on the direction the rules were specified and what currently is source and target! The ChangePropagationSpecification's source and target change, the ibex's don't...
+
         if (propagationDirection.equals(PropagationDirectionHolder.PropagationDirection.FORWARD)) {
             this.forward();
         } else {
@@ -77,7 +80,6 @@ public class VitruviusTGGChangePropagationIbexEntrypoint extends SYNC {
         logger.debug("BENCHMARKLOGGER logs: ");
         logger.debug(this.options.debug.benchmarkLogger().toString());
 
-        // TODO resourceHandler.saveRelevantModels probably needs to be overridden!
         this.saveModels();
         this.terminate();
 
@@ -86,7 +88,7 @@ public class VitruviusTGGChangePropagationIbexEntrypoint extends SYNC {
             Map<String, Timer> allTimeMeasurements = new HashMap<>();
             allTimeMeasurements.putAll(vitruviusBackwardConversionTGGEngine.getTimeMeasurements());
             allTimeMeasurements.put("total change propagation time", timer);
-            //TODO put this
+
             return new VitruviusTGGChangePropagationResult(
                     this.getIntactRules(),
                     this.getCorruptRules(),

@@ -70,7 +70,7 @@ public class VitruviusTGGChangePropagationRegistrationHelper implements IRegistr
                 .project.path(ibexProjectPath.getName())
                 .debug.ibexDebug(true)
                 .repair.repairAttributes(true)
-                .repair.useShortcutRules(useShortcutRules) // TODO schon zwei TODOs im Shortcutrule-Code entdeckt, weeeiß ja net ob des so gut geht --> Im Zweifel Future work, bzw Evaluation...
+                .repair.useShortcutRules(useShortcutRules)
                 .registrationHelper(this);
         tryToFindAndAddUserDefinedAttributeConstraints(ibexOptions);
         return ibexOptions;

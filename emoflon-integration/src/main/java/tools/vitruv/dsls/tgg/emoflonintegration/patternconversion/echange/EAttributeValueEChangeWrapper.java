@@ -46,7 +46,6 @@ public class EAttributeValueEChangeWrapper extends EChangeWrapper {
     public EObjectPlaceholder getValuePlaceholder() {
         return valuePlaceholder;
     }
-    //todo add isInitialized method in superclass which this overrides
 
     @Override
     protected boolean extendedDataMatches(EChange<EObject> eChange) {

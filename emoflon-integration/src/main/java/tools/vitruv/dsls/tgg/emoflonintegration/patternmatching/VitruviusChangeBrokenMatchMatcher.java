@@ -103,7 +103,6 @@ public class VitruviusChangeBrokenMatchMatcher {
                              EObject candidate = (EObject) tggRuleApplication.eGet(tggRuleApplication.eClass().getEStructuralFeature(Util.getMarkerStyleName(ruleNode)));
                              return updateAttributeEChange.getAffectedElement().equals(candidate);
                          })) {
-                     //todo add new match
                      matches.add(new VitruviusConsistencyMatch(tggRuleApplication, tggRule));
                      break;
                  }

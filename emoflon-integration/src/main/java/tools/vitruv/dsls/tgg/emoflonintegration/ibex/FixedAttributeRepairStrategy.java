@@ -24,7 +24,7 @@ public class FixedAttributeRepairStrategy extends AttributeRepairStrategy {
     @Override
     protected ITGGMatch repair(ITGGMatch repairCandidate, IRuntimeTGGAttrConstrContainer csp) {
         if (repairCandidate instanceof VitruviusConsistencyMatch vitruviusConsistencyMatch && !vitruviusConsistencyMatch.isFullyMatched()) {
-            return repairCandidate; //TODO maybe return null?
+            return repairCandidate;
         }
         if (!csp.solve()) {
             return null;

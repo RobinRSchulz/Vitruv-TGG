@@ -14,14 +14,7 @@
 
     <artifactId>tools.vitruv.tgg.emoflon-integration</artifactId>
 
-    <name>Vitruv TGG Runtime</name>
-    <description />
-    <!--TODO: only copied. remove unused stuff-->
-<!--    <build>-->
-<!--        <plugins>-->
-<!--        </plugins>-->
-<!--    </build>-->
-
+    <name>Vitruv TGG eMoflon::IBeX Integration</name>
     <dependencies>
         <!-- Vitruvius compile dependencies -->
         <dependency>
@@ -49,12 +42,6 @@
             <artifactId>tools.vitruv.change.utils</artifactId>
         </dependency>
 
-        <!-- Vitruvius temporary dependencies TODO remove after test refactor! -->
-<!--        <dependency>-->
-<!--            <groupId>tools.vitruv</groupId>-->
-<!--            <artifactId>tools.vitruv.framework.testutils.integration</artifactId>-->
-<!--        </dependency>-->
-
         <!-- eMoflon (TGG framework)-->
         <dependency>
             <groupId>emoflon-ibex</groupId>
@@ -76,6 +63,7 @@
             <groupId>emoflon-ibex</groupId>
             <artifactId>org.emoflon.ibex.tgg.runtime.democles</artifactId>
         </dependency>
+
         <!-- HiPE pattern matcher (emoflon uses that)-->
         <dependency>
             <groupId>hipe</groupId>
@@ -85,11 +73,6 @@
             <groupId>hipe</groupId>
             <artifactId>hipe.engine</artifactId>
         </dependency>
-        <!-- external compile dependencies TODO copied, look which are needed... -->
-<!--        <dependency>-->
-<!--            <groupId>com.google.guava</groupId>-->
-<!--            <artifactId>guava</artifactId>-->
-<!--        </dependency>-->
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
@@ -102,62 +85,5 @@
             <groupId>org.eclipse.emf</groupId>
             <artifactId>org.eclipse.emf.ecore</artifactId>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.eclipse.platform</groupId>-->
-<!--            <artifactId>org.eclipse.core.resources</artifactId>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.eclipse.platform</groupId>-->
-<!--            <artifactId>org.eclipse.equinox.common</artifactId>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.eclipse.xtend</groupId>-->
-<!--            <artifactId>org.eclipse.xtend.lib</artifactId>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.eclipse.xtext</groupId>-->
-<!--            <artifactId>org.eclipse.xtext.xbase.lib</artifactId>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>sdq-commons</groupId>-->
-<!--            <artifactId>edu.kit.ipd.sdq.commons.util.emf</artifactId>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>xannotations</groupId>-->
-<!--            <artifactId>edu.kit.ipd.sdq.activextendannotations</artifactId>-->
-<!--        </dependency>-->
-
-
-
-        <!-- [TEST DEPENDENCIES] -->
-        <!-- project test dependencies -->
-<!--        <dependency>-->
-<!--            <groupId>${project.groupId}</groupId>-->
-<!--            <artifactId>tools.vitruv.dsls.testutils</artifactId>-->
-<!--            <version>${project.version}</version>-->
-<!--            <scope>test</scope>-->
-<!--        </dependency>-->
-        <!-- Vitruvius test dependencies -->
-<!--        <dependency>-->
-<!--            <groupId>tools.vitruv</groupId>-->
-<!--            <artifactId>tools.vitruv.change.testutils.core</artifactId>-->
-<!--            <scope>test</scope>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>tools.vitruv</groupId>-->
-<!--            <artifactId>tools.vitruv.change.testutils.integration</artifactId>-->
-<!--            <scope>test</scope>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>tools.vitruv</groupId>-->
-<!--            <artifactId>tools.vitruv.change.testutils.metamodels</artifactId>-->
-<!--            <scope>test</scope>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>tools.vitruv</groupId>-->
-<!--            <artifactId>tools.vitruv.dsls.demo.insurancefamilies</artifactId>-->
-<!--            <version>3.2.0-SNAPSHOT</version>-->
-<!--            <scope>test</scope>-->
-<!--        </dependency>-->
     </dependencies>
 </project>

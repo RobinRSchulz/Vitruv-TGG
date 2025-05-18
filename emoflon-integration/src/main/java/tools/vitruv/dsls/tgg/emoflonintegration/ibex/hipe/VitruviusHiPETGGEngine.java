@@ -69,7 +69,6 @@ public class VitruviusHiPETGGEngine extends HiPETGGEngine {
             cp = file.getCanonicalPath();
             cp = cp.replace("%20", " ");
         } catch (IOException e1) {
-            // TODO Auto-generated catch block
             e1.printStackTrace();
         }
         Resource r = null;
@@ -82,7 +81,6 @@ public class VitruviusHiPETGGEngine extends HiPETGGEngine {
         IBeXModel ibexModel = (IBeXModel)r.getContents().getFirst();
         //
         IBeXPatternSet ibexPatterns = ibexModel.getPatternSet();
-//        logger.info("ibexPatterns: " + ibexPatterns.getContextPatterns());
         setPrivateSuperclassField("ibexPatterns", ibexPatterns);
 
         for(IBeXContext context : ibexPatterns.getContextPatterns()) {

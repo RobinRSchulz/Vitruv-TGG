@@ -59,7 +59,7 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
      * @param SRCMetamodelPlatformUri the platform uri of the metamodel that is labelled SRC in the ibexProject
      * @param TRGMetamodelPlatformUri the platform uri of the metamodel that is labelled TRG in the ibexProject
      * @param ibexProjectPath file system path to the eMoflon TGG project
-     * @param targetRootEClasses the possible root classes for the target model to be able to create a corresponding model if none already exists. todo check if this strategy is required.
+     * @param targetRootEClasses the possible root classes for the target model to be able to create a corresponding model if none already exists.
      * @param targetRootURI URI under which to persist the model created on calling {@code propagateChanges } if no corresponding model already exist.
      */
     public TGGChangePropagationSpecification(MetamodelDescriptor sourceMetamodelDescriptor, MetamodelDescriptor targetMetamodelDescriptor,
@@ -180,22 +180,6 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
     }
 
     /**
-     *  todo keep for a while until more tests...
-     * @param sourceModel
-     * @param targetModel
-     */
-    private void handleDanglingEObjects(Resource sourceModel, Resource targetModel) {
-        logger.trace("+++handleDanglingEObjects+++");
-        logger.trace("  - sourceModel: " + sourceModel.getURI());
-        sourceModel.getAllContents().forEachRemaining(eObject -> {
-            logger.trace("    - " + Util.eObjectToString(eObject) + ",eResource=" + eObject.eResource().getURI());
-        });
-        logger.trace("  - targetModel: " + targetModel.getURI());
-        targetModel.getAllContents().forEachRemaining(eObject -> {
-            logger.trace("    - " + Util.eObjectToString(eObject) + ",eResource=" + eObject.eResource().getURI());
-        });
-    }
-    /**
      *
      * Tries to find a model ${@link Resource} related to a ${@link VitruviusChange}.
      * Problem: a change either inserts a root object to a model, changes an existing model element or creates/ deletes an EObject.
@@ -259,8 +243,6 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
 
         addNewlyCreatedCorrespondencesToCorrespondenceModel(changePropagationResult.getAddedCorrespondences(), correspondenceModel);
         vitruviusTGGChangePropagationResults.add(changePropagationResult);
-        //TODO Add generating a change sequence out of the factually applied matches. This currently relies on change derivation!
-//        handleDanglingEObjects(sourceModel, targetModel);
     }
 
     private void addNewlyCreatedCorrespondencesToCorrespondenceModel(Set<CorrespondenceNode> newlyCreatedIbexCorrs,
@@ -271,7 +253,7 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
                 correspondenceModel.addCorrespondenceBetween(
                         (EObject) correspondenceNode.eGet(correspondenceNode.eClass().getEStructuralFeature("source")),
                         (EObject) correspondenceNode.eGet(correspondenceNode.eClass().getEStructuralFeature("target")),
-                        correspondenceNode.eClass().getName()); // todo just using the name. is that enough?
+                        correspondenceNode.eClass().getName());
     });
     }
 
@@ -296,7 +278,7 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
      *       Third approach:<br/>
      *       1. Create a resource for the target model via the resourceSet of the source model.<br/>
      *       2. perform change propagation.<br/>
-     *       3. persist the now-existing root node as root in the resourceAccess. todo implement that step!<br/>
+     *       3. persist the now-existing root node as root in the resourceAccess.<br/>
      *       ==> Better (not having to create artificial root), but (presumably?) Vitruvius doesn't automatically monitor the changes made to the target model.<br/>
      *       Since we want to create the Changes manually, this comes in handy, if true.
      * </li>

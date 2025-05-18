@@ -48,15 +48,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
+ *
  * Pattern Matcher implementing the generation of new matches based on
  * * the existing TGG derivation (protocol)
  * * Pattern templates:
- *      * TGG patterns converted to the EChanges that they consist of.
- *      * todo precompiled (for performance opt.)
- *      * todo short-cut-rules?
  * * matching those templates onto a given VitruviusChange
  * <br/>
- * TODO:
+ * TO.DO:
  * 1. Generating pattern templates
  *      1. Design a class structure for pattern templates
  *      2. Design an algorithm to
@@ -104,10 +102,6 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
 
     private final Set<VitruviusConsistencyMatch> matchesThatHaveBeenTriedToRepair;
 
-    /**
-     * TODO input here or in init function?
-     * VitruviusChange cannot be given in initialize, so here.
-     */
     public VitruviusBackwardConversionTGGEngine(VitruviusChange<EObject> vitruviusChange, PropagationDirection propagationDirection) {
         this.vitruviusChange = new VitruviusChangeTransformer(vitruviusChange).transform();
         this.timeMeasurements = new HashMap<>();
@@ -123,7 +117,6 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
 
     @Override
     public void initialise(IbexExecutable ibexExecutable, IbexOptions ibexOptions, EPackage.Registry registry, IMatchObserver iMatchObserver) {
-        //TODO maybe need todo the same as below!
         this.ibexExecutable = ibexExecutable;
         this.ibexOptions = ibexOptions;
         this.iMatchObserver = iMatchObserver;
@@ -159,9 +152,6 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
         }
     }
 
-    /**
-     * todo remove this as it isn't called...
-     */
     @Override
     public void initialise(EPackage.Registry registry, IMatchObserver iMatchObserver) {
         this.registry = registry;
@@ -297,7 +287,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
 
     @Override
     public void setDebugPath(String s) {
-        //TODO implement if needed
+        // implement if needed...
     }
 
     @Override
@@ -332,7 +322,6 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     }
 
     private Set<VitruviusConsistencyMatch> getBrokenMatches() {
-        //TODO might be sufficient if calculated once. for now, calculate every time
         return vitruviusChangeBrokenMatchMatcher
                 .getBrokenMatches(this.observedOperationalStrategy.getResourceHandler())
                 .stream().filter(brokenMatch -> !vitruviusTGGIbexRedInterpreter.getRevokedRuleMatches().contains(brokenMatch))

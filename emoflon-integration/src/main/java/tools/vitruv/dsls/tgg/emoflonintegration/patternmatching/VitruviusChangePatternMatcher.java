@@ -44,7 +44,6 @@ public class VitruviusChangePatternMatcher {
      */
     public Set<VitruviusBackwardConversionMatch> getAdditiveMatches(PropagationDirectionHolder.PropagationDirection propagationDirection) {
         // 1. compute all possible matches
-        // TODO optimization: not compute all matches but mark EChanges (at the possible cost of missing sth?)
         Set<ChangeSequenceTemplate> allInvokedPatternTemplates = new HashSet<>();
         for (EChange<EObject> eChange : vitruviusChange.getEChanges()) {
             Set<ChangeSequenceTemplate> patternTemplates = changeSequenceTemplateSet.getAndInitRelevantIbexPatternTemplatesByEChange(eChange);
@@ -67,7 +66,7 @@ public class VitruviusChangePatternMatcher {
                             eChangeWrapperInitialized = true;
                             // to avoid duplicates, remember which pattern types are already invoked for the current eChange.
                             rememberWrapperInvokedWithEChange(eChangeCandidate, patternTemplate);
-                            // we can break, since we're finished with this eChangeWrapper. TODO do we miss anything by not continuing the search and splitting the pattern invocation again?
+                            // we can break, since we're finished with this eChangeWrapper.
                             break;
                         }
                     }
