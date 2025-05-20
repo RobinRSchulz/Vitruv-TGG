@@ -1,0 +1,586 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="15.1">
+  <help_text>Space for diagram notes</help_text>
+  <zoom_level>11</zoom_level>
+  <element>
+    <id>UMLPackage</id>
+    <coordinates>
+      <x>418</x>
+      <y>0</y>
+      <w>572</w>
+      <h>209</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;external&gt;&gt;
+tools.vitruv.change.propagation.impl
+--
+bg=light_gray</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>495</x>
+      <y>55</y>
+      <w>440</w>
+      <h>66</h>
+    </coordinates>
+    <panel_attributes>/AbstractChangePropagationSpecification/
+--
+--
+/+ propagateNonAtomicChange(change: VitruviusChange, ...)/
+layer=2</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>693</x>
+      <y>110</y>
+      <w>33</w>
+      <h>209</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;170.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLPackage</id>
+    <coordinates>
+      <x>418</x>
+      <y>242</y>
+      <w>1485</w>
+      <h>946</h>
+    </coordinates>
+    <panel_attributes>tools.vitruv.dsls.tgg.emoflonintegration
+--
+bg=#cfffc9</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>440</x>
+      <y>297</y>
+      <w>506</w>
+      <h>154</h>
+    </coordinates>
+    <panel_attributes>/TGGChangePropagationSpecification/
+layer=2
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLNote</id>
+    <coordinates>
+      <x>451</x>
+      <y>341</y>
+      <w>440</w>
+      <h>88</h>
+    </coordinates>
+    <panel_attributes>A methodologist extends this class and registers it in a VSUM.
+When a matching change occurs, 
+propagateNonAtomicChanges is called. 
+There, the VitruviusTGGChangePropagationIbexEntrypoint is 
+called.
+layer=3</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLPackage</id>
+    <coordinates>
+      <x>1045</x>
+      <y>0</y>
+      <w>858</w>
+      <h>209</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;external&gt;&gt;
+org.emoflon.ibex.tgg...
+--
+bg=light_gray</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1067</x>
+      <y>55</y>
+      <w>264</w>
+      <h>77</h>
+    </coordinates>
+    <panel_attributes>/SYNC/
+--
+--
++ forward()
++ backward()
+layer=2
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLPackage</id>
+    <coordinates>
+      <x>990</x>
+      <y>275</y>
+      <w>429</w>
+      <h>275</h>
+    </coordinates>
+    <panel_attributes>.ibex
+--
+layer=2
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1034</x>
+      <y>308</y>
+      <w>341</w>
+      <h>66</h>
+    </coordinates>
+    <panel_attributes>VitruviusTGGChangePropagationIbexEntrypoint
+--
+--
++ propagateChanges()
+layer=2
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1221</x>
+      <y>121</y>
+      <w>33</w>
+      <h>209</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;170.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1034</x>
+      <y>429</y>
+      <w>374</w>
+      <h>66</h>
+    </coordinates>
+    <panel_attributes>VitruviusBackwardConversionTGGEngine
+--
+--
+layer=2
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1364</x>
+      <y>55</y>
+      <w>352</w>
+      <h>121</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;interface&gt;&gt;
+IBlackInterpreter
+--
+--
++ initPatterns(iBeXPatternSet: IBeXPatternSet)
++ updateMatches()
+...
+--
+layer=2</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1386</x>
+      <y>165</y>
+      <w>33</w>
+      <h>286</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;.</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;240.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLPackage</id>
+    <coordinates>
+      <x>440</x>
+      <y>605</y>
+      <w>990</w>
+      <h>539</h>
+    </coordinates>
+    <panel_attributes>.patternconversion
+--
+layer=2
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLPackage</id>
+    <coordinates>
+      <x>473</x>
+      <y>638</y>
+      <w>451</w>
+      <h>220</h>
+    </coordinates>
+    <panel_attributes>.echange
+--
+layer=2
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>484</x>
+      <y>671</y>
+      <w>275</w>
+      <h>88</h>
+    </coordinates>
+    <panel_attributes>/EChangeWrapper/
+--
+--
++ matches(eChange: EChange)
++ initialize(eChange: EChange)
+...
+layer=2
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>484</x>
+      <y>814</y>
+      <w>44</w>
+      <h>33</h>
+    </coordinates>
+    <panel_attributes>
+layer=2</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>495</x>
+      <y>748</y>
+      <w>33</w>
+      <h>88</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;60.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>550</x>
+      <y>748</y>
+      <w>33</w>
+      <h>88</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;60.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>539</x>
+      <y>814</y>
+      <w>44</w>
+      <h>33</h>
+    </coordinates>
+    <panel_attributes>
+layer=2</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>605</x>
+      <y>748</y>
+      <w>33</w>
+      <h>88</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;60.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>594</x>
+      <y>814</y>
+      <w>44</w>
+      <h>33</h>
+    </coordinates>
+    <panel_attributes>
+layer=2</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>660</x>
+      <y>748</y>
+      <w>33</w>
+      <h>88</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;60.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>649</x>
+      <y>814</y>
+      <w>44</w>
+      <h>33</h>
+    </coordinates>
+    <panel_attributes>
+layer=2</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>715</x>
+      <y>748</y>
+      <w>33</w>
+      <h>88</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;60.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>704</x>
+      <y>814</y>
+      <w>44</w>
+      <h>33</h>
+    </coordinates>
+    <panel_attributes>
+layer=2</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>473</x>
+      <y>935</y>
+      <w>440</w>
+      <h>132</h>
+    </coordinates>
+    <panel_attributes>ChangeSequenceTemplate
+--
+--
++ deepCopy()
+layer=2
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLNote</id>
+    <coordinates>
+      <x>759</x>
+      <y>770</y>
+      <w>154</w>
+      <h>77</h>
+    </coordinates>
+    <panel_attributes>Concrete 
+EChangeWrappers
+wrap different groups 
+of EChanges
+layer=2</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLNote</id>
+    <coordinates>
+      <x>682</x>
+      <y>979</y>
+      <w>154</w>
+      <h>77</h>
+    </coordinates>
+    <panel_attributes>::deepCopy() is used 
+to be able to
+instantiate patterns 
+more than once.
+layer=3</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>429</x>
+      <y>682</y>
+      <w>88</w>
+      <h>275</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-
+m1=1..n
+m2=1</panel_attributes>
+    <additional_attributes>50.0;10.0;20.0;10.0;20.0;180.0;50.0;180.0;50.0;230.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1012</x>
+      <y>935</y>
+      <w>396</w>
+      <h>66</h>
+    </coordinates>
+    <panel_attributes>ChangeSequenceTemplateSet
+--
+--
++ deepCopy()
+layer=2
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>902</x>
+      <y>979</y>
+      <w>132</w>
+      <h>44</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-
+m1=1..n
+m2=1</panel_attributes>
+    <additional_attributes>10.0;10.0;100.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>726</x>
+      <y>627</y>
+      <w>110</w>
+      <h>88</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-
+m1=0...1
+m2=1
+original</panel_attributes>
+    <additional_attributes>30.0;50.0;70.0;50.0;70.0;20.0;10.0;20.0;10.0;40.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLNote</id>
+    <coordinates>
+      <x>946</x>
+      <y>1089</y>
+      <w>253</w>
+      <h>44</h>
+    </coordinates>
+    <panel_attributes>Copied ChangeSequenceTemplates
+aren't contained in the set.
+layer=2</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>957</x>
+      <y>979</y>
+      <w>33</w>
+      <h>132</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;..</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;100.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1012</x>
+      <y>748</y>
+      <w>396</w>
+      <h>66</h>
+    </coordinates>
+    <panel_attributes>IbexPatternToChangeSequenceTemplateConverter
+--
+--
++ convert() : ChangeSequenceTemplateSet
+layer=2
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>957</x>
+      <y>473</y>
+      <w>165</w>
+      <h>341</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;..
+calls for initialization</panel_attributes>
+    <additional_attributes>50.0;290.0;10.0;290.0;10.0;10.0;70.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1067</x>
+      <y>363</y>
+      <w>187</w>
+      <h>88</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;..
+retrieves matches from</panel_attributes>
+    <additional_attributes>10.0;60.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>935</x>
+      <y>330</y>
+      <w>121</w>
+      <h>44</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;..
+calls </panel_attributes>
+    <additional_attributes>90.0;20.0;10.0;20.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLPackage</id>
+    <coordinates>
+      <x>1474</x>
+      <y>605</y>
+      <w>418</w>
+      <h>539</h>
+    </coordinates>
+    <panel_attributes>.patternmatching
+--
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1507</x>
+      <y>671</y>
+      <w>374</w>
+      <h>110</h>
+    </coordinates>
+    <panel_attributes>VitruviusChangePatternMatcher
+--
+--
++ matchPatterns(changeSequenceTemplateSet: 
+                               ChangeSequenceTemplateSet): 
+               Set&lt;ChangeSequenceTemplate&gt;
+layer=2</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1397</x>
+      <y>429</y>
+      <w>308</w>
+      <h>308</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;..
+
+calls to calculate forward matches</panel_attributes>
+    <additional_attributes>110.0;260.0;50.0;260.0;50.0;10.0;10.0;10.0</additional_attributes>
+  </element>
+</diagram>

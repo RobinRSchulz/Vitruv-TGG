@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!-- Build Parent -->
+  <parent>
+    <groupId>tools.vitruv</groupId>
+    <artifactId>parent</artifactId>
+    <version>3.0.6</version>
+  </parent>
+
+  <!-- Project Information -->
+  <artifactId>tools.vitruv.tgg</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+  <name>Vitruv TGG</name>
+  <description>Language support for developing transformations with Triple Graph Grammars</description>
+
+  <!-- Modules -->
+  <modules>
+    <module>emoflon-integration</module>
+  </modules>
+
+  <properties>
+    <maven.compiler.release>21</maven.compiler.release>
+    <maven.compiler.source>21</maven.compiler.source>
+    <maven.compiler.target>21</maven.compiler.target>
+    <emoflon.ibex.version>1.0.0.202411071058</emoflon.ibex.version>
+    <hipe.version>1.0.0.202411071042</hipe.version>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.openntf.maven</groupId>
+        <artifactId>p2-layout-resolver</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+  <repositories>
+    <!-- Maven Central should have priority -->
+    <repository>
+      <id>central</id>
+      <name>Maven Central</name>
+      <url>https://repo1.maven.org/maven2/</url>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>emoflon-ibex</id>
+      <name>eMoflon::Ibex</name>
+      <layout>p2</layout>
+      <url>https://emoflon.org/emoflon-ibex-updatesite/snapshot/updatesite</url>
+    </repository>
+    <repository>
+      <id>hipe</id>
+      <name>HiPE</name>
+      <layout>p2</layout>
+      <url>https://hipe-devops.github.io/HiPE-Updatesite/hipe.updatesite/</url>
+    </repository>
+</repositories>
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- eMoflon (TGG framework) -->
+      <dependency>
+        <groupId>emoflon-ibex</groupId>
+        <artifactId>org.emoflon.ibex.tgg.language</artifactId>
+        <version>${emoflon.ibex.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>emoflon-ibex</groupId>
+        <artifactId>org.emoflon.ibex.tgg.runtime</artifactId>
+        <version>${emoflon.ibex.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>emoflon-ibex</groupId>
+        <artifactId>org.emoflon.ibex.tgg.runtime.hipe</artifactId>
+        <version>${emoflon.ibex.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>emoflon-ibex</groupId>
+        <artifactId>org.emoflon.ibex.gt.hipe</artifactId>
+        <version>${emoflon.ibex.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>emoflon-ibex</groupId>
+        <artifactId>org.emoflon.ibex.tgg.runtime.democles</artifactId>
+        <version>${emoflon.ibex.version}</version>
+      </dependency>
+      <!-- HiPE pattern matcher (emoflon uses that)-->
+      <dependency>
+        <groupId>hipe</groupId>
+        <artifactId>hipe.dependencies</artifactId>
+        <version>${hipe.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>hipe</groupId>
+        <artifactId>hipe.engine</artifactId>
+        <version>${hipe.version}</version>
+      </dependency>
+
+      <!-- Vitruvius dependencies -->
+      <dependency>
+        <groupId>tools.vitruv</groupId>
+        <artifactId>tools.vitruv.change.atomic</artifactId>
+        <version>3.1.0</version>
+      </dependency>
+      <dependency>
+        <groupId>tools.vitruv</groupId>
+        <artifactId>tools.vitruv.change.composite</artifactId>
+        <version>3.1.0</version>
+      </dependency>
+      <dependency>
+        <groupId>tools.vitruv</groupId>
+        <artifactId>tools.vitruv.change.correspondence</artifactId>
+        <version>3.1.0</version>
+      </dependency>
+      <dependency>
+        <groupId>tools.vitruv</groupId>
+        <artifactId>tools.vitruv.change.interaction</artifactId>
+        <version>3.1.0</version>
+      </dependency>
+      <dependency>
+        <groupId>tools.vitruv</groupId>
+        <artifactId>tools.vitruv.change.propagation</artifactId>
+        <version>3.2.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>tools.vitruv</groupId>
+        <artifactId>tools.vitruv.change.utils</artifactId>
+        <version>3.1.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>tools.vitruv</groupId>
+        <artifactId>tools.vitruv.change.testutils.integration</artifactId>
+        <version>3.1.0</version>
+      </dependency>
+<!--      <dependency>-->
+<!--        <groupId>tools.vitruv</groupId>-->
+<!--        <artifactId>tools.vitruv.dsls.tgg.runtime</artifactId>-->
+<!--        <version>3.2.0-SNAPSHOT</version>-->
+<!--      </dependency>-->
+      <dependency>
+        <groupId>tools.vitruv</groupId>
+        <artifactId>tools.vitruv.dsls.reactions.runtime</artifactId>
+        <version>3.1.0</version>
+      </dependency>
+      <dependency>
+        <groupId>tools.vitruv</groupId>
+        <artifactId>tools.vitruv.framework.views</artifactId>
+        <version>3.1.0</version>
+      </dependency>
+      <dependency>
+        <groupId>tools.vitruv</groupId>
+        <artifactId>tools.vitruv.framework.vsum</artifactId>
+        <version>3.1.0</version>
+      </dependency>
+
+      <!-- external dependencies-->
+      <dependency>
+        <groupId>org.eclipse.emf</groupId>
+        <artifactId>org.eclipse.emf.common</artifactId>
+        <version>2.40.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.emf</groupId>
+        <artifactId>org.eclipse.emf.ecore</artifactId>
+        <version>2.38.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter</artifactId>
+        <version>5.10.1</version>
+      </dependency>
+      <dependency>
+        <groupId>log4j</groupId>
+        <artifactId>log4j</artifactId>
+        <version>1.2.17</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+</project>

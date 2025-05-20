@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>tools.vitruv</groupId>
+        <artifactId>tools.vitruv.tgg</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+    </parent>
+    <packaging>jar</packaging>
+
+    <artifactId>tools.vitruv.tgg.emoflon-integration</artifactId>
+
+    <name>Vitruv TGG eMoflon::IBeX Integration</name>
+    <dependencies>
+        <!-- Vitruvius compile dependencies -->
+        <dependency>
+            <groupId>tools.vitruv</groupId>
+            <artifactId>tools.vitruv.change.atomic</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>tools.vitruv</groupId>
+            <artifactId>tools.vitruv.change.composite</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>tools.vitruv</groupId>
+            <artifactId>tools.vitruv.change.correspondence</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>tools.vitruv</groupId>
+            <artifactId>tools.vitruv.change.interaction</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>tools.vitruv</groupId>
+            <artifactId>tools.vitruv.change.propagation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>tools.vitruv</groupId>
+            <artifactId>tools.vitruv.change.utils</artifactId>
+        </dependency>
+
+        <!-- eMoflon (TGG framework)-->
+        <dependency>
+            <groupId>emoflon-ibex</groupId>
+            <artifactId>org.emoflon.ibex.tgg.language</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>emoflon-ibex</groupId>
+            <artifactId>org.emoflon.ibex.tgg.runtime</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>emoflon-ibex</groupId>
+            <artifactId>org.emoflon.ibex.tgg.runtime.hipe</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>emoflon-ibex</groupId>
+            <artifactId>org.emoflon.ibex.gt.hipe</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>emoflon-ibex</groupId>
+            <artifactId>org.emoflon.ibex.tgg.runtime.democles</artifactId>
+        </dependency>
+
+        <!-- HiPE pattern matcher (emoflon uses that)-->
+        <dependency>
+            <groupId>hipe</groupId>
+            <artifactId>hipe.dependencies</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>hipe</groupId>
+            <artifactId>hipe.engine</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.emf</groupId>
+            <artifactId>org.eclipse.emf.common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.emf</groupId>
+            <artifactId>org.eclipse.emf.ecore</artifactId>
+        </dependency>
+    </dependencies>
+</project>
