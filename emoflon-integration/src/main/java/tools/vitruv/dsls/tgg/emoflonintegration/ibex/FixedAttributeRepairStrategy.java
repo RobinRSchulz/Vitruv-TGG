@@ -4,16 +4,11 @@ import org.emoflon.ibex.tgg.operational.csp.IRuntimeTGGAttrConstrContainer;
 import org.emoflon.ibex.tgg.operational.debug.LoggerConfig;
 import org.emoflon.ibex.tgg.operational.matches.ITGGMatch;
 import org.emoflon.ibex.tgg.operational.repair.strategies.AttributeRepairStrategy;
-import org.emoflon.ibex.tgg.operational.repair.strategies.RepairApplicationPoint;
 import org.emoflon.ibex.tgg.operational.strategies.PropagatingOperationalStrategy;
-import org.emoflon.ibex.tgg.operational.strategies.PropagationDirectionHolder;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternmatching.VitruviusConsistencyMatch;
 
-import java.util.Collection;
-import java.util.Collections;
-
 /**
- * Ensures that not fully matched matches are not tried to repair.
+ * Ensures that not fully matched {@link VitruviusConsistencyMatch}es are not tried to be repaired, regarding their attributes, which makes IBeX throw a {@link NullPointerException}.
  */
 public class FixedAttributeRepairStrategy extends AttributeRepairStrategy {
 

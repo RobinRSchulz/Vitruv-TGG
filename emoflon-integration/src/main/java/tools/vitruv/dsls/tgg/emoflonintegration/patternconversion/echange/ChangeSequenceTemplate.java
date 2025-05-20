@@ -14,7 +14,6 @@ import org.emoflon.ibex.tgg.operational.strategies.PropagationDirectionHolder.Pr
 import org.emoflon.ibex.tgg.operational.strategies.modules.TGGResourceHandler;
 import runtime.CorrespondenceNode;
 import tools.vitruv.change.atomic.EChange;
-import tools.vitruv.change.atomic.feature.reference.InsertEReference;
 import tools.vitruv.dsls.tgg.emoflonintegration.Util;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.EObjectPlaceholder;
 
@@ -320,7 +319,7 @@ public class ChangeSequenceTemplate {
          * Only check all CONTEXT nodes/edges, if this is adjacent to a CREATE node, that will be handled by the caller!<br/>
          * Since we also switch domains in this recursion (because we also match the target contexts),<br/>
          * this hinders us breaking our precondition by mistakenly assuming that we have already matched "TRG" CREATE nodes!
-         * @param tggRuleNode
+         *
          * @return whether this recursion branch has successfully been matched
          */
         private boolean visitNode(TGGRuleNode tggRuleNode) {
@@ -347,6 +346,10 @@ public class ChangeSequenceTemplate {
             return true;
         }
 
+        /**
+         * Try to match the source node of an incoming edge.
+         * This can be used for CREATE or CONTEXT edges, the source node can be CREATE or CONTEXT.
+         */
         private boolean visitIncomingEdge(TGGRuleEdge incomingEdge) {
             logger.trace("Visiting incoming edge" + Util.tGGRuleEdgeToString(incomingEdge));
             TGGRuleNode srcTGGRuleNode = incomingEdge.getSrcNode();
@@ -375,7 +378,7 @@ public class ChangeSequenceTemplate {
                     logger.trace("    HAVE WE FOUND IT? (container!) " + Util.eObjectToString(trgNodeEObject.eContainer()));
                     EObject potentialSrcNodeEObject = trgNodeEObject.eContainer();
                     if (srcTGGRuleNode.getType().isSuperTypeOf(potentialSrcNodeEObject.eClass())) {
-                        // dont know if this check is necessary
+                        // don't know if this check is necessary
                         tggRuleNode2EObjectMapStack.putPush(srcTGGRuleNode, potentialSrcNodeEObject);
                         return visitNode(srcTGGRuleNode);
                     } else return false;
@@ -386,9 +389,6 @@ public class ChangeSequenceTemplate {
                             .map(EStructuralFeature.Setting::getEObject)
                             .collect(Collectors.toSet());
                     return recurseAndTryAllMatchingCandidatesFor(parentCandidates, srcTGGRuleNode);
-//                    if (handleMatchingCandidatesFor(parentCandidates, srcTGGRuleNode)) {
-//                        return visitNode(srcTGGRuleNode); // recurse
-//                    } else return false;
                 }
             } else if (incomingEdge.getDomainType().equals(DomainType.CORR)) {
                 logger.trace("  CORR domain, Context trg node: " + Util.tGGRuleNodeToString(trgTGGRuleNode));
@@ -479,7 +479,7 @@ public class ChangeSequenceTemplate {
             if (tggRuleNode2EObjectMapStack.containsKey(tggRuleNode)
                     && eObjectCandidates.contains(tggRuleNode2EObjectMapStack.get(tggRuleNode))) {
                 // It might be we have preinitialized our map with the contextnode.
-                // In that case we dont need to go through the whole set, but we still need to recurse further!
+                // In that case we don't need to go through the whole set, but we still need to recurse further!
                 return visitNode(tggRuleNode);
             }
 
@@ -503,7 +503,7 @@ public class ChangeSequenceTemplate {
         private void initTggRuleNode2EObjectMap() {
             for (EObjectPlaceholder eObjectPlaceholder : getAllPlaceholders()) {
                 /*
-                    in the case of ReplaceSingeValuedEReference (which represents replacement but also the insertion of an value into a single-valued EReference),
+                    in the case of ReplaceSingeValuedEReference (which represents replacement but also the insertion of a value into a single-valued EReference),
                     we use null as the TGG rule placeholder for the old value, because there is no such thing as an old value in a TGG pattern, meaning we cannot assign a TGGRuleNode!
                     So here, we have to check for null nodes...
                  */
@@ -515,12 +515,14 @@ public class ChangeSequenceTemplate {
 
         /**
          * Check if the given eObject is correllated via a CORR node that resembles the tggRuleCorrFromRule to a node in the OTHER domain
-         * that matches the given ruleNodeInOtherDomain.
+         * that matches the given ruleNodeInOtherDomain and returns it.
          *
          * @param eObject the eObject which is to be checked
-         * @param tggRuleCorrFromRule
-         * @param ruleNodeInOtherDomain
-         * @return
+         * @param tggRuleCorrFromRule the {@link TGGRule}'s corr node, required to find the "instantiated" {@link CorrespondenceNode}.
+         * @param ruleNodeInOtherDomain the {@link TGGRule}'s {@link TGGRuleNode} in the other domain as the one that represents the given eObject.
+         *                             That is required to find the "instantiated" {@link EObject} in the other domain.
+         * @return the context instance, consisting of a {@link CorrespondenceNode} and an {@link EObject} of the other domain as the given eObject,
+         * if that can be found.
          */
         private Optional<Pair<CorrespondenceNode,EObject>> getInstantiatedCorrNodeAndOthersidedEObjectCorrelatedToAMatchingEObject(
                 EObject eObject, TGGRuleCorr tggRuleCorrFromRule, TGGRuleNode ruleNodeInOtherDomain) {

@@ -23,6 +23,7 @@ import org.emoflon.ibex.tgg.compiler.patterns.PatternUtil;
 import org.emoflon.ibex.tgg.operational.IBlackInterpreter;
 import org.emoflon.ibex.tgg.operational.benchmark.TimeMeasurable;
 import org.emoflon.ibex.tgg.operational.benchmark.Times;
+import org.emoflon.ibex.tgg.operational.strategies.modules.TGGResourceHandler;
 import tools.vitruv.dsls.tgg.emoflonintegration.Timer;
 import org.emoflon.ibex.tgg.operational.defaults.IbexOptions;
 import org.emoflon.ibex.tgg.operational.matches.ITGGMatch;
@@ -48,34 +49,23 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
- *
- * Pattern Matcher implementing the generation of new matches based on
- * * the existing TGG derivation (protocol)
- * * Pattern templates:
- * * matching those templates onto a given VitruviusChange
+ * The Pattern Matcher acting as the counterpart for {@link VitruviusTGGChangePropagationIbexEntrypoint},
+ * which inherits {@link org.emoflon.ibex.tgg.operational.strategies.sync.SYNC}.
  * <br/>
- * TO.DO:
- * 1. Generating pattern templates
- *      1. Design a class structure for pattern templates
- *      2. Design an algorithm to
- *          1. map those templates onto a given change sequence
- *          2. choose between found matches via strategy (? here or in SYNC?)
- *          3. Propose a selection of matches to the SYNC algorithm.
- *          4. Keep in 'mind', which changes from the sequence have already been mapped.
- *          5. DELETE: Might need to revoke found mappings.
- *          6. If all changes are covered, output the Sequence of pattern applications.
- *      3. Map pattern applications to their respective target application sequence
- *      4. Generate an EChange-Sequence or VitruviusChange out of that.
- *      5. Apply that change to the target model. (maybe same step as 6.)
- *      6. Hand that change to Vitruvius (maybe same step as 5.)
- * 2.
+ * Here, pattern conversion {@link IbexPatternToChangeSequenceTemplateConverter} is triggered,
+ * as well as all process steps relevant for generating, handling and choosing matches.
+ * The resulting additive or subtractive matches are fed to the {@link VitruviusTGGChangePropagationIbexEntrypoint} via {@link IMatchObserver}, which applies some and calls back this class'
+ * {@link #updateMatches()}.
+ * <br/>
+ * Further, this class implements {@link IbexObserver} to be able to retrieve information about applied forward {@link VitruviusBackwardConversionMatch}es.
+ * That is relevant for calculating the next set of matches.
+ * Since the {@link IbexObserver} doesn't inform about revoked matches, this class holds an {@link VitruviusTGGIbexRedInterpreter} to enable that knowledge.
  *
  */
 public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, TimeMeasurable, IContextPatternInterpreter, IbexObserver {
     protected static final Logger logger = Logger.getLogger(VitruviusBackwardConversionTGGEngine.class);
-    private boolean needs_paranoid_modificiations = false;
+    private boolean needs_paranoid_modifications = false;
 
-    private EPackage.Registry registry;
     private IMatchObserver iMatchObserver;
     private final URI baseURI;
     private IbexOptions ibexOptions;
@@ -102,6 +92,12 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
 
     private final Set<VitruviusConsistencyMatch> matchesThatHaveBeenTriedToRepair;
 
+    /**
+     *
+     * @param vitruviusChange the initial change sequence where the forward matching and parts of the broken match detection are based upon.
+     * @param propagationDirection {@link PropagationDirection#FORWARD} or {@link PropagationDirection#BACKWARD},
+     *                                                                 depending on what model the given vitruviusChange concerns.
+     */
     public VitruviusBackwardConversionTGGEngine(VitruviusChange<EObject> vitruviusChange, PropagationDirection propagationDirection) {
         this.vitruviusChange = new VitruviusChangeTransformer(vitruviusChange).transform();
         this.timeMeasurements = new HashMap<>();
@@ -154,17 +150,15 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
 
     @Override
     public void initialise(EPackage.Registry registry, IMatchObserver iMatchObserver) {
-        this.registry = registry;
         this.iMatchObserver = iMatchObserver;
     }
 
     @Override
     public ResourceSet createAndPrepareResourceSet(String workspacePath) {
         this.resourceSet = new ResourceSetImpl();
+        // use custom class for bugfix.
         resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap()
                 .put(Resource.Factory.Registry.DEFAULT_EXTENSION, new SmartEMFResourceFactoryImplFixed(workspacePath));
-//                .put(Resource.Factory.Registry.DEFAULT_EXTENSION, new SmartEMFResourceFactoryImpl(workspacePath));
-//				.put(Resource.Factory.Registry.DEFAULT_EXTENSION, new XMIResourceFactoryImpl());
         try {
             resourceSet.getURIConverter().getURIMap().put(
                     URI.createPlatformResourceURI("/", true),
@@ -181,7 +175,8 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     }
 
     /**
-     * eMoflon doesn't seem to do this on its own (at least I cannot find out how and where), so we do it here..
+     * IBeX doesn't seem to do this on its own (at least I cannot find out how and where), so we do it here:
+     * Initialize the matches that are known from the protocol by creating them and handling them to the {@link IMatchObserver}.
      */
     private void initializePreexistingConsistencyMatchesIfNotAlreadyPresent() {
         if (!preexistingConsistencyMatchesInitialized) {
@@ -208,9 +203,16 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
 
         // new forward matches. currently only creating forward matches ONCE since we match against the whole change sequence...
         createForwardMatchesIfNotAlreadyPresent();
+
+        // as the pattern matching is incremental, we ensure that only matches that have not already been applied before, are considered.
         Set<VitruviusBackwardConversionMatch> remainingMatches = getMatchesThatHaventBeenAppliedAndAreStillIntact();
 
-        // we do not give ALL matches to SYNC but only those that CURRENTLY match context. As matches are applied by SYNC, new matches from this engine may become possible again!
+        /*
+            We do not give ALL matches to SYNC but only those that CURRENTLY match context.
+            As matches are applied by SYNC, new matches from this engine may become possible again!
+            Flattening must happen after that (and thus, often...) because, if done before context matching,
+            it might throw out matches because it prefers matches whose context doesn't match.
+         */
         matchContext_flatten_andHandToSYNC(remainingMatches);
 
         Set<VitruviusConsistencyMatch> brokenMatches = getBrokenMatches();
@@ -219,10 +221,8 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
             this.iMatchObserver.removeMatch(brokenMatch);
         });
 
-        // Repair matches that are broken and have not been repaired by shortcut rules
-//        if (ibexOptions.repair.useShortcutRules()) {
-//            throw new IllegalStateException("Using shortcut rules not supported yet: Need to filter out repaired matches from the broken matches...");
-//        }
+        // Repair matches that are broken and have not been repaired by shortcut rules.
+        // Created new forward matches are handed to sync and also stored to be treated as normal forward matches by this method.
         repairUnrepairedBrokenMatches();
     }
 
@@ -241,6 +241,7 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
                 this.observedOperationalStrategy.getResourceHandler(), this.ibexOptions.tgg.flattenedTGG().getRules().stream().filter(tggRule -> !tggRule.isAbstract()).collect(Collectors.toSet()),
                 unrepairedAndUntriedBrokenMatches, propagationDirection)
                 .createNewChangeSequence();
+
         // Utilize EChanges that have been left over from the main pattern matching, too!
         newChangeSequence.addAll(vitruviusChangePatternMatcher.getUnmatchedEChanges());
         VitruviusChangePatternMatcher newVitruviusChangePatternMatcher = new VitruviusChangePatternMatcher(
@@ -259,6 +260,12 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
         matchContext_flatten_andHandToSYNC(newMatches);
     }
 
+    /**
+     * Tries to match context (see {@link VitruviusBackwardConversionMatch#contextMatches(TGGResourceHandler, PropagationDirection)}) on each given match.
+     * Context-matched matches are then <I>flattened</I>/ selected by the {@link PatternCoverageFlattener},
+     * meaning that it is ensured that there are no overlaps between matches in the change sequence, such that a change is covered by more than one {@link VitruviusBackwardConversionMatch}.
+     * Finally, the matches are handed to SYNC by calling the {@link IMatchObserver}.
+     */
     private void matchContext_flatten_andHandToSYNC(Set<VitruviusBackwardConversionMatch> matches) {
         Timer contextMatchingTimer = new Timer();
         contextMatchingTimer.start();
@@ -300,19 +307,19 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
              * For additive changes, we need it set to false, because otherwise the serialization looks like ... and some references are lost, (e.g. UML-> Generalization::general)
              */
             @Override
-            public boolean needs_paranoid_modificiations() { return needs_paranoid_modificiations ; }
+            public boolean needs_paranoid_modificiations() { return needs_paranoid_modifications; }
         };
     }
 
     /**
-     * Set the value that {@link VitruviusBackwardConversionTGGEngine#getProperties()#needs_paranoid_modificiations} returns.
-     *
+     * Set the value that {@link VitruviusBackwardConversionTGGEngine#getProperties()#needs_paranoid_modifications} returns.
+     * <br/>
      * This is another ibex bug workaround. We need both paranoid and un-paranoid modifications to each prevent different kinds of bugs:
      * For deleting changes, we need it set to true, because otherwise some {@link UnsupportedOperationException} is thrown in some models (e.g. UML).
      * For additive changes, we need it set to false, because otherwise the serialization looks like ... and some references are lost, (e.g. UML-> Generalization::general)
      */
-    public void setNeeds_paranoid_modificiations(boolean needs_paranoid_modificiations) {
-        this.needs_paranoid_modificiations = needs_paranoid_modificiations;
+    public void setNeeds_paranoid_modifications(boolean needs_paranoid_modifications) {
+        this.needs_paranoid_modifications = needs_paranoid_modifications;
     }
 
     @Override
@@ -321,6 +328,11 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
         return new Times();
     }
 
+    /**
+     *
+     * @return matches broken (and not already revoked by the {@link VitruviusTGGIbexRedInterpreter})
+     * as indicated by the initial change sequence or broken protocol entries.
+     */
     private Set<VitruviusConsistencyMatch> getBrokenMatches() {
         return vitruviusChangeBrokenMatchMatcher
                 .getBrokenMatches(this.observedOperationalStrategy.getResourceHandler())
@@ -328,6 +340,9 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
                 .collect(Collectors.toSet());
     }
 
+    /**
+     * Create forward matches based on the pattern templates gotten from {@link IbexPatternToChangeSequenceTemplateConverter}, using the {@link VitruviusChangePatternMatcher}.
+     */
     private void createForwardMatchesIfNotAlreadyPresent() {
         if (this.matchesFound == null) {
 
@@ -391,7 +406,6 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
     @Override
     public void update(ObservableEvent eventType, Object... objects) {
         if (Objects.requireNonNull(eventType) == ObservableEvent.MATCHAPPLIED) {
-            //                this.getObservers().forEach((o) -> o.update(ObservableEvent.MATCHAPPLIED, new Object[]{match})); // this the code of the caller.
             if (!(objects[0] instanceof ITGGMatch match)) {
                 throw new IllegalStateException("MATCHAPPLIED events must be of type IMatch");
             }
@@ -406,6 +420,10 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
         }
     }
 
+    /**
+     *
+     * @return all new correspondences added in the process of pattern matching.
+     */
     public Set<CorrespondenceNode> getNewlyAddedCorrespondences() {
         return this.matchesThatHaveBeenApplied.stream()
                 .filter(match -> match instanceof VitruviusBackwardConversionMatch)
@@ -417,14 +435,24 @@ public class VitruviusBackwardConversionTGGEngine implements IBlackInterpreter, 
                 .collect(Collectors.toSet());
     }
 
+    /**
+     * Give this class knowledge about the correspondence graph and the protocol.
+     */
     public void addObservedOperationalStrategy(OperationalStrategy observedOperationalStrategy) {
         this.observedOperationalStrategy = observedOperationalStrategy;
     }
 
+    /**
+     * Add the {@link VitruviusTGGIbexRedInterpreter} to enable this class to have knowledge about matches that have been revoked.
+     */
     public void addVitruviusTGGIbexRedInterpreter(VitruviusTGGIbexRedInterpreter vitruviusTGGIbexRedInterpreter) {
         this.vitruviusTGGIbexRedInterpreter = vitruviusTGGIbexRedInterpreter;
     }
 
+    /**
+     *
+     * @return all new forward matches that have been applied in the process of pattern matching (includes forward matches for repair).
+     */
     public Set<VitruviusBackwardConversionMatch> getAppliedMatches() {
         return this.matchesThatHaveBeenApplied.stream()
                 .filter(match -> match instanceof VitruviusBackwardConversionMatch)

@@ -18,7 +18,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Used as broken or intact CONSISTENCY match, i.e. a representation of a protocol marker.
+ * Used to represent a broken or intact CONSISTENCY match, i.e. a representation of a protocol marker.
  */
 public class VitruviusConsistencyMatch extends SimpleTGGMatch implements ITGGMatch {
     protected static final Logger logger = Logger.getLogger(VitruviusConsistencyMatch.class);
@@ -72,6 +72,10 @@ public class VitruviusConsistencyMatch extends SimpleTGGMatch implements ITGGMat
         return PatternUtil.resolve(this.getPatternName());
     }
 
+    /**
+     *
+     * @return all matched nodes of {@link BindingType#CREATE}
+     */
     public Set<Pair<TGGRuleNode, EObject>> getMatchedCreateNodes() {
         return this.getTggRule().getNodes().stream()
                 .filter(ruleNode -> ruleNode.getBindingType().equals(BindingType.CREATE))
@@ -79,6 +83,10 @@ public class VitruviusConsistencyMatch extends SimpleTGGMatch implements ITGGMat
                 .collect(Collectors.toSet());
     }
 
+    /**
+     *
+     * @return all matched nodes of {@link BindingType#CONTEXT}
+     */
     public Set<Pair<TGGRuleNode, EObject>> getMatchedContextNodes() {
         return this.getTggRule().getNodes().stream()
                 .filter(ruleNode -> ruleNode.getBindingType().equals(BindingType.CONTEXT))
@@ -86,6 +94,10 @@ public class VitruviusConsistencyMatch extends SimpleTGGMatch implements ITGGMat
                 .collect(Collectors.toSet());
     }
 
+    /**
+     *
+     * @return the {@link TGGRule} that this match is an "instance" of.
+     */
     public TGGRule getTggRule() {
         return tggRule;
     }

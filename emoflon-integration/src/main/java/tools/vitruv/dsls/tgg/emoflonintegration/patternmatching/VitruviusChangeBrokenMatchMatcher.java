@@ -8,8 +8,6 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.EStructuralFeature;
 import org.emoflon.ibex.common.operational.IMatch;
-import org.emoflon.ibex.tgg.operational.matches.ITGGMatch;
-import org.emoflon.ibex.tgg.operational.strategies.PropagationDirectionHolder;
 import org.emoflon.ibex.tgg.operational.strategies.modules.TGGResourceHandler;
 import runtime.TGGRuleApplication;
 import tools.vitruv.change.atomic.EChange;
@@ -28,6 +26,9 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+/**
+ * Detects broken matches based on corrupt protocol nodes and on deleting changes in a given {@link VitruviusChange}.
+ */
 public class VitruviusChangeBrokenMatchMatcher {
     static Logger logger = Logger.getLogger(VitruviusChangePatternMatcher.class);
 
@@ -36,19 +37,28 @@ public class VitruviusChangeBrokenMatchMatcher {
 
     private Set<VitruviusConsistencyMatch> brokenMatchesCache;
 
+    /**
+     *
+     * @param vitruviusChange the change sequence to base the broken match detection on.
+     */
     public VitruviusChangeBrokenMatchMatcher(VitruviusChange<EObject> vitruviusChange, Collection<TGGRule> rules) {
         this.vitruviusChange = vitruviusChange;
         this.rules = rules;
     }
 
+    /**
+     * Calculates broken matches if not already calculated, and returns them.
+     * @param resourceHandler for access to the protocol.
+     * @return matches from the protocol that are broken by the given change sequence ({@link VitruviusChange}).
+     */
     public Set<VitruviusConsistencyMatch> getBrokenMatches(TGGResourceHandler resourceHandler) {
         if (brokenMatchesCache == null) {
             Map<TGGRuleApplication, TGGRule> tggRuleApplicationTGGRuleMap = Util.getTGGRuleApplicationsWithRules(resourceHandler, rules);
-            Set<VitruviusConsistencyMatch> matches = getNodeMissingBrokenMatches(resourceHandler, tggRuleApplicationTGGRuleMap);
+            Set<VitruviusConsistencyMatch> matches = getNodeMissingBrokenMatches(tggRuleApplicationTGGRuleMap);
 
             // we only want to find NEW matches. That also ensures those matches being complete, i.e. having all their nodes!
             matches.forEach(match -> tggRuleApplicationTGGRuleMap.remove(match.getRuleApplicationNode()));
-            matches.addAll(getAdditionalBrokenMatches(resourceHandler, tggRuleApplicationTGGRuleMap));
+            matches.addAll(getAdditionalBrokenMatches(tggRuleApplicationTGGRuleMap));
             matches.addAll(getMatchesBrokenByAttributeChanges(tggRuleApplicationTGGRuleMap));
             brokenMatchesCache = matches;
         }
@@ -58,7 +68,7 @@ public class VitruviusChangeBrokenMatchMatcher {
     /**
      * @return matches that are broken because of a marker that doesn't cover all CONTEXT and CREATE nodes anymore (meaning that some EObject must have been deleted).
      */
-    private Set<VitruviusConsistencyMatch> getNodeMissingBrokenMatches(TGGResourceHandler resourceHandler, Map<TGGRuleApplication, TGGRule> tggRuleApplicationTGGRuleMap) {
+    private Set<VitruviusConsistencyMatch> getNodeMissingBrokenMatches(Map<TGGRuleApplication, TGGRule> tggRuleApplicationTGGRuleMap) {
         Set<VitruviusConsistencyMatch> brokenMatches = tggRuleApplicationTGGRuleMap.keySet().stream()
                 .filter(tggRuleApplication -> {
                     // is there any node that is null but shouldn't?
@@ -112,11 +122,7 @@ public class VitruviusChangeBrokenMatchMatcher {
          return matches;
     }
 
-    /**
-     *
-     * @param resourceHandler provides access to the protocol resource.
-     */
-    private Set<VitruviusConsistencyMatch> getAdditionalBrokenMatches(TGGResourceHandler resourceHandler, Map<TGGRuleApplication, TGGRule> intactTGGRuleApplicationTGGRuleMap) {
+    private Set<VitruviusConsistencyMatch> getAdditionalBrokenMatches(Map<TGGRuleApplication, TGGRule> intactTGGRuleApplicationTGGRuleMap) {
         return vitruviusChange.getEChanges().stream()
                 .filter(eChange -> !Util.isCreatingOrAdditiveEChange(eChange))
                 .filter(eChange -> !(eChange instanceof DeleteEObject<EObject>)) // those are handled by getNodeMissingBrokenMatches already!
@@ -136,35 +142,29 @@ public class VitruviusChangeBrokenMatchMatcher {
 
     /**
      * This detects match-break cases where the concerned EObjects have not been deleted. E.g. if a reference was created by the green match but the node still remains.
-     * @param breakingChange
-     * @param intactTGGRuleApplicationTGGRuleMap contains markers (and their respecitve rules) that are INTACT (not missing any nodes) and should be checked
+     *
+     * @param intactTGGRuleApplicationTGGRuleMap contains markers (and their respective rules) that are INTACT (not missing any nodes) and should be checked
      * @return broken matches that don't miss a node.
      */
     private Set<VitruviusConsistencyMatch> handleNonTrivialBreakingEChange(EChange<EObject> breakingChange, Map<TGGRuleApplication, TGGRule> intactTGGRuleApplicationTGGRuleMap) {
         logger.trace("  handle breaking change: " + Util.eChangeToString(breakingChange));
         Set<TGGRuleApplication> calculatedBrokenTGGRuleApplications = Set.of();
         switch (breakingChange) {
-            case DeleteEObject<EObject> deleteEObject -> {
-                logger.warn("  DeleteEObject changes are not handled, here!: " + Util.eChangeToString(deleteEObject));
-            }
+            case DeleteEObject<EObject> deleteEObject -> logger.warn("  DeleteEObject changes are not handled, here!: " + Util.eChangeToString(deleteEObject));
             case ReplaceSingleValuedFeatureEChange<EObject, ?, ?> replaceSingleValuedFeatureEChange -> {
                 // captures ReplaceSingleValuedEReference and ReplaceSingleValuedEAttribute
-                throw new RuntimeException("todo implement");
+                throw new RuntimeException("This should not occur! ReplaceSingleValuedFeatureEChange must be converted!");
             }
-            case RemoveRootEObject<EObject> removeRootEObject -> {
-                calculatedBrokenTGGRuleApplications = getMarkersWhereEObjectOccursAs(removeRootEObject.getOldValue(),
-                        Set.of(BindingType.CREATE), intactTGGRuleApplicationTGGRuleMap);
-            }
-            case RemoveEAttributeValue<EObject, ?> removeEAttributeValue -> {
-                logger.debug("RemoveEAttributeValue EChanges that only change attributes are ignored: " + Util.eChangeToString(removeEAttributeValue));
-            }
-            case RemoveEReference<EObject> removeEReference -> {
-                calculatedBrokenTGGRuleApplications = getMarkersWhereAEReferencesValuePossiblyIndexed(removeEReference.getAffectedElement(), removeEReference.getAffectedFeature(),
-                        removeEReference.getOldValue(), removeEReference.getIndex(), intactTGGRuleApplicationTGGRuleMap);
-            }
-            case UnsetFeature<EObject, ?> unsetFeature -> {
-                calculatedBrokenTGGRuleApplications = getMarkersWhereFeatureOccurs(unsetFeature.getAffectedElement(), unsetFeature.getAffectedFeature(), intactTGGRuleApplicationTGGRuleMap);
-            }
+            case RemoveRootEObject<EObject> removeRootEObject ->
+                    calculatedBrokenTGGRuleApplications = getMarkersWhereEObjectOccursAs(removeRootEObject.getOldValue(),
+                            Set.of(BindingType.CREATE), intactTGGRuleApplicationTGGRuleMap);
+            case RemoveEAttributeValue<EObject, ?> removeEAttributeValue -> logger.debug("RemoveEAttributeValue EChanges that only change attributes are ignored: " + Util.eChangeToString(removeEAttributeValue));
+            case RemoveEReference<EObject> removeEReference ->
+                    calculatedBrokenTGGRuleApplications =
+                            getMarkersWhereAEReferencesValuePossiblyIndexed(removeEReference.getAffectedElement(), removeEReference.getAffectedFeature(),
+                                    removeEReference.getOldValue(), removeEReference.getIndex(), intactTGGRuleApplicationTGGRuleMap);
+            case UnsetFeature<EObject, ?> unsetFeature ->
+                    calculatedBrokenTGGRuleApplications = getMarkersWhereFeatureOccurs(unsetFeature.getAffectedElement(), unsetFeature.getAffectedFeature(), intactTGGRuleApplicationTGGRuleMap);
             case EChange<EObject> eChange1 -> throw new IllegalStateException("Inconcrete eChange: " + eChange1);
         }
         return calculatedBrokenTGGRuleApplications.stream()
@@ -200,12 +200,9 @@ public class VitruviusChangeBrokenMatchMatcher {
                     // check references (type and marker)
                     .anyMatch(ruleNode -> ruleNode.getOutgoingEdges().stream()
                             .filter(tggRuleEdge -> eReference.equals(tggRuleEdge.getType()))
-                            // check the VALUE on the marker. if the reference is manyvalued, we have to check List and index, otherwise only equality.
+                            // check the VALUE on the marker. if the reference is many-valued, we have to check List and index, otherwise only equality.
                             .anyMatch(tggRuleEdge -> {
                                 Object eGetReturn = marker.eGet(marker.eClass().getEStructuralFeature(Util.getMarkerStyleName(tggRuleEdge.getTrgNode())));
-                                // the following cannot be handled!
-//                                if (eReference.isMany()) {
-//                                }
                                 return value.equals(eGetReturn);
                             }));
         }, intactTGGRuleApplicationTGGRuleMap);

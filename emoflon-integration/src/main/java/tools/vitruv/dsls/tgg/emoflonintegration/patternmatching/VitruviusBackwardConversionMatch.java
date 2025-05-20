@@ -14,7 +14,6 @@ import tools.vitruv.dsls.tgg.emoflonintegration.Util;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.EObjectPlaceholder;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange.ChangeSequenceTemplate;
 
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -47,7 +46,6 @@ public class VitruviusBackwardConversionMatch extends SimpleTGGMatch implements 
         } else {
             Optional<Map<TGGRuleNode, EObject>> tggRuleNodeEObjectMapOptional = matchedChangeSequenceTemplate.contextMatches(tggResourceHandler, propagationDirection);
             if (tggRuleNodeEObjectMapOptional.isPresent()) {
-                logger.debug("  SUCCESSS!!!!");
                 contextHasBeenMatchedSuccessfully = true;
                 this.tggRuleNodeEObjectMap = tggRuleNodeEObjectMapOptional.get();
                 // add the matched EObjects to this

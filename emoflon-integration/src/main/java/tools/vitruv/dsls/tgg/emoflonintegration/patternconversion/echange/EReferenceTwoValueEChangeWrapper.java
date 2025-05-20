@@ -28,7 +28,7 @@ public class EReferenceTwoValueEChangeWrapper extends EChangeWrapper {
     /**
      *
      * @param eChangeType                this template can only be matched against eChanges of this type.
-     * @param affectedElementEClass      this template can only be matched against eChanges whose affectedElements are instances of that Eclass
+     * @param affectedElementEClass      this template can only be matched against eChanges whose affectedElements are instances of that EClass
      * @param affectedElementPlaceholder a affectedElementPlaceholder to be able to hold an actual mapping of the change.
      * @param oldValuePlaceholder a placeholder for the (EDataType) value that is replaced by the newValue in an actual eChange.
      * @param newValuePlaceholder a placeholder for the new value that replaces the old value.

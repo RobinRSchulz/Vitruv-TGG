@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 /**
  * Ibex initializes HiPE in a way that doesn't allow the flexibility for it to be called "as a library".
  * So we override and override and override...
- * This is not part of the thesis and it is unsure if this is even used in the evaluation...
+ * This is not part of the thesis, and it is unsure if this is even used in the evaluation...
  */
 public class VitruviusHiPETGGEngine extends HiPETGGEngine {
 
@@ -64,7 +64,7 @@ public class VitruviusHiPETGGEngine extends HiPETGGEngine {
         String path = getProjectBinDirectory() + generateHiPEClassName().replace(".", "/").replace("HiPEEngine", "ibex-patterns.xmi");
 
         File file = new File(path);
-//        logger.info("ibex-patterns.xmi path: " + file);
+
         try {
             cp = file.getCanonicalPath();
             cp = cp.replace("%20", " ");
@@ -79,7 +79,7 @@ public class VitruviusHiPETGGEngine extends HiPETGGEngine {
         }
 
         IBeXModel ibexModel = (IBeXModel)r.getContents().getFirst();
-        //
+
         IBeXPatternSet ibexPatterns = ibexModel.getPatternSet();
         setPrivateSuperclassField("ibexPatterns", ibexPatterns);
 
@@ -165,10 +165,6 @@ public class VitruviusHiPETGGEngine extends HiPETGGEngine {
     private Class loadIbexProjectSpecificClass(final File directory, String className) throws ClassNotFoundException {
         try {
             //class loader should have access to this CL's classes as well as the ibex project
-
-//            return new SimpleNameSupportingURLClassLoader(
-//                    new URL[]{directory.toURI().toURL()},
-//                    this.getClass().getClassLoader())
             return SimpleNameSupportingURLClassLoader
                     .getInstance(new URL[]{directory.toURI().toURL()})
                     .loadClass(className);

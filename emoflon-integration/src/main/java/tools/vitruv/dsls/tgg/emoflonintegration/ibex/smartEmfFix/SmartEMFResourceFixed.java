@@ -6,6 +6,9 @@ import org.eclipse.emf.common.util.URI;
 import org.emoflon.smartemf.persistence.AdapterList;
 import org.emoflon.smartemf.persistence.SmartEMFResource;
 
+/**
+ * A bugfix class that replaces the buggy class {@link AdapterList} with {@link AdapterListFixed}.
+ */
 public class SmartEMFResourceFixed extends SmartEMFResource {
 
     private AdapterListFixed adapters = new AdapterListFixed(this);

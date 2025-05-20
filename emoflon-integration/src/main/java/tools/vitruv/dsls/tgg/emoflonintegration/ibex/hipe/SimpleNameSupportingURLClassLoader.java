@@ -7,7 +7,7 @@ import java.util.Map;
 
 /**
  * A singleton classloader to enable loading classes without the package name.
- * The singleton mechanism is used for preventing ambiguities when a non-disjoint set of classes is to be loaded,
+ * The singleton mechanism is used for preventing ambiguities when a set of classes is to be loaded by different classes,
  * as is done in the evaluation project.
  */
 public class SimpleNameSupportingURLClassLoader extends URLClassLoader {
@@ -17,7 +17,7 @@ public class SimpleNameSupportingURLClassLoader extends URLClassLoader {
 
     /**
      *
-     * @param urls
+     * @param urls the urls to be loaded on first getInstance call. On the second, they are ignored.
      * @return this singleton instance, instanciated with the first urls.
      */
     public static SimpleNameSupportingURLClassLoader getInstance(URL[] urls) {

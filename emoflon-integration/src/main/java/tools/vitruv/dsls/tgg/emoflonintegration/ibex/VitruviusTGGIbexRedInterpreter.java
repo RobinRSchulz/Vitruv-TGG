@@ -2,8 +2,6 @@ package tools.vitruv.dsls.tgg.emoflonintegration.ibex;
 
 import org.eclipse.emf.ecore.EObject;
 import org.emoflon.ibex.common.emf.EMFEdge;
-import org.emoflon.ibex.common.emf.EMFManipulationUtils;
-import org.emoflon.ibex.tgg.operational.IBlackInterpreter;
 import org.emoflon.ibex.tgg.operational.defaults.IbexRedInterpreter;
 import org.emoflon.ibex.tgg.operational.matches.ITGGMatch;
 import org.emoflon.ibex.tgg.operational.strategies.OperationalStrategy;
@@ -47,9 +45,9 @@ public class VitruviusTGGIbexRedInterpreter extends IbexRedInterpreter {
     @Override
     public void revoke(Set<EObject> nodesToRevoke, Set<EMFEdge> edgesToRevoke) {
         // we need this, but cannot leave it activated all the time since it breaks edge cases in serialization!
-        patternMatcher.setNeeds_paranoid_modificiations(true);
+        patternMatcher.setNeeds_paranoid_modifications(true);
         super.revoke(nodesToRevoke, edgesToRevoke);
-        patternMatcher.setNeeds_paranoid_modificiations(false);
+        patternMatcher.setNeeds_paranoid_modifications(false);
 
 
         revokedModelNodes.addAll(nodesToRevoke.stream().filter(eObject -> !(eObject instanceof CorrespondenceNode)).collect(Collectors.toSet())); // only model nodes!

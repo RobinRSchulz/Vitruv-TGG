@@ -20,7 +20,7 @@ public class ChangeSequenceTemplateSet {
 
     private final Collection<ChangeSequenceTemplate> patternTemplateParents;
     /**
-     * maps an Echange Type to all EChange-Wrappers this pattern contains
+     * maps an EChange Type to all EChange-Wrappers this pattern contains
      */
     private Map<EClass, Set<ChangeSequenceTemplate>> changeSequenceTemplatesByEChangeType;
 
@@ -59,7 +59,7 @@ public class ChangeSequenceTemplateSet {
             changeSequenceTemplate.getEChangeWrappers().stream()
                     .filter(eChangeWrapper -> eChangeWrapper.matches(eChange))
                     .forEach(eChangeWrapper -> {
-                        // we got a pattern with >= 1 eChangewrappers matching the eChange. We now want to create one invoked IbexPatternTemplate with the respective eChangeWrapper already initialized.
+                        // we got a pattern with >= 1 eChangeWrappers matching the eChange. We now want to create one invoked IbexPatternTemplate with the respective eChangeWrapper already initialized.
                         // thus, we initialize the one eChangeWrapper here
                         ChangeSequenceTemplate changeSequenceTemplateCopy = changeSequenceTemplate.deepCopy();
                         changeSequenceTemplateCopy.getThisInstancesEChangeWrapperFromParent(eChangeWrapper).initialize(eChange);

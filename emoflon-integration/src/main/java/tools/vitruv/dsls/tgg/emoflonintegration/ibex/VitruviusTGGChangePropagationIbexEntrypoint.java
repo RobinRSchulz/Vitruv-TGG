@@ -16,7 +16,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
- * This is the entrypoint for the propagation of Vitruvius Changes with TGG rules.
+ * This is the entrypoint for the propagation of Vitruvius Changes with TGG rules. Also, since it extends {@link SYNC},
+ * this class acts as the counterpart for {@link VitruviusBackwardConversionTGGEngine}.
+ * To enable that, certain customizations are made, giving the pattern matcher more information that it would normally have and fixing some bugs.
+ *
  * The Pattern matcher and other configuration (metamodel and model information) is provided in the constructor
  */
 public class VitruviusTGGChangePropagationIbexEntrypoint extends SYNC {
@@ -32,10 +35,12 @@ public class VitruviusTGGChangePropagationIbexEntrypoint extends SYNC {
      */
     public VitruviusTGGChangePropagationIbexEntrypoint(VitruviusTGGChangePropagationRegistrationHelper registrationHelper) throws IOException {
         super(registrationHelper.createIbexOptions());
-        //override redInterpreter with our own stuff
         this.propagationDirection = registrationHelper.getPropagationDirection();
         IBlackInterpreter patternMatcher = this.getOptions().blackInterpreter();
+
+        //further initialize this SYNC instance and the pattern matcher
         if (patternMatcher instanceof VitruviusBackwardConversionTGGEngine vitruviusBackwardConversionTGGEngine) {
+            // custom RedInterpreter for being able to remeber revoked matches. That is required by the pattern matcher.
             VitruviusTGGIbexRedInterpreter vitruviusTGGIbexRedInterpreter = new VitruviusTGGIbexRedInterpreter(this, (VitruviusBackwardConversionTGGEngine) this.getOptions().blackInterpreter());
             this.registerRedInterpeter(vitruviusTGGIbexRedInterpreter);
 

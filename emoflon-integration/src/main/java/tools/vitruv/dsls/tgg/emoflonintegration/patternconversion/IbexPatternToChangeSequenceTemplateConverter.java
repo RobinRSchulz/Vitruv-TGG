@@ -2,12 +2,8 @@ package tools.vitruv.dsls.tgg.emoflonintegration.patternconversion;
 
 import language.*;
 import org.apache.log4j.Logger;
-import org.eclipse.emf.common.util.URI;
-import org.eclipse.emf.ecore.EPackage;
-import org.eclipse.emf.ecore.InternalEObject;
 import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXContextPattern;
 import org.emoflon.ibex.patternmodel.IBeXPatternModel.IBeXModel;
-import org.emoflon.ibex.tgg.compiler.patterns.PatternSuffixes;
 import tools.vitruv.change.atomic.eobject.EobjectPackage;
 import tools.vitruv.change.atomic.feature.reference.ReferencePackage;
 import tools.vitruv.change.atomic.root.RootPackage;
@@ -17,6 +13,9 @@ import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Main class for <I>backward conversion</I> of the IBeX {@link TGGRule}s.
+ */
 public class IbexPatternToChangeSequenceTemplateConverter {
     protected static final Logger logger = Logger.getLogger(IbexPatternToChangeSequenceTemplateConverter.class);
 
@@ -31,13 +30,16 @@ public class IbexPatternToChangeSequenceTemplateConverter {
      */
     private Set<TGGRuleNode> graphElementVisitedSet;
     /**
-     * Collects EChangeWrappers belonging to ONE rule. That means this needs to be resetted before each rule parsing.
+     * Collects EChangeWrappers belonging to ONE rule. That means this needs to be reset before each rule parsing.
      */
     private Collection<EChangeWrapper> eChangeWrappers;
     
-    private DomainType domainType;
+    private final DomainType domainType;
 
-
+    /**
+     *
+     * @param domainType this converter only considers one side/ graph/ metamodel for template creation: {@link DomainType#SRC} or {@link DomainType#TRG}.
+     */
     public IbexPatternToChangeSequenceTemplateConverter(IBeXModel iBeXModel, TGG tgg, DomainType domainType) {
         this.iBeXModel = iBeXModel;
         this.tgg = tgg;
@@ -48,8 +50,6 @@ public class IbexPatternToChangeSequenceTemplateConverter {
     }
 
     public ChangeSequenceTemplateSet convert() {
-        printRulesDebugInfo();
-
         Collection<ChangeSequenceTemplate> patternTemplates = this.tgg.getRules().stream()
                 .filter(tggRule -> !tggRule.isAbstract())
                 .map(this::parseRule).collect(Collectors.toList());
@@ -58,7 +58,7 @@ public class IbexPatternToChangeSequenceTemplateConverter {
     }
 
     /**
-     * DFS through a pattern, divided into CONTEXT nodes and CREATE nodes for less complex submethods.
+     * DFS through a pattern, divided into CONTEXT nodes and CREATE nodes for less complex sub-methods.
      * Depending on different CREATE nodes and CREATE edges, EChangeWrappers are generated and collected globally.
      *
      * @return a ${@link ChangeSequenceTemplate} containing the collected EChangeWrappers and references to their ibeX pendants.
@@ -110,7 +110,7 @@ public class IbexPatternToChangeSequenceTemplateConverter {
 
     /**
      * Ignore this node but decide, based on its outgoing edges, what is to be done.
-     * A CREATEing edge adds EChangeWrappers, while a CONTEXT edge is skipped.
+     * A CREATE-ing edge adds EChangeWrappers, while a CONTEXT edge is skipped.
      */
     private void parseContextNode(TGGRuleNode ruleNode) {
         if (graphElementVisitedSet.contains(ruleNode)) { return; }
@@ -163,17 +163,6 @@ public class IbexPatternToChangeSequenceTemplateConverter {
                 );
             } else {
                 eChangeWrappers.add(
-//                /*
-//                    in the case of ReplaceSingeValuedEReference (which represents replacement (not handled here) but also the insertion of a value into a single-valued EReference),
-//                    we use null as the TGG rule placeholder for the old value, because there is no such thing as an old value in a TGG pattern, meaning we cannot assign a TGGRuleNode!
-//                 */
-//                    new EReferenceTwoValueEChangeWrapper(
-//                            ReferencePackage.eINSTANCE.getReplaceSingleValuedEReference(),
-//                            ruleEdge.getSrcNode().getType(), // the affected EObject always is the node where this edge comes from
-//                            getOrCreatePlaceHolder(ruleEdge.getSrcNode()),
-//                            ruleEdge.getType(),
-//                            new EObjectPlaceholder(null), // this isn't mapped by TGG rules/ patterns
-//                            getOrCreatePlaceHolder(ruleEdge.getTrgNode()))
                     /* Normally, single-valued eChanges would NOT be represented by InsertEReference EChanges, but by ReplaceSingleValuedEReference EChanges.
                        But since this EChange is sometimes additive AND subtractive, we transform those into an InsertEReference change (plus a RemoveEReference, if it is a "true" replacement )
                     */
@@ -187,8 +176,6 @@ public class IbexPatternToChangeSequenceTemplateConverter {
                 );
             }
         }
-
-
 
         // continue DFS
         if (ruleEdge.getTrgNode().getBindingType().equals(BindingType.CONTEXT)) {
@@ -217,74 +204,10 @@ public class IbexPatternToChangeSequenceTemplateConverter {
      * Map a ${@link TGGRule} to its related ${@link IBeXContextPattern}.
      */
     private Collection<IBeXContextPattern> getRelatedPatterns(TGGRule rule) {
-        printPatternsForRuleDebugInfo(rule);
-
         return this.iBeXModel.getPatternSet().getContextPatterns().stream()
                 .filter(IBeXContextPattern.class::isInstance)
                 .map(IBeXContextPattern.class::cast)
                 .filter(ibexContextPattern -> ibexContextPattern.getName().startsWith(rule.getName()))
                 .toList();
-    }
-
-    private void printPatternsForRuleDebugInfo(TGGRule rule) {
-        logger.trace("+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~");
-        logger.trace("PATTERNS FOR RULE: " + rule.getName());
-        this.iBeXModel.getPatternSet().getContextPatterns().stream()
-                .filter(IBeXContextPattern.class::isInstance)
-                .map(IBeXContextPattern.class::cast)
-                .filter(ibexContextPattern -> ibexContextPattern.getName().startsWith(rule.getName()))
-                .forEach(iBeXContextPattern -> logger.trace("  - [" + iBeXContextPattern.getName() + "] patternType=" + PatternSuffixes.extractType(iBeXContextPattern.getName())));
-        logger.trace(" ANY ALTERNATIVES???");
-        this.iBeXModel.getPatternSet().getContextPatterns().stream()
-                .filter(pattern -> !(pattern instanceof IBeXContextPattern))
-                .forEach(pattern -> logger.trace("  - [" + pattern.getName() + "] patternType=" + PatternSuffixes.extractType(pattern.getName())));
-        logger.trace("+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~+*~");
-
-    }
-
-
-    /**
-     * debug...
-     */
-    private void printRulesDebugInfo() {
-        logger.debug("*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~");
-        logger.debug("Rules: ");
-        logger.debug("*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~*+~");
-        for (TGGRule rule : this.tgg.getRules().stream().filter(tggRule -> !tggRule.isAbstract()).collect(Collectors.toSet())) {
-            logger.debug("  - TGGRule(" + rule.getName() + "): ");
-            rule.getNodes().forEach(tggRuleNode -> {
-                logger.debug("    - " + nodeToString(tggRuleNode));
-                logger.trace("      - incoming edges: ");
-                tggRuleNode.getIncomingEdges().forEach(edge -> logger.trace("        - " + edgeToString(edge)));
-                logger.trace("      - outgoing edges: ");
-                tggRuleNode.getOutgoingEdges().forEach(edge -> logger.trace("        - " + edgeToString(edge)));
-                logger.trace("      - incomingCorrsSource edges: ");
-                tggRuleNode.getIncomingCorrsSource().forEach(node -> logger.trace("        - " + nodeToString(node)));
-            });
-
-            Set<TGGRuleNode> proxyNodes = rule.getNodes().stream().filter(ruleNode -> ruleNode.getType().eIsProxy()).collect(Collectors.toSet());
-            Set<TGGRuleEdge> proxyEdges = rule.getEdges().stream().filter(ruleEdge -> ruleEdge.getType().eIsProxy()).collect(Collectors.toSet());
-            if (!proxyNodes.isEmpty() || !proxyEdges.isEmpty()) {
-                logger.warn("CORRUPT RULE: " + rule.getName() + "has nodes and/ or edges whose type is an unresolved proxy!");
-                proxyNodes.forEach(proxyNode -> logger.warn("  - " + proxyNode.getName() + ", " + proxyNode.getType()));
-                proxyEdges.forEach(proxyEdge -> logger.warn("  - " + proxyEdge.getName() + ", " + proxyEdge.getType()));
-            }
-        }
-    }
-
-    /**
-     * debug...
-     */
-    private String edgeToString(TGGRuleEdge edge) {
-        return "TGGRuleEdge(" + edge.getName() + ")" +
-                "[ " + edge.getSrcNode().getName() + "->" + edge.getTrgNode().getName() + "]: " +
-                "domain=" + edge.getDomainType() + ", " +
-                "binding=" + edge.getBindingType();
-    }
-
-    private String nodeToString(TGGRuleNode node) {
-        return node.getClass().getSimpleName() + "(" + node.getName() + "): " +
-                "domain=" + node.getDomainType() + ", " +
-                "binding=" + node.getBindingType();
     }
 }

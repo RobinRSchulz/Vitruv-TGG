@@ -210,7 +210,6 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
                                                               ResourceAccess resourceAccess,
                                                               VitruviusTGGChangePropagationRegistrationHelper ibexRegistrationHelper,
                                                               Function<VitruviusTGGChangePropagationIbexEntrypoint, VitruviusTGGChangePropagationResult> changePropgationFunction) {
-        Set<CorrespondenceNode> newlyCreatedIbexCorrs;
         VitruviusTGGChangePropagationResult changePropagationResult;
         //  If no target model exists yet, we need to create one. There are different possible approaches. Currently, the third is in place.
         try {
@@ -224,7 +223,7 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
                         : ibexRegistrationHelper.withSRCModel(targetModel);
                 changePropagationResult = changePropgationFunction.apply(new VitruviusTGGChangePropagationIbexEntrypoint(ibexRegistrationHelper));
 
-                persistNewTargetRoot(targetModel, correspondenceModel, resourceAccess);
+                persistNewTargetRoot(targetModel, resourceAccess);
             } else {
                 logger.debug("Found target model via correspondence model");
                 Resource targetModel = correspondenceModel.getCorrespondingEObjects(sourceModel.getContents().getFirst()).stream()
@@ -258,45 +257,14 @@ public abstract class TGGChangePropagationSpecification extends AbstractChangePr
     }
 
     /**
-     *
-     * @return the target model resource, based on
-     * <ul>
-     * <li>existing correspondences between the (known) source model and the target model</li>
-     * <li>information provided by the methodologist implementing this class. The following approaches are to be tried. Currently, the third is in place:<br/>
-     * First approach:<br/>
-     * 1. try simply creating an empty resource<br/>
-     *       2. handing that to emolfon<br/>
-     *       3. gettin' the filled resource back and registering it in Vitruv<br/>
-     *       ==> doesnt work, no access to resourceSet via resourceAccess<br/><br/>
-     *
-     *       Second approach:<br/>
-     *       1. Create an artificial root (methodologist gives the EClass needed for that).<br/>
-     *       2. Persist that as root in resourceAccess.<br/>
-     *       3. Add a correspondence between a source object and that artificial root<br/>
-     *       ==> A little hacky, but kept in commented-out code, in case third doesnt work as expected...<br/><br/>
-     *
-     *       Third approach:<br/>
-     *       1. Create a resource for the target model via the resourceSet of the source model.<br/>
-     *       2. perform change propagation.<br/>
-     *       3. persist the now-existing root node as root in the resourceAccess.<br/>
-     *       ==> Better (not having to create artificial root), but (presumably?) Vitruvius doesn't automatically monitor the changes made to the target model.<br/>
-     *       Since we want to create the Changes manually, this comes in handy, if true.
-     * </li>
-     * </ul>
-     */
-
-    /**
-     * this persists the new mod
+     * this persists the new model
      */
     private void persistNewTargetRoot(Resource targetModel,
-                                      EditableCorrespondenceModelView<Correspondence> correspondenceModel,
                                       ResourceAccess resourceAccess) {
         Set<EObject> newRoots = targetModel.getContents().stream()
                 .filter(eChange -> this.targetRootEClasses.contains(eChange.eClass()))
                 .collect(Collectors.toSet());
-        newRoots.forEach(newRoot -> {
-            resourceAccess.persistAsRoot(newRoot, this.targetRootURI);
-        });
+        newRoots.forEach(newRoot -> resourceAccess.persistAsRoot(newRoot, this.targetRootURI));
     }
 
     private boolean modelHasCorrespondencesToResourceOfTargetMetamodel(Resource sourceModelResource, EPackage targetMetamodelPackage, EditableCorrespondenceModelView<Correspondence> correspondenceModel) {

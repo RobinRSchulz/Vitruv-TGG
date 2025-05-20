@@ -50,7 +50,7 @@ public abstract class EChangeWrapper {
      *   * maybe performance in switch-Statements?
      *
      * @param eChangeType this template can only be matched against eChanges of this type.
-     * @param affectedElementEClass this template can only be matched against eChanges whose affectedElements are instances of that Eclass
+     * @param affectedElementEClass this template can only be matched against eChanges whose affectedElements are instances of that EClass
      * @param affectedElementPlaceholder a affectedElementPlaceholder to be able to hold an actual mapping of the change.
      */
     public EChangeWrapper(EClass eChangeType, EClass affectedElementEClass, EObjectPlaceholder affectedElementPlaceholder) {
@@ -145,7 +145,7 @@ public abstract class EChangeWrapper {
      *         Beware! This EChangeWrapper might be partly initialized, as some placeholders could have already been filled
      *         by initializing another EChangeWrapper belonging to the same ${@link ChangeSequenceTemplate} as this one.
      *         This introduces the requirement for matching not only the "statical properties" (meaning EClasses and EStructuralFeatures)
-     *         but also checking whether the <b>already initialized</b> placeholders match the echange!
+     *         but also checking whether the <b>already initialized</b> placeholders match the eChange!
      */
     protected abstract boolean extendedDataMatches(EChange<EObject> eChange);
 
@@ -155,7 +155,7 @@ public abstract class EChangeWrapper {
      *         Beware! This EChangeWrapper might be partly initialized, as some placeholders could have already been filled
      *         by initializing another EChangeWrapper belonging to the same ${@link ChangeSequenceTemplate} as this one.
      *         This introduces the requirement for matching not only the "statical properties" (meaning EClasses and EStructuralFeatures)
-     *         but also checking whether the <b>already initialized</b> placeholders match the echange!
+     *         but also checking whether the <b>already initialized</b> placeholders match the eChange!
      */
     public boolean matches(EChange<EObject> eChange) {
         return  eChangeTypeAndAffectedEObjectMatches(eChange) && extendedDataMatches(eChange);
@@ -213,7 +213,7 @@ public abstract class EChangeWrapper {
 
     /**
      * [DEBUG helper]
-     * @return a string representation that looks bettern on console print
+     * @return a string representation that looks better on console print
      */
     public abstract String toString(String indent);
 }

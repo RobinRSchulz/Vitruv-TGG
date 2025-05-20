@@ -5,7 +5,6 @@ import org.eclipse.emf.ecore.EObject;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.composite.description.VitruviusChange;
 import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange.ChangeSequenceTemplate;
-import tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange.EChangeWrapper;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -34,12 +33,10 @@ public class PatternCoverageFlattener {
      */
     private final Set<VitruviusBackwardConversionMatch> patternApplications;
     private final List<EChange<EObject>> changeSequence;
-    private final Map<EChange, Integer> changeSequenceIndexMap;
+    private final Map<EChange<EObject>, Integer> changeSequenceIndexMap;
 
-    private static final Map<EChange, Set<VitruviusBackwardConversionMatch>> staticEChangeToPatternApplicationMap = new HashMap<>();
+    private static final Map<EChange<EObject>, Set<VitruviusBackwardConversionMatch>> staticEChangeToPatternApplicationMap = new HashMap<>();
     private static final Set<VitruviusBackwardConversionMatch> staticPatternApplicationsSet = new HashSet<>();
-
-//    stream().map(VitruviusBackwardConversionMatch::getMatchedChangeSequenceTemplate).collect(Collectors.toSet()
 
 
     public PatternCoverageFlattener(Set<VitruviusBackwardConversionMatch> patternApplications, VitruviusChange<EObject> vitruviusChange) {
@@ -69,24 +66,20 @@ public class PatternCoverageFlattener {
                     }
                 }
             }
-
-
-//            this.staticEChangeToPatternApplicationMap.put(
-//                    eChange,
-//                    patternApplications.stream()
-//                            .filter(patternApplication -> patternApplication.getMatchedChangeSequenceTemplate()
-//                                    .getEChanges().contains(eChange))
-//                            .collect(Collectors.toSet()));
         }
     }
 
     private void initializeIndexesForChangeSequence() {
         int i = 0;
-        for (EChange eChange : this.changeSequence) {
+        for (EChange<EObject> eChange : this.changeSequence) {
             this.changeSequenceIndexMap.put(eChange, i);
         }
     }
 
+    /**
+     * Apply flattening and return the result.
+     * @return the {@link VitruviusBackwardConversionMatch}es that remain after flattening.
+     */
     public Set<VitruviusBackwardConversionMatch> getFlattenedPatternApplications() {
         if (isFlat()) {
             // early return
@@ -137,7 +130,7 @@ public class PatternCoverageFlattener {
                     .filter(patternApplication -> patternApplication.getMatchedChangeSequenceTemplate().getEChanges().size() == maxCoverage)
                     .map(patternApplication -> new Pair<>(patternApplication, densityHeuristic(patternApplication)))
                     .max(Comparator.comparing(Pair::getSecond))
-                    .orElseThrow(() -> new IllegalStateException("No ChangeSequenceTempplates"))
+                    .orElseThrow(() -> new IllegalStateException("No ChangeSequenceTemplates"))
                     .getFirst();
             // remove all but the survivor
             patternApplications.removeAll(relevantPatternApplications.stream()
@@ -148,8 +141,7 @@ public class PatternCoverageFlattener {
 
     /**
      *
-     * @param changeSequenceTemplate
-     * @return Khelladi's distance/ density heuristic: is between 0 and 1. the higher the denser the changes are grouped together
+     * @return Khelladi's distance/ density heuristic: is between 0 and 1. the higher, the denser the changes are grouped together
      */
     private double densityHeuristic(VitruviusBackwardConversionMatch changeSequenceTemplate) {
         List<Integer> indexes = changeSequenceTemplate.getMatchedChangeSequenceTemplate().getEChanges().stream().map(changeSequenceIndexMap::get).toList();
@@ -162,7 +154,7 @@ public class PatternCoverageFlattener {
 
     private Set<VitruviusBackwardConversionMatch> getRelevantPatternApplications(EChange<EObject> eChange) {
         // for performance reasons, the map is pre-calculated. Since patternApplications contains the current coverage, these are significant.
-        return this.staticEChangeToPatternApplicationMap.get(eChange).stream()
+        return staticEChangeToPatternApplicationMap.get(eChange).stream()
                 .filter(patternApplications::contains)
                 .collect(Collectors.toSet());
     }

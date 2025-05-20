@@ -6,16 +6,9 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.emoflon.ibex.common.emf.EMFSaveUtils;
 import org.emoflon.ibex.tgg.operational.strategies.modules.TGGResourceHandler;
-import org.emoflon.smartemf.persistence.JDOMXmiParser;
-import org.emoflon.smartemf.persistence.XmiParserUtil;
 import org.moflon.core.utilities.MoflonUtil;
 
 import java.io.*;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.net.URI;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -26,6 +19,7 @@ public class VitruviusTGGResourceHandler extends TGGResourceHandler {
     //duplicates to avoid possible conflicts. Resources should only be present after loadModels was called. So at construction time, we can only store them.
     private final Resource sourceToBeLoaded;
     private final Resource targetToBeLoaded;
+
     // remember the former resourceset, as we hand resources over to the ibex' resource set and need to hand it back...
     private final ResourceSet vitruvResourceSet;
 
@@ -46,8 +40,8 @@ public class VitruviusTGGResourceHandler extends TGGResourceHandler {
      *
      * @param source source model resource
      * @param target target model resource
-     * @param corrPath path to corr.xmi, must be workspace-relative
-     * @param protocolPath path to protocol.xmi, must be workspace-relative
+     * @param corrPath path to corr.xmi, must be workspace-relative (IBeX eclipse project)
+     * @param protocolPath path to protocol.xmi, must be workspace-relative (IBeX eclipse project)
      * @throws IOException
      */
     public VitruviusTGGResourceHandler(Resource source, Resource target, String corrPath, String protocolPath) throws IOException {
@@ -62,7 +56,9 @@ public class VitruviusTGGResourceHandler extends TGGResourceHandler {
     }
 
     /**
-     * Load models not from File, but from given Resources
+     * Load models not partly from file (corr and protocol), and partly from given vitruvius resources.
+     * Vitruvius Resources (source and target model) are moved to an IBeX resourceset.
+     * This is reverted in {@link #saveRelevantModels()}.
      */
     @Override
     public void loadModels() {
@@ -92,7 +88,7 @@ public class VitruviusTGGResourceHandler extends TGGResourceHandler {
             e.printStackTrace();
             Throwable t = e.getCause();
 
-            logger.info("---- CAUSE ? " + t); // this doesnt work as there is a Bug in SmartEMFResource:142 (as a cause they take e.getCause() instead of just e...)
+            logger.info("---- CAUSE ? " + t); // this doesn't work as there is a Bug in SmartEMFResource:142 (as a cause they take e.getCause() instead of just e...)
             while (t != null) {
                 logger.info("---- CAUSE ----");
                 t.printStackTrace();
@@ -103,8 +99,6 @@ public class VitruviusTGGResourceHandler extends TGGResourceHandler {
                     "Use the debugger and set a breakpoint in JDOMXmiParser::indexForeignResource. Original message:" + e.getMessage()
                     + " -- stacktrace above");
         }
-//        corr = createResource(this.options.project.path() + "/instances/corr.xmi");
-//        protocol = createResource(options.project.path() + "/instances/protocol.xmi");
     }
 
 
@@ -122,7 +116,6 @@ public class VitruviusTGGResourceHandler extends TGGResourceHandler {
         }
         logger.info("Resource found. Now trying to load resource " + res.getURI() + " which is located at " + absolutePath);
         try {
-//            DebugUtil.smartEMFResourceLoadDEBUG(res);
             res.load((Map)null);
         } catch (FileNotFoundException e) {
             throw new TGGFileNotFoundException(e, res.getURI());

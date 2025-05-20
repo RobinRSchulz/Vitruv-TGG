@@ -19,6 +19,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+/**
+ * IBeX class  that helps with registering models and metamodels and is used by Vitruv-TGG for  configuration via the builder pattern.
+ */
 public class VitruviusTGGChangePropagationRegistrationHelper implements IRegistrationHelper {
     protected static final Logger logger = Logger.getLogger(VitruviusTGGChangePropagationRegistrationHelper.class);
 
@@ -80,42 +83,84 @@ public class VitruviusTGGChangePropagationRegistrationHelper implements IRegistr
         return propagationDirection;
     }
 
+    /**
+     *
+     * @param TRGModel the model that is an instance of the metamodel defined as target in the Schema.
+     */
     public VitruviusTGGChangePropagationRegistrationHelper withTRGModel(Resource TRGModel) {
         this.target = TRGModel;
         return this;
     }
+
+    /**
+     *
+     * @param SRCModel the model that is an instance of the metamodel defined as source in the Schema.
+     */
     public VitruviusTGGChangePropagationRegistrationHelper withSRCModel(Resource SRCModel) {
         this.source = SRCModel;
         return this;
     }
+
+    /**
+     *
+     * @param ibexProjectPath the path to the ibex project where the Schema, rules etc. are defined.
+     */
     public VitruviusTGGChangePropagationRegistrationHelper withIbexProjectPath(File ibexProjectPath) {
         this.ibexProjectPath = ibexProjectPath;
         return this;
     }
+
+    /**
+     *
+     * @param SRCMetamodelPackage the metamodel defined as source in the Schema.
+     */
     public VitruviusTGGChangePropagationRegistrationHelper withSRCMetamodelPackage(EPackage SRCMetamodelPackage) {
         this.sourceMetamodelPackage = SRCMetamodelPackage;
         return this;
     }
+
+    /**
+     *
+     * @param TRGMetamodelPackage the metamodel defined as target in the Schema.
+     */
     public VitruviusTGGChangePropagationRegistrationHelper withTRGMetamodelPackage(EPackage TRGMetamodelPackage) {
         this.targetMetamodelPackage = TRGMetamodelPackage;
         return this;
     }
+
+    /**
+     *
+     * @param SRCMetamodelPlatformUri the platform URI of the metamodel defined as source in the Schema. Can be found in the Schema file.
+     */
     public VitruviusTGGChangePropagationRegistrationHelper withSRCMetamodelPlatformUri(String SRCMetamodelPlatformUri) {
         this.sourceMetamodelPlatformUri = SRCMetamodelPlatformUri;
         return this;
     }
+
+    /**
+     *
+     * @param TRGMetamodelPlatformUri the platform URI of the metamodel defined as target in the Schema. Can be found in the Schema file.
+     */
     public VitruviusTGGChangePropagationRegistrationHelper withTRGMetamodelPlatformUri(String TRGMetamodelPlatformUri) {
         this.targetMetamodelPlatformUri = TRGMetamodelPlatformUri;
         return this;
     }
+
     public VitruviusTGGChangePropagationRegistrationHelper withPatternMatcher(IBlackInterpreter patternMatcher) {
         this.patternMatcher = patternMatcher;
         return this;
     }
+
+    /**
+     *
+     * @param propagationDirection the propagation direction, based on what is defined as source and target in the Schema.
+     *                             {@link PropagationDirectionHolder.PropagationDirection#FORWARD} means that the propagation should be from SRC to TRG.
+     */
     public VitruviusTGGChangePropagationRegistrationHelper withPropagationDirection(PropagationDirectionHolder.PropagationDirection propagationDirection) {
         this.propagationDirection = propagationDirection;
         return this;
     }
+
     public VitruviusTGGChangePropagationRegistrationHelper withUseShortcutRules(boolean useShortcutRules) {
         this.useShortcutRules = useShortcutRules;
         return this;
@@ -127,9 +172,6 @@ public class VitruviusTGGChangePropagationRegistrationHelper implements IRegistr
             Class userDefinedConstraintFactoryClass =
                     SimpleNameSupportingURLClassLoader
                             .getInstance(new URL[]{new File(ibexProjectPath, "/bin").toURI().toURL()})
-//                    new SimpleNameSupportingURLClassLoader(
-//                    new URL[]{new File(ibexProjectPath, "/bin").toURI().toURL()},
-//                    this.getClass().getClassLoader())
                     .loadClass("org.emoflon.ibex.tgg.operational.csp.constraints.factories." + ibexOptions.project.name().toLowerCase() + ".UserDefinedRuntimeTGGAttrConstraintFactory");
 
             ibexOptions.csp.userDefinedConstraints((RuntimeTGGAttrConstraintFactory) userDefinedConstraintFactoryClass.getConstructor().newInstance());

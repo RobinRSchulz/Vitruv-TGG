@@ -22,7 +22,7 @@ public class VitruviusChangePatternMatcher {
     static Logger logger = Logger.getLogger(VitruviusChangePatternMatcher.class);
 
     private final VitruviusChange<EObject> vitruviusChange;
-    private ChangeSequenceTemplateSet changeSequenceTemplateSet;
+    private final ChangeSequenceTemplateSet changeSequenceTemplateSet;
     private Map<EClass, Set<EChange<EObject>>> eChangesByEChangeType;
 
     /**

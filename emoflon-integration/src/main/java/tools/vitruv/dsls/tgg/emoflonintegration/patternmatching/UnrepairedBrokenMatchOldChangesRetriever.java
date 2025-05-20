@@ -22,28 +22,29 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Broken matches, that remain unrepaired by either shortcut rules not being sufficiently applicable or unreliable and thus unused,
- * must be repaired by creating new additive matches from what's broken
+ * Broken matches that remain unrepaired by either shortcut rules not being sufficiently applicable or unreliable and thus unused,
+ * must be repaired by creating new additive matches from what's broken.
+ * This class creates a new change sequence based on additive matches that those broken matches represent.
  */
 public class UnrepairedBrokenMatchOldChangesRetriever {
     protected static final Logger logger = Logger.getLogger(UnrepairedBrokenMatchOldChangesRetriever.class);
 
-    private Set<VitruviusConsistencyMatch> brokenAndUnrepairedMatches;
-    private TGGResourceHandler resourceHandler;
-    private Set<VitruviusConsistencyMatch> intactMatchesFromProtocol;
-    private Collection<TGGRule> rules;
-    private PropagationDirection propagationDirection;
+    private final Set<VitruviusConsistencyMatch> brokenAndUnrepairedMatches;
+    private final Set<VitruviusConsistencyMatch> intactMatchesFromProtocol;
+    private final PropagationDirection propagationDirection;
 
     public UnrepairedBrokenMatchOldChangesRetriever(TGGResourceHandler resourceHandler, Collection<TGGRule> rules, Set<VitruviusConsistencyMatch> brokenAndUnrepairedMatches, PropagationDirection propagationDirection) {
         this.brokenAndUnrepairedMatches = brokenAndUnrepairedMatches;
-        this.resourceHandler = resourceHandler;
-        this.rules = rules;
         this.intactMatchesFromProtocol = Util.getTGGRuleApplicationsWithRules(resourceHandler, rules).entrySet().stream()
                 .map(entry -> new VitruviusConsistencyMatch(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toSet());
         this.propagationDirection = propagationDirection;
     }
 
+    /**
+     *
+     * @return a list of EChanges that are "freed" from coverage by a TGG rule application because the respective matches, that once covered the EChanges, are now broken.
+     */
     public List<EChange<EObject>> createNewChangeSequence() {
         List<VitruviusConsistencyMatch> allBrokenMatches = fixpointIterateBrokenMatches();
         List<EChange<EObject>> newChanges = new LinkedList<>();
@@ -110,7 +111,7 @@ public class UnrepairedBrokenMatchOldChangesRetriever {
             }
         }
 
-        // we must also handle all CREATE edges from the invalidated matches for them to be potientally matchable again.
+        // we must also handle all CREATE edges from the invalidated matches for them to be potentially matchable again.
         for (TGGRuleEdge ruleEdge : match.getTggRule().getEdges()) {
             if (ruleEdge.getBindingType().equals(BindingType.CREATE)
                     && ruleEdge.getDomainType().equals(propagationDirection.equals(PropagationDirection.FORWARD) ? DomainType.SRC : DomainType.TRG)) {
@@ -139,13 +140,8 @@ public class UnrepairedBrokenMatchOldChangesRetriever {
     }
 
     private boolean eObjectHasBeenDeleted(EObject eObject) {
-//        EcoreUtil.delete();
-////        if (eObject.eIsProxy()) return true;
         if (eObject == null) return true;
-//        InternalEObject internalEObject = (InternalEObject) eObject;
         Resource resource = eObject.eResource();
         return resource == null;
-//        if (eObject.eContainer() == null || (resource != null && resource.getContents().c)) return true;
-//        return (resource == null) ? true : !resource.getContents().contains(eObject);
     }
 }

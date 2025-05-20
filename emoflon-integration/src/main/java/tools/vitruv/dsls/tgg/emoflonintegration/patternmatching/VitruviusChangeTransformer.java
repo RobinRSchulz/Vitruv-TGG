@@ -15,7 +15,11 @@ import tools.vitruv.change.composite.description.VitruviusChangeFactory;
 import java.util.*;
 
 /**
- * Transforms a {@link VitruviusChange} to
+ * Transforms a {@link VitruviusChange} to another {@link VitruviusChange} that is processable by the pattern matching process.
+ * All {@link ReplaceSingleValuedFeatureEChange}s contained in the original {@link VitruviusChange} are replaced by a {@link InsertEReference} and a {@link RemoveEReference} change.
+ * That is done because the additive and subtractive part of those changes have to be handled separately:
+ * the {@link InsertEReference}, if consistency-relevant, is covered by forward matching, and the {@link RemoveEReference} is needed to calculate broken matches.
+ *
  */
 public class VitruviusChangeTransformer {
 
@@ -25,17 +29,8 @@ public class VitruviusChangeTransformer {
         this.vitruviusChange = vitruviusChange;
     }
 
-
-    public VitruviusChange<EObject> mocktransformDELETEME() {
-        return vitruviusChange;
-    }
-
     public VitruviusChange<EObject> transform() {
-//        if ((1+1 == 2) == true) {
-//            return mocktransformDELETEME();
-//        }
         assert new HashSet<>(this.vitruviusChange.getEChanges()).size() == this.vitruviusChange.getEChanges().size();
-//        VitruviusChange<EObject> newChange = this.vitruviusChange.copy();
 
         List<EChange<EObject>> newEChanges = new LinkedList<>();
 

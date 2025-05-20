@@ -3,8 +3,10 @@ package tools.vitruv.dsls.tgg.emoflonintegration.patternconversion.echange;
 import java.util.*;
 
 /**
- * We do not implement Stack or Map, this is a one-purpose class...
- * T
+ * This data structure enables keeping mappings in a recursion-friendly manner by simultaneously keeping the mappings in a stack,
+ * allowing the caller to remove mappings that have been stored in the course of a failed recursive descend.
+ * <br/>
+ * We do not implement {@link Stack} or {@link Map}, this is a one-purpose class...
  */
 public class MapStack<K, V> {
 
@@ -18,7 +20,7 @@ public class MapStack<K, V> {
 
     /**
      * Copies the map and puts everything in the stack. The stack order depends on the map's iterator.
-     * @param map
+     * @param map initial values that are copied to the internal map and stack in an order given by the map's iterator.
      */
     public MapStack(Map<K, V> map) {
         this();
@@ -42,6 +44,11 @@ public class MapStack<K, V> {
         return map.get(key);
     }
 
+    /**
+     * push the key to the stack and remember the mapping key -> value.
+     *
+     * @return the previous value associated with key, or null if there was no mapping for key.
+     */
     public V putPush(K key, V value) {
         stack.push(key);
         return map.put(key, value);
