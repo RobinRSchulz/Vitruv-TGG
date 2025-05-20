@@ -146,6 +146,10 @@ we translate the pattern coverage plus the pattern matches introduced by SYNC (a
     ```
     mvnw clean install
     ```
+## Push to Gitlab
+```
+    git push gitlabAbgabe master
+```
   
 ## Test/ Usage
 * Testing/ exemplary usage is currently implemented in a private project, only. You need 
