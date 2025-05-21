@@ -13,6 +13,9 @@ and further explanations to this implementation are described in more detail.
 In the following, the process of getting sequences of changes to a source model, given by Vitruvius,
 and using IbeX and a pattern matching process, which this project mainly consists of, to propagate those changes to a target model, is shown.
 
+## LaTeX sources
+The latex sources for the thesis document can be found under [doc/latex-sources](doc/latex-sources).
+
 ### Architecture Diagram
 The following diagram illustrates the architecture based on a selection of important classes and packages.
 The green packages are what this project contains.

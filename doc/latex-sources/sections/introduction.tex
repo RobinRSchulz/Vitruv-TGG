@@ -1,0 +1,44 @@
+%% LaTeX2e class for student theses
+%% sections/content.tex
+%% 
+%% Karlsruhe Institute of Technology
+%% Institute for Program Structures and Data Organization
+%% Chair for Software Design and Quality (SDQ)
+%%
+%% Dr.-Ing. Erik Burger
+%% burger@kit.edu
+%%
+%% Version 1.6, 2024-06-07
+
+\chapter{Introduction}
+\label{ch:Introduction}
+
+The development of many large modern IT systems and cyber-physical systems (CPS) is characterized by the use of different languages and tools to describe different parts and aspects of the system under development, e.g., design, implementation, and documentation and different subdomains and subsystems. The use of different languages produces different informational artifacts describing the system and dependencies between those artifacts.
+
+As an approach to cope with increasingly complex conglomerates of different artifacts that all describe a single system, \emph{Model Driven Engineering} (MDE) \cite{kent_model_2002} has become a strategy with industrial relevance \cite{hutchinson_model-driven_2011, hutchinson_model-driven_2014, whittle_state_2014}.
+In the software context, different groups of developers of such systems can form by assigning different roles to software developers or by choosing certain architectural patterns or development processes. Examples of such roles are software architects, system deployers, and component developers. Systems that not only consist of software introduce further groups of developers, e.g., electrical or mechanical engineers, that also produce artifacts that describe the system from physical viewpoints.
+To account for different perspectives and concerns, in short: for viewpoints, that different groups of developers have, the view-based paradigm has been established. Here, various views are defined that represent partial information of a system that is relevant from the viewpoint of the roles that different developer groups assume.
+With the usage of multiple models that constitute a system, these models often share information, which introduces redundancy, and the question of how to prevent that redundancy or keep redundant information consistent arises.
+Klare et al. \cite{VitruviusKlare2021} aim to answer that question by proposing the concept of \emph{Virtual Single Underlying Model}s (V-SUMs) and presenting the \textsc{Vitruvius} approach.
+Aiming to combine \enquote{the advantages of synthetic and projective modeling}  \cite{VitruviusKlare2021}, the projective concept of a view as a dynamically generated model is combined with the synthetic concept of describing the system with multiple interrelated models instead of one. The concepts of projective and synthetic views are defined in the ISO 42010 standard \cite{iso_42010}.
+With V-SUMs, developers only use views to modify the system.
+To be able to keep the system in a consistent state, \emph{consistency preservation rules} (CPRs) are defined.
+They specify how consistency is preserved between models and are executed if changes are made to one model. 
+Alongside view definition languages, languages that are specialized for consistency preservation play the key role in keeping consistency between the models that form the system description of a V-SUM.
+
+While such languages exist and have been implemented for V-SUMs in the context of \textsc{Vitruvius}, there are also existing and mature \cite{fritsche_short-cut-theoretical_2018, fritsche_higher_order_short_cut_rules_2023} general-purpose model-transformation languages that are able to express complex relations between models. One such concept is given by \emph{Triple Graph Grammars} (TGGs) \cite{schurr_tggs_1995}, which consist of context-sensitive graph production rule patterns that relate a pair of graphs by building a third graph representing the relation. These rules can be used for keeping two models consistent in an incremental manner via pattern matching.
+% This allows for minizmizing data loss and improving performance, because. 
+
+TGGs allow for specifying descriptive rules that can concern any number of entities, and the graph approach allows for graphical visualization of these potentially complex relations. To use that advantage for consistency preservation in V-SUMs and examine the resulting approach, the following research questions are answered in this thesis:
+\begin{enumerate}
+    \item How can TGG rules be applied in delta-based consistency preservation processes?
+    \item What kinds of consistency relations can be expressed with the developed concept?
+\end{enumerate}
+
+To that end, the aim of this thesis is to investigate how TGGs can be used for consistency preservation in \textsc{Vitruvius} by researching how sequences of \textsc{Vitruvius} changes can be converted to sequences of TGG rule applications. This is done by elaborating a concept, and developing a prototype that implements that concept.
+
+This concept, which is called \emph{Backward Conversion Pattern Matching}, is explained in \autoref{ch:Concept}. In addition to the process of converting TGG rules to something that is matchable to sequences of \textsc{Vitruvius} changes and the matching process, several additional process steps are necessary to make the concept realizable, such as handling deleting changes (\autoref{sec:Concept:RedMatching}) or context matching (\autoref{alg:BackwardConversionPM:BlackMatching}).
+Details of the prototype implementation of the elaborated concept are described in extracts in \autoref{ch:Implementation}.
+The evaluation of the concept via the prototype is shown in \autoref{ch:Evaluation}, as well as a discussion of the results.
+In \autoref{ch:RelatedWork}, a brief overview of work related to the thesis is given, mainly presenting other approaches to consistency preservation.
+Chapter \ref{ch:Conclusion} concludes by summarizing the work done in the thesis, the evaluation results and their discussion, and giving an outlook to future research related to this work.

@@ -1,0 +1,23 @@
+%% LaTeX2e class for student theses
+%% sections/abstract_en.tex
+%% 
+%% Karlsruhe Institute of Technology
+%% Institute of Information Security and Dependability
+%% Software Design and Quality (SDQ)
+%%
+%% Dr.-Ing. Erik Burger
+%% burger@kit.edu
+%%
+%% Version 1.6, 2024-06-07
+
+\Abstract
+As complex software systems or software-intensive systems often are described by multiple artifacts written in different languages, information redundancy and dependencies can be present between these artifacts, which can also be viewed as models. This raises the question of consistency between those artifacts. 
+If consistency-relevant changes are made to one model, some effort, in the form of adapting relevant information in the other models, needs to be made to restore consistency within the whole system. 
+As an approach to reduce the manual share of that effort, the concept of \emph{Virtual Single Underlying Models} (V-SUMs) was proposed. There, models are modified only via \emph{views} and \emph{consistency preservation rules} (CPRs) are defined to specify how consistency is preserved if changes are made to one model.
+These CPRs can be defined in specialized languages, and in this work they are supplemented by another transformation language, using an existing and mature general-purpose approach called \emph{Triple Graph Grammars} (TGGs) that allows for expressing complex relations by specifying graphical patterns called \emph{TGG rules}. 
+To be able to stay close to the paradigm of delta-based consistency preservation, the application of TGG rules as CPRs has to be based on information about how and what changes were applied, i.e., a sequence of changes.
+A concept is presented that allows matching TGG rules to sequences of changes to a model to be able to apply the rule to the target model and thus apply the CPR represented by the TGG rule.
+This concept is prototypically implemented using the \textsc{Vitruvius} framework for V-SUMs and \emph{eMoflon::IBeX}, which is a TGG framework.
+The concept is evaluated with respect to correctness, consistency completeness, and performance.
+While revealing drawbacks introduced by \emph{eMoflon::IBeX}, the results indicate no limitations to correctness and only minor limitations to consistency completeness. In comparison to \emph{HiPE} \cite{hipe-devops_highly_2022}, an approach that ignores the change sequence information, the prototype performs well in small to medium ($128$ changes in the sequence) problem sizes, but results indicate a worse runtime complexity than \emph{HiPE}. Propositions to mitigate the scalability issues with larger change sequences are presented.
+

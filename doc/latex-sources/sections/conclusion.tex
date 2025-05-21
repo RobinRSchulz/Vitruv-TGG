@@ -1,0 +1,75 @@
+%% LaTeX2e class for student theses
+%% sections/conclusion.tex
+%% 
+%% Karlsruhe Institute of Technology
+%% Institute of Information Security and Dependability
+%% Software Design and Quality (SDQ)
+%%
+%% Dr.-Ing. Erik Burger
+%% burger@kit.edu
+%%
+%% Version 1.6, 2024-06-07
+
+\chapter{Conclusion}
+\label{ch:Conclusion}
+In this work, a concept for using \emph{Triple Graph Grammars} (TGGs) for consistency preservation in \emph{Virtual Single Underlying Models} (V-SUMs)
+was developed. To evaluate this concept, a prototype was implemented using the \textsc{Vitruvius} framework and \emph{eMoflon::IBeX} 
+and evaluated with regard to correctness, consistency completeness and performance. 
+
+The developed concept presented in \autoref{ch:Concept} includes using sequences of \emph{atomic} changes to one model to find rule applications that match the change
+but also aims to stay close to the user's intention, assuming that the change sequence represents that.
+To that end, the concept of \emph{Backward-Conversion Pattern Matching} was developed, which revolves around the idea of transforming TGG rules to \emph{Change Sequence Templates}, a data structure that is more easily matchable to single atomic changes 
+in a sequence but also retains the relevant information on the graphical structure of the TGG rule.
+In \autoref{ch:Implementation}, details on the implementation of the prototype that realizes this concept are shown, 
+as well as limitations of eMoflon::IBeX.
+\autoref{ch:Evaluation} describes the evaluation process, presents and discusses the results. It showed that correctness is no 
+major drawback of the concept, but of the prototype, or, more precisely formulated, of eMoflon::IBeX. 
+Consistency completeness was measured by comparison with the \emph{Reactions} language, and it showed, that in realistic 
+application scenarios, while certain shortcomings could be identified, with $93.33\%$ full and $4.44\%$ partial representability, consistency completeness is also high.
+It can be assumed that some of these shortcomings can be eliminated by extending the approach to include
+user interactions, like it is done in the \emph{Reactions} language.
+Regarding performance, it could be shown that with shorter change sequences, in the evaluation case up to 128 atomic changes, 
+the prototype can keep up with the high-performance pattern matching engine HiPE which is used and recommended 
+by the used TGG framework. From there on upwards, in comparison, it has shown that scalability is not a property 
+of the prototype in its current form, since runtime complexity strongly diverges from HiPE. However, in \autoref{sec:Conclusion:FutureWork} suggestions to mitigate this weakness are made.
+
+In the following, threats to the validity of the results presented in \autoref{sec:Evaluation:Results} are presented.
+Finally, an overview of possible improvements of both the prototype and the concept is given.
+
+\section{Threats To Validity}
+\paragraph{Construct Validity} 
+As described in the evaluation chapter (see \autoref{sec:Evaluation:GQMPlan}), the evaluation was structured using a GQM plan to ensure high construct validity.
+
+\paragraph{External Validity} To evaluate how far the approach presented in \autoref{ch:Concept} reaches the goals defined in \autoref{sec:Evaluation:GQMPlan}, a prototype was implemented. Considering the inadequacies of the eMoflon::IBeX framework described in \autoref{sec:Implementation:Challenges:unsolved}, the raw data generated in the evaluation can be seen as a conservative estimation of the approach's capabilities. This has been accounted for by providing an artificial category with an estimation of the results without the mentioned proxy problem. There, each failing change sequence was manually inspected, and it was determined whether they were similar to other change sequences that succeeded.
+Further, the evaluation has been conducted with the \emph{Java2UML} evaluation case that can be seen as realistic. However, more evaluation cases would further improve external validity, as well as more tests on the same evaluation case.
+The fact that the \emph{Reactions} language, which is the baseline for consistency completeness in \textbf{M2.1.1}, is a Turing-complete imperative language, while the prototype's imperativity is limited to attribute conditions, is not reflected in the evaluation results and can be seen as a threat to external validity. It also can be interpreted as the absence of imperativity/ turing-completeness not being a major drawback for a CPR in realistic scenarios. This ambiguity in interpretation raises the need for further investigation, using more evaluation cases.
+
+\paragraph{Reproducibility}
+\emph{Reproducibility} of the evaluation results is given insofar, as the evaluation process is implemented as \emph{JUnit} tests, which are available as part of the replication package. Reproducing the exact same test results should not be threatened for goals \textbf{G1} and \textbf{G2}, but since evaluating performance (\textbf{G3}) included time measurements with pseudo-random input data, reproducibility is limited to the runtime trend and the comparison to \textsc{HiPE}. The threat of the runtime trend being unstable has been mitigated by running each single test $20$ times, and taking the median of all measurements.
+
+
+\paragraph{Replicability}
+The translation of reactions to TGG rules poses a potential threat to replicability, since that is a subjective process.
+To mitigate that threat, the evaluation has been gone through systematically, and the rule mappings have been documented.
+Another threat to replicability is introduced by the artificial category with an estimation of the results without the mentioned proxy problem in metric \textbf{M1.1.1}, since deciding what would be correctly matched if the proxy problem did not exist is also a subjective assessment.
+
+\section{Future work}
+\label{sec:Conclusion:FutureWork}
+While developing the concept, implementing the prototype, and evaluating the prototype, various ideas of improvement and extension came up, of which the change propagation could benefit.
+
+% Regarding the concept and the prototype, it would be good to divide the data structure change sequence templates in their role as a template from their role as an application of such a template. This would improve understandability and make the class-instance relationship explicit. The same would need to be done with EChange wrappers.
+Although, mainly in the process of evaluation, some performance optimizations were implemented, there is still room left for further optimization, since that was not the main driving goal of this work.
+Some of these performance optimizations fall under the category of static precalculations. In the prototype, the conversion process currently is performed each time a change propagation is triggered, which is unnecessary since the resulting change sequence templates only depend on the TGG rules, not on any runtime information.
+Further, falling partly in the category of static precalculations, patterns that exhibit a containment relation could be found out in a precalculation step and grouped together by extending the change sequence template structure.
+This might improve both green matching and pattern selection performance. In the former, a change sequence template that structurally consists of the \enquote{biggest} pattern, but defines sets of EChange wrappers that represent contained patterns, is thinkable. This would reduce the number of change sequence templates that have to be matched against a change sequence and thus the runtime of green pattern matching.
+
+Since \autoref{sec:Evaluation:Results:G3} showed that in comparison to \textsc{HiPE} \cite{hipe-devops_highly_2022} the approach performs worse from $128$ model elements/EChanges upwards (or $512$, if coverage flattening is omitted), an approach to split the change sequence in sub-sequences of, e.g., $128$ EChanges would be conceivable to improve performance but, of course, limit the complex change detection, especially in the border areas where the change sequence was split. This could again be mitigated by choosing different borders, running the algorithm twice, and choosing the result with more rule applications. While seeming unperformant, this only would introduce a linear overhead, which is negligible compared to the non-linear growth in runtime that the prototype shows. \autoref{fig:eval:RuntimeTrendSplitProjection} depicts a projection of this approach which indicates that splitting could drastically improve performance, to the point where it would outperform \textsc{HiPE} if the split size was chosen small enough.
+
+Since the bigger picture is to generate a sequence of changes to the target model with the approach presented in this thesis, that will also have to be implemented. A basic approach would be to calculate that change sequence from state difference, but utilizing the applied patterns might improve reflecting the user intentions in the change sequence.
+Imagining a constellation where a change is propagated from model A to B to C and both propagation transformations use TGGs, it might even be possible to reuse matches from the A-to-B transformation in the B-to-C- transformation, if there are overlaps between target rules of A-to-B and source rules of B-to-C, which seems not far-fetched in the context of a V-SUMM.
+
+As described in \autoref{sec:Implementation:Challenges:unsolved} and \autoref{sec:Evaluation:Results:G1}, the eMoflon::IBeX framework has bugs and limitations. One reduces the correctness of the consistency preservation process by a great margin, from potentially $95.56\%$ to $57.78\%$ in the evaluation, and another breaks consistency because of imprecise serialization. Thus, using another framework, like eMoflon::Neo \cite{weidmann_emoflonneo_nodate}, might be worth considering moving to.
+
+\section{Acknowledgements}
+I thank my first advisor, Lars König, for his support and advice in countless meetings, many emails, and correction iterations of this and other documents.
+Also, I thank my second advisor, Thomas Weber, for his support in the code and architecture reviews and a long debugging session.

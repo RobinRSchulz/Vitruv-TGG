@@ -1,0 +1,23 @@
+%% LaTeX2e class for student theses
+%% sections/abstract_de.tex
+%% 
+%% Karlsruhe Institute of Technology
+%% Institute for Program Structures and Data Organization
+%% Chair for Software Design and Quality (SDQ)
+%%
+%% Dr.-Ing. Erik Burger
+%% burger@kit.edu
+%%
+%% Version 1.6, 2024-06-07
+
+\Abstract
+Da komplexe Software-Systeme oder Software-intensive Systeme häufig aus verschiedenen Artefakten bestehen, die in verschiedenen Sprachen beschrieben sind, treten Informations-Redundanzen und informationelle Abhängigkeiten zwischen diesen Abhängigkeiten auf, was die Frage nach Konsistenz zwischen diesen Artefakten, welche auch als Modelle angesehen werden können, aufwirft.
+Wenn konsistenzrelevante Änderungen an einem Modell vorgenommen werden, muss Aufwand in Form von Anpassungen von Informationen in anderen Modellen betrieben werden, um die Konsistenz im Gesamtsystem wiederherzustellen. 
+Als Ansatz zur möglichst weitestgehenden Reduktion des manuellen Anteils an diesem Aufwand wurde das Konzept von \emph{Virtual Single Underlying Models} (V-SUMs) vorgestellt, in welchem Modelle ausschließlich mittels \emph{Sichten} modifiziert werden können und \emph{consistency preservation rules} (CPRs) definiert werden, die spezifizieren, wie die Konsistenz im Gesamtsystem erhalten wird, wenn Änderungen an einem Modell vorgenommen werden.
+Diese CPRs können in auf diesen Anwendungsfall spezialisierten Sprachen beschrieben werden, und in dieser Arbeit werden sie durch einen  Ansatz ergänzt, welcher einen existierenden allgemeineren Ansatz namens \emph{Triple Graph Grammars} (TGGs) nutzt, der es ermöglicht, komplexe Beziehungen zwischen Modellen darzustellen, indem Graph-Muster spezifiziert werden, die TGG-Regeln genannt werden.
+Um dem Paradigma der Delta-basierten Konsistenz-Erhaltung gerecht werden zu können, muss die Anwendung der TGG-Regeln als CPRs auf Informationen darüber basieren, welche Änderungen und in welcher Reihenfolge diese angewendet wurden -- es wird also eine Änderungs-Sequenz benötigt.
+In dieser Arbeit wird ein Konzept präsentiert, welches es ermöglicht, TGG-Regeln mit Änderungs-Sequenzen bezüglich eines Modells abzugleichen, um dann die Regeln zu nutzen, um die Änderung in ein anderes Modell zu übertragen, und damit die durch die TGG-Regel dargestellte CPR anzuwenden.
+Das Konzept wird prototypisch mit dem \textsc{Vitruvius}-Rahmenwerk für V-SUMs und \emph{eMoflon::IBeX}, einem TGG-Rahmenwerk, implementiert.
+Dieser Prototyp wird genutzt, um das Konzept hinsichtlich Korrektheit, Konsistenz-Vollständigkeit und Performanz zu evaluieren.
+Die Ergebnisse zeigen zwar Einschränkungen auf, die durch \emph{eMoflon::IBeX} entstehen, aber bezüglich des Konzepts können keine Einschränkungen hinsichtlich der Korrektheit und nur kleinere Einschränkungen hinsichtlich der Konsistenz-Vollständigkeit festgestellt werden. Im Vergleich zu \emph{HiPE} \cite{hipe-devops_highly_2022}, einem bestehenden Ansatz, welcher die Änderungssequenz-Information ignoriert, ist die Laufzeit des Prototyps für kleinen bis mittleren Problemgrößen (128 Änderungen in der Änderungssequenz) vergleichbar oder besser. Für größere Sequenzen divergieren die Laufzeiten und der Ansatz zeigt eine schlechtere Laufzeit-Komplexität als \emph{HiPE} auf. Zur Abmilderung oder Lösung dieser Thematik werden in dieser Arbeit Vorschläge präsentiert und diskutiert.
+

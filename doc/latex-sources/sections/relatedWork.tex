@@ -1,0 +1,24 @@
+\chapter{Related Work}
+\label{ch:RelatedWork}
+Other approaches to consistency preservation via model transformations are presented in this chapter.
+
+\emph{Domain Specific Languages} (\emph{DSLs}) that can be used for model synchronization can be subdivided into unidirectional and bidirectional, as well as into imperative and declarative approaches.
+TGGs are bidirectional and declarative, which comes with drawbacks and advantages in comparison to other approaches
+that have been applied or are applicable in the context of V-SUMs.
+The \textsc{Vitruvius} project currently uses two languages that are used for consistency preservation between models: the \emph{Reactions} Language and the \emph{Commonalities} Language.
+
+The \emph{Reactions} language \cite{kramer_specification_2017} is an imperative and unidirectional language that allows for the definition of reactions that are executed on models when a change in one model that breaks consistency with another model occurs. Its advantage lies in its expressiveness as a \enquote{general-purpose programming language}\cite{kramer_specification_2017}.
+In comparison to bidirectional approaches to model synchronization, unidirectional approaches have the disadvantage that transformations have to be written for both directions, which makes implementing them more time-consuming and possibly more error-prone. Further, using a graph-based language like TGGs, complex relationships are visualizable, which can prove user-friendly for methodologists that develop CPRs.
+
+The \emph{Commonalities} approach \cite{klare_commonalities_2019}
+is motivated by the idea of making common concepts shared between two metamodels explicit and thus making this redundant information visible.
+These shared concepts are called \emph{Commonalities}, and they are the core entities of a \emph{concept metamodel} whose instances are what the user specifies by using the Commonalities Language.
+It thus can be described as a declarative and bidirectional language that, in contrast to other declarative languages used for model synchronization, does not consist of consistency constraints but of the explicit definition of what information is shared between metamodels. This definition can then be used to derive transformations either between the (then explicitly instantiated) Commonalities metamodel and the metamodels that are to be kept consistent with each other 
+or between those metamodels directly. The Commonalities language implements the first option and generates transformations defined in the Reactions Language.
+
+The \emph{Highly Scalable Incremental Pattern Matching Engine} (\emph{HiPE}) \cite{hipe-devops_highly_2022} is a pattern-matching engine used by the eMoflon::IBeX TGG framework \cite{eMoflonIBeX_weidmann_incremental_nodate}, which is described in \autoref{sec:Foundations:eMoflon}.
+HiPE is based on the \emph{Rete Match Algorithm} proposed by Forgy \cite{forgy_rete_1982}, which it implements in a \enquote{massively parallelized variant} \cite{kratz_model-driven_2025}.
+By being able to be used as a pattern matcher to find TGG rule matches in model graphs, HiPE is an alternative to the concept presented in this work. However, it differs from the concept since it is based on detecting patterns on the subgraph that is created when elements are considered that are not yet covered by TGG rule applications, while the pattern-matching concept presented in this work detects patterns in sequences of changes to a model and makes a choice between overlapping matches.
+Both features are intended to introduce a preference of matches with regard to better reflecting what the user actions behind the changes were.
+
+The Choice between overlapping matches is partially made by using and modifying heuristics of Khelladi et al. \cite{khelladi_detecting_complex_changes_2015}. Those are described in \autoref{sec:Foundations:ComplexChangeDetection} and \autoref{sec:Concept:PatternSelection}.
