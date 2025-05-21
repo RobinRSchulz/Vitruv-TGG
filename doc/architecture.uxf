@@ -47,7 +47,7 @@ layer=2</panel_attributes>
     <coordinates>
       <x>418</x>
       <y>242</y>
-      <w>1485</w>
+      <w>1496</w>
       <h>946</h>
     </coordinates>
     <panel_attributes>tools.vitruv.dsls.tgg.emoflonintegration
@@ -204,10 +204,10 @@ layer=2</panel_attributes>
   <element>
     <id>UMLPackage</id>
     <coordinates>
-      <x>440</x>
-      <y>605</y>
+      <x>429</x>
+      <y>594</y>
       <w>990</w>
-      <h>539</h>
+      <h>550</h>
     </coordinates>
     <panel_attributes>.patternconversion
 --
@@ -545,12 +545,12 @@ calls </panel_attributes>
     <coordinates>
       <x>1474</x>
       <y>605</y>
-      <w>418</w>
+      <w>429</w>
       <h>539</h>
     </coordinates>
     <panel_attributes>.patternmatching
 --
-</panel_attributes>
+layer=2</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
@@ -558,15 +558,15 @@ calls </panel_attributes>
     <coordinates>
       <x>1507</x>
       <y>671</y>
-      <w>374</w>
+      <w>385</w>
       <h>110</h>
     </coordinates>
     <panel_attributes>VitruviusChangePatternMatcher
 --
 --
-+ matchPatterns(changeSequenceTemplateSet: 
++ getAdditiveMatches(changeSequenceTemplateSet: 
                                ChangeSequenceTemplateSet): 
-               Set&lt;ChangeSequenceTemplate&gt;
+               Set&lt;VitruviusBackwardConversionMatch&gt;
 layer=2</panel_attributes>
     <additional_attributes/>
   </element>
@@ -575,12 +575,109 @@ layer=2</panel_attributes>
     <coordinates>
       <x>1397</x>
       <y>429</y>
-      <w>308</w>
+      <w>528</w>
       <h>308</h>
     </coordinates>
     <panel_attributes>lt=&lt;..
 
 calls to calculate forward matches</panel_attributes>
-    <additional_attributes>110.0;260.0;50.0;260.0;50.0;10.0;10.0;10.0</additional_attributes>
+    <additional_attributes>110.0;260.0;110.0;200.0;250.0;200.0;250.0;10.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1507</x>
+      <y>847</y>
+      <w>385</w>
+      <h>110</h>
+    </coordinates>
+    <panel_attributes>VitruviusChangeBrokenMatchMatcher
+--
+--
++ getBrokenMatches(...): 
+               Set&lt;VitruviusConsistencyMatch&gt;
+layer=2</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1397</x>
+      <y>440</y>
+      <w>308</w>
+      <h>473</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;..
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+calls to calculate broken matches</panel_attributes>
+    <additional_attributes>110.0;410.0;60.0;410.0;60.0;10.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1507</x>
+      <y>1012</y>
+      <w>385</w>
+      <h>110</h>
+    </coordinates>
+    <panel_attributes>PatternCoverageFlattener
+--
+--
++ getFlattenedPatternApplications(): 
+           Set&lt;VitruviusBackwardConversionMatchMatch&gt;
+layer=2</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1397</x>
+      <y>462</y>
+      <w>418</w>
+      <h>616</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;..
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+calls to get a flat coverage of the change sequence</panel_attributes>
+    <additional_attributes>110.0;540.0;50.0;540.0;50.0;10.0;10.0;10.0</additional_attributes>
   </element>
 </diagram>

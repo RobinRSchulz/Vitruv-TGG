@@ -7,11 +7,11 @@ Since this depends on eMoflon, we need at least a Java-21-SDK
 This project enables the usage of Tripe Graph Grammar (TGG) rules to define consistency preservation rules (CPRs) in the [Vitruvius](https://vitruv.tools/) framework.
 CPRs define how consistency is preserved between two models.
 For the definition and to support the propagation of those rules (patterns in TGGs), the [eMoflon::IBeX](https://github.com/eMoflon/emoflon-ibex/) framework is used.
-In the [proposal document](doc/Proposal.pdf), the concept behind this project and the concepts this project touches are described in more detail.
+In the [thesis document](doc/thesis.pdf), the concept behind this project, the concepts this project touches 
+and further explanations to this implementation are described in more detail.
+
 In the following, the process of getting sequences of changes to a source model, given by Vitruvius,
 and using IbeX and a pattern matching process, which this project mainly consists of, to propagate those changes to a target model, is shown.
-
-TODO Reference KitOpen-Link of Thesis(?)
 
 ### Architecture Diagram
 The following diagram illustrates the architecture based on a selection of important classes and packages.
