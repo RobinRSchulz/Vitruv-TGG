@@ -29,7 +29,15 @@
     <maven.compiler.release>21</maven.compiler.release>
     <maven.compiler.source>21</maven.compiler.source>
     <maven.compiler.target>21</maven.compiler.target>
-    <emoflon.ibex.version>1.0.0.202411071058</emoflon.ibex.version>
+    <!--these versions will need to be updated regularly,
+    as they are not stored in the updatesite upon a new release...
+    Visit the following pages for that:
+    https://github.com/eMoflon/emoflon-ibex-updatesite/tree/master/snapshot/updatesite/plugins
+    https://hipe-devops.github.io/HiPE-Updatesite/hipe.updatesite/
+    -->
+<!--    <emoflon.ibex.version>1.0.0.202411071058</emoflon.ibex.version>-->
+<!--    <hipe.version>1.0.0.202411071042</hipe.version>-->
+    <emoflon.ibex.version>1.0.0.202503180938</emoflon.ibex.version>
     <hipe.version>1.0.0.202411071042</hipe.version>
   </properties>
 
