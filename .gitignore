@@ -11,6 +11,6 @@ META-INF
 build.properties
 plugin.properties
 
-# IntelliJ
-.idea
+# Idea
+.idea/
 *.iml
