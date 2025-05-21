@@ -11,6 +11,8 @@ In the [proposal document](doc/Proposal.pdf), the concept behind this project an
 In the following, the process of getting sequences of changes to a source model, given by Vitruvius,
 and using IbeX and a pattern matching process, which this project mainly consists of, to propagate those changes to a target model, is shown.
 
+TODO Reference KitOpen-Link of Thesis(?)
+
 ### Architecture Diagram
 The following diagram illustrates the architecture based on a selection of important classes and packages.
 The green packages are what this project contains.
@@ -97,31 +99,54 @@ The detailled function of the pattern matching is described in the
 [VitruviusChangePatternMatcher](emoflon-integration/src/main/java/tools/vitruv/dsls/tgg/emoflonintegration/patternmatching/VitruviusChangePatternMatcher.java) class.
 After a pattern coverage of the change sequence is found, they are handed back to the Pattern Matcher ibex interface.
 
+### Context Matching
+
+A pattern coverage given by the [VitruviusChangePatternMatcher](emoflon-integration/src/main/java/tools/vitruv/dsls/tgg/emoflonintegration/patternmatching/VitruviusChangePatternMatcher.java)
+consists of pattern matches whose *green* (CREATE) nodes match against the change sequence. Let those matches be called green matches.
+However, that is not sufficient, since a pattern consists of green and black (CONTEXT) nodes. To be applicable, the context nodes must also be matched. 
+Let a context-matched pattern match be called a black match.
+Unfortunately (from a performance perspective), this has to be done multiple times, because the application of one pattern match to the triple graph might enable another green matches
+to become black matches, since the application of a pattern changes (enlargens) the triple graph and thus, enables further possibilities for a context match.
+
+So, context matching is performed before each time that `updateMatches()` is called upon 
+[VitruviusBackwardConversionTGGEngine](emoflon-integration/src/main/java/tools/vitruv/dsls/tgg/emoflonintegration/ibex/VitruviusBackwardConversionTGGEngine.java).
+This is done in [VitruviusBackwardConversionMatch](emoflon-integration/src/main/java/tools/vitruv/dsls/tgg/emoflonintegration/patternmatching/VitruviusBackwardConversionMatch.java), 
+which caches successful matching and delegates the actual context matching to 
+[ChangeSequenceTemplate](emoflon-integration/src/main/java/tools/vitruv/dsls/tgg/emoflonintegration/patternconversion/echange/ChangeSequenceTemplate.java).
+
+### Coverage Flattening
+
+Since after pattern matching and context matching, the resulting coverage of the change sequence with pattern matches might contain overlaps between those matches,
+a choice needs to be made between those overlapping matches. 
+To be able to stay close to representing user intentions, we want to have control over that choice.
+That is implemented in [PatternCoverageFlattener](emoflon-integration/src/main/java/tools/vitruv/dsls/tgg/emoflonintegration/patternmatching/PatternCoverageFlattener.java).
+There, three heuristics are applied to ensure that the coverage of patterns over a change sequence is *flat*, meaning that each change is covered by at most one pattern.
+
+After context matching and coverage flattening, the remaining patterns are handed to the SYNC-deriving 
+[VitruviusTGGChangePropagationIbexEntrypoint](emoflon-integration/src/main/java/tools/vitruv/dsls/tgg/emoflonintegration/ibex/VitruviusTGGChangePropagationIbexEntrypoint.java)
+to be applied.
+
 ### Handling Broken Matches and handing the matches to SYNC
-**The following is NOT yet implemented!**
 
 The [VitruviusBackwardConversionTGGEngine](emoflon-integration/src/main/java/tools/vitruv/dsls/tgg/emoflonintegration/ibex/VitruviusBackwardConversionTGGEngine.java), 
 which implements the ibex Pattern Matcher interface, retrieves the pattern coverage and converts it to ibex-readable matches.
-It also calculates which matches that already existed (from previous change propagations) are broken by the changes in the change sequences.
-Both is handed to SYNC. SYNC applies the matches and (hopefully) keeps the protocol up-to-date.
+It also calculates which matches that already existed (from previous change propagations) are broken by subtractive changes in the change sequences.
+That is delegated to the [VitruviusChangeBrokenMatchMatcher](emoflon-integration/src/main/java/tools/vitruv/dsls/tgg/emoflonintegration/patternmatching/VitruviusChangeBrokenMatchMatcher.java).
+It calculates broken matches based on the corruption of former matches and based on changes in the change sequence.
+
+These broken matches are also handed to SYNC.
+As SYNC applies revoking the pattern applications, this frees nodes in the graph which are consistency-relevant, but now uncovered.
+Thus, these revoked pattern applications are collected, and, on each call to `updateMatches()`, 
+the set of revoked pattern applications is converted to a sequence of Vitruvius Changes. 
+That *artificial change sequence* is then handed to the [VitruviusChangePatternMatcher](emoflon-integration/src/main/java/tools/vitruv/dsls/tgg/emoflonintegration/patternmatching/VitruviusChangePatternMatcher.java)
+to create a sequence of green matches, which is then added to the set of green matches from the green matching of the *original/ non-artificial* change sequence, which have not yet been consumed.
+From there on, they are considered by context matching and pattern coverage on each subsequent call to `updateMatches()`.
 
 ### Target change generation
 **The following is NOT yet implemented!**
 
 Since the ultimate goal is to transform source model changes to target model changes, after the pattern matching process is through, 
 we translate the pattern coverage plus the pattern matches introduced by SYNC (as a result of handling broken matches) into target model changes.
-
-
-## TODO next
-* IBlackinterpreter-Sachen erfüllen
-  * IMatch-Zeug (Übersetzung)
-  * Broken match handling (Protokoll lesen und VitruvCHange durchgehen)
-* targetchange generation
-* GGF Unit-Tests schreiben für
-  * IbexPatternConverter
-  * VitruviusChangePatternMatcher
-  * dafür das Something2Else-Modell bisschen erweitern und einfach die Patterns ins repo reinhauen. Das benötigte Ibex-Gedöns möglichst kleinhalten, Vitruvius auch.
-* Architektur-Review-Ergebnisse einarbeiten
 
 ## Install on windows
 
@@ -152,8 +177,10 @@ we translate the pattern coverage plus the pattern matches introduced by SYNC (a
 ```
   
 ## Test/ Usage
-* Testing/ exemplary usage is currently implemented in a private project, only. You need 
-  * a methodologist-template-derived test project
-  * to select two models there
-  * to create a class inheriting TGGChangePropagationSpecification where the models and metamodels are specified.
-  * an eMoflon project with defined rules, that is referenced by your test project.
+* For a usage example, check the following repo: https://github.com/RobinRSchulz/Vitruv-TGG-Integration-Test
+* The following is a good starting point: 
+  * create a [methodologist-template](https://github.com/vitruv-tools/Methodologist-Template)-derived test project
+  * select two meta-models there
+  * create an eMoflon::IBeX project with defined rules, locally.
+  * create a class inheriting TGGChangePropagationSpecification where the models and metamodels are specified, and which references the IBeX project.
+  
